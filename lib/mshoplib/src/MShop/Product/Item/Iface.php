@@ -3,7 +3,7 @@
 /**
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
  * @copyright Metaways Infosystems GmbH, 2011
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Product
  */
@@ -19,23 +19,24 @@ namespace Aimeos\MShop\Product\Item;
  * @subpackage Product
  */
 interface Iface
-	extends \Aimeos\MShop\Common\Item\Config\Iface, \Aimeos\MShop\Common\Item\ListRef\Iface,
-		\Aimeos\MShop\Common\Item\Time\Iface, \Aimeos\MShop\Common\Item\Typeid\Iface
+	extends \Aimeos\MShop\Common\Item\Iface, \Aimeos\MShop\Common\Item\Config\Iface,
+		\Aimeos\MShop\Common\Item\ListRef\Iface, \Aimeos\MShop\Common\Item\PropertyRef\Iface,
+		\Aimeos\MShop\Common\Item\Status\Iface, \Aimeos\MShop\Common\Item\Time\Iface,
+		\Aimeos\MShop\Common\Item\TypeRef\Iface
 {
 	/**
-	 * Returns the status of the product item.
+	 * Returns the catalog items referencing the product
 	 *
-	 * @return integer Status of the product
+	 * @return \Aimeos\MShop\Catalog\Item\Iface[] Catalog items
 	 */
-	public function getStatus();
+	public function getCatalogItems();
 
 	/**
-	 * Sets the new status of the product item.
+	 * Returns the supplier items referencing the product
 	 *
-	 * @param integer $status New status of the product
-	 * @return void
+	 * @return \Aimeos\MShop\Supplier\Item\Iface[] Supplier items
 	 */
-	public function setStatus( $status );
+	public function getSupplierItems();
 
 	/**
 	 * Returns the code of the product item.
@@ -48,24 +49,24 @@ interface Iface
 	 * Sets a new code of the product item.
 	 *
 	 * @param string $code New code of the product item
-	 * @return void
+	 * @return \Aimeos\MShop\Product\Item\Iface Product item for chaining method calls
 	 */
 	public function setCode( $code );
 
 	/**
-	 * Returns the supplier code of the product.
+	 * Returns the data set name assigned to the product item.
 	 *
-	 * @return string Supplier code of the product
+	 * @return string Data set name
 	 */
-	public function getSupplierCode();
+	public function getDataset();
 
 	/**
-	 * Sets a new supplier code of the product item.
+	 * Sets a new data set name assignd to the product item.
 	 *
-	 * @param string $suppliercode New supplier code of the product
-	 * @return void
+	 * @param string $name New data set name
+	 * @return \Aimeos\MShop\Product\Item\Iface Product item for chaining method calls
 	 */
-	public function setSupplierCode( $suppliercode );
+	public function setDataset( $name );
 
 	/**
 	 * Returns the label of the product item.
@@ -75,10 +76,25 @@ interface Iface
 	public function getLabel();
 
 	/**
-	 * Sets a new label of the product item.
+	 * Sets a new URL target specific for that product
 	 *
 	 * @param string $label New label of the product item
-	 * @return void
+	 * @return \Aimeos\MShop\Product\Item\Iface Product item for chaining method calls
 	 */
 	public function setLabel( $label );
+
+	/**
+	 * Returns the URL target specific for that product
+	 *
+	 * @return string URL target specific for that product
+	 */
+	public function getTarget();
+
+	/**
+	 * Sets a new label of the product item.
+	 *
+	 * @param string $value New URL target specific for that product
+	 * @return \Aimeos\MShop\Product\Item\Iface Product item for chaining method calls
+	 */
+	public function setTarget( $value );
 }

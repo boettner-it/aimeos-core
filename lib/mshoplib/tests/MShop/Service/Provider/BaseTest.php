@@ -1,87 +1,63 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2013
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2013
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 
 namespace Aimeos\MShop\Service\Provider;
 
 
-/**
- * Test class for \Aimeos\MShop\Service\Provider\Base.
- */
-class BaseTest extends \PHPUnit_Framework_TestCase
+class BaseTest extends \PHPUnit\Framework\TestCase
 {
 	private $object;
 	private $context;
 
 
-	/**
-	 * Sets up the fixture, for example, opens a network connection.
-	 * This method is called before a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function setUp()
 	{
-		$this->context = \TestHelper::getContext();
-		$serviceItem = \Aimeos\MShop\Service\Manager\Factory::createManager( $this->context )->createItem();
+		$this->context = \TestHelperMShop::getContext();
+		$serviceItem = \Aimeos\MShop\Service\Manager\Factory::create( $this->context )->createItem();
 
-		$this->object = new TestBase( $this->context, $serviceItem );
+		$this->object = $this->getMockBuilder( \Aimeos\MShop\Service\Provider\Base::class )
+			->setConstructorArgs( [$this->context, $serviceItem] )
+			->setMethods( null )
+			->getMock();
+
+		\Aimeos\MShop::cache( true );
 	}
 
-	/**
-	 * Tears down the fixture, for example, closes a network connection.
-	 * This method is called after a test is executed.
-	 *
-	 * @access protected
-	 */
+
 	protected function tearDown()
 	{
-		$this->object = null;
-	}
+		\Aimeos\MShop::cache( false );
 
-
-	public function testCalcDateLimit()
-	{
-		$this->assertEquals( '2013-10-15', $this->object->calcDateLimitPublic( 1382100000, 3 ) );
-	}
-
-
-	public function testCalcDateLimitWeekdays()
-	{
-		$this->assertEquals( '2013-10-18', $this->object->calcDateLimitPublic( 1382186400, 0, true ) );
-		$this->assertEquals( '2013-10-18', $this->object->calcDateLimitPublic( 1382272800, 0, true ) );
-	}
-
-
-	public function testCalcDateLimitHolidays()
-	{
-		$this->assertEquals( '2013-10-16', $this->object->calcDateLimitPublic( 1382100000, 0, false, '2013-10-17, 2013-10-18' ) );
+		unset( $this->object );
 	}
 
 
 	public function testCheckConfigBE()
 	{
-		$this->assertEquals( array(), $this->object->checkConfigBE( array() ) );
+		$this->assertEquals( [], $this->object->checkConfigBE( [] ) );
 	}
 
 
 	public function testGetConfigValue()
 	{
-		$this->object->injectGlobalConfigBE( array( 'payment.url-success' => 'https://url.to/ok' ) );
-		$this->assertEquals( 'https://url.to/ok', $this->object->getConfigValuePublic( array( 'payment.url-success' ) ) );
+		$this->object->injectGlobalConfigBE( ['payment.url-success' => 'https://url.to/ok'] );
+		$result = $this->access( 'getConfigValue' )->invokeArgs( $this->object, ['payment.url-success'] );
+
+		$this->assertEquals( 'https://url.to/ok', $result );
 	}
 
 
 	public function testQuery()
 	{
-		$item = \Aimeos\MShop\Order\Manager\Factory::createManager( $this->context )->createItem();
+		$item = \Aimeos\MShop\Order\Manager\Factory::create( $this->context )->createItem();
 
-		$this->setExpectedException( '\\Aimeos\\MShop\\Service\\Exception' );
+		$this->setExpectedException( \Aimeos\MShop\Service\Exception::class );
 		$this->object->query( $item );
 	}
 
@@ -92,32 +68,72 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 	}
 
 
+	public function testUpdatePush()
+	{
+		$request = $this->getMockBuilder( \Psr\Http\Message\ServerRequestInterface::class )->getMock();
+		$response = $this->getMockBuilder( \Psr\Http\Message\ResponseInterface::class )->getMock();
+
+		$response->expects( $this->once() )->method( 'withStatus' )->will( $this->returnValue( $response ) );
+
+		$result = $this->object->updatePush( $request, $response );
+
+		$this->assertInstanceOf( \Psr\Http\Message\ResponseInterface::class, $result );
+	}
+
+
 	public function testUpdateSync()
 	{
-		$response = null; $header = array();
-		$result = $this->object->updateSync( array(), 'body', $response, $header );
+		$orderItem = \Aimeos\MShop\Order\Manager\Factory::create( $this->context )->createItem();
+		$request = $this->getMockBuilder( \Psr\Http\Message\ServerRequestInterface::class )->getMock();
 
-		$this->assertEquals( null, $result );
-	}
-}
+		$result = $this->object->updateSync( $request, $orderItem );
 
-
-class TestBase extends \Aimeos\MShop\Service\Provider\Base
-{
-	/**
-	 * @param integer $ts
-	 */
-	public function calcDateLimitPublic( $ts, $days = 0, $bd = false, $hd = '' )
-	{
-		return $this->calcDateLimit( $ts, $days, $bd, $hd );
+		$this->assertInstanceOf( \Aimeos\MShop\Order\Item\Iface::class, $result );
 	}
 
-	public function getConfigValuePublic( array $keys )
+
+	public function testCheckConfig()
 	{
-		return $this->getConfigValue( $keys );
+		$this->setExpectedException( \Aimeos\MShop\Exception::class );
+
+		$args = [['key' => ['code' => 'key', 'type' => 'invalid', 'required' => true]], ['key' => 'abc']];
+		$this->access( 'checkConfig' )->invokeArgs( $this->object, $args );
 	}
 
-	public function setConfigFE( \Aimeos\MShop\Order\Item\Base\Service\Iface $orderServiceItem, array $attributes )
+
+	public function testGetCustomerData()
 	{
+		$manager = \Aimeos\MShop::create( $this->context, 'customer' );
+		$customerId = $manager->findItem( 'UTC001' )->getId();
+
+		$this->assertNull( $this->access( 'getCustomerData' )->invokeArgs( $this->object, [$customerId, 'token'] ) );
+	}
+
+
+	public function testSetCustomerData()
+	{
+		$stub = $this->getMockBuilder( \Aimeos\MShop\Customer\Manager\Standard::class )
+			->setConstructorArgs( [$this->context] )
+			->setMethods( ['saveItem'] )
+			->getMock();
+
+		\Aimeos\MShop::inject( 'customer', $stub );
+
+		$stub->expects( $this->once() )->method( 'saveItem' );
+
+		$manager = \Aimeos\MShop::create( $this->context, 'customer' );
+		$customerId = $manager->findItem( 'UTC001' )->getId();
+
+		$this->access( 'setCustomerData' )->invokeArgs( $this->object, [$customerId, 'token', 'abcd'] );
+	}
+
+
+	protected function access( $name )
+	{
+		$class = new \ReflectionClass( \Aimeos\MShop\Service\Provider\Base::class );
+		$method = $class->getMethod( $name );
+		$method->setAccessible( true );
+
+		return $method;
 	}
 }

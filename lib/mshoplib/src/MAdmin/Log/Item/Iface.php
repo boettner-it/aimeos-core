@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MAdmin
  * @subpackage Log
  */
@@ -31,7 +31,7 @@ interface Iface extends \Aimeos\MShop\Common\Item\Iface
 	 * Sets the new facility of the item.
 	 *
 	 * @param string $facility Facility of the item
-	 * @return void
+	 * @return \Aimeos\MAdmin\Log\Item\Iface Log item for chaining method calls
 	 */
 	public function setFacility( $facility );
 
@@ -53,7 +53,7 @@ interface Iface extends \Aimeos\MShop\Common\Item\Iface
 	 * Sets the new priority of the item.
 	 *
 	 * @param integer $priority Priority of the item
-	 * @return void
+	 * @return \Aimeos\MAdmin\Log\Item\Iface Log item for chaining method calls
 	 */
 	public function setPriority( $priority );
 
@@ -68,7 +68,7 @@ interface Iface extends \Aimeos\MShop\Common\Item\Iface
 	 * Sets the new message of the item.
 	 *
 	 * @param string $message Message of the item
-	 * @return void
+	 * @return \Aimeos\MAdmin\Log\Item\Iface Log item for chaining method calls
 	 */
 	public function setMessage( $message );
 
@@ -83,7 +83,7 @@ interface Iface extends \Aimeos\MShop\Common\Item\Iface
 	 * Sets the new request of the item.
 	 *
 	 * @param string $request Request of the item
-	 * @return void
+	 * @return \Aimeos\MAdmin\Log\Item\Iface Log item for chaining method calls
 	 */
 	public function setRequest( $request );
 }

@@ -3,7 +3,7 @@
 /**
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
  * @copyright Metaways Infosystems GmbH, 2011
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Service
  */
@@ -18,8 +18,10 @@ namespace Aimeos\MShop\Service\Item;
  * @subpackage Service
  */
 interface Iface
-	extends \Aimeos\MShop\Common\Item\Config\Iface, \Aimeos\MShop\Common\Item\ListRef\Iface,
-		\Aimeos\MShop\Common\Item\Position\Iface, \Aimeos\MShop\Common\Item\Typeid\Iface
+	extends \Aimeos\MShop\Common\Item\Iface, \Aimeos\MShop\Common\Item\Config\Iface,
+		\Aimeos\MShop\Common\Item\ListRef\Iface, \Aimeos\MShop\Common\Item\Position\Iface,
+		\Aimeos\MShop\Common\Item\Status\Iface, \Aimeos\MShop\Common\Item\Time\Iface,
+		\Aimeos\MShop\Common\Item\TypeRef\Iface
 {
 	/**
 	 * Returns the code of the service item.
@@ -32,7 +34,7 @@ interface Iface
 	 * Sets a new code for the service item.
 	 *
 	 * @param string $code Code as defined by the service provider
-	 * @return void
+	 * @return \Aimeos\MShop\Service\Item\Iface Service item for chaining method calls
 	 */
 	public function setCode( $code );
 
@@ -47,7 +49,7 @@ interface Iface
 	 * Sets the new name of the service provider the item belongs to.
 	 *
 	 * @param string $provider Name of the service provider
-	 * @return void
+	 * @return \Aimeos\MShop\Service\Item\Iface Service item for chaining method calls
 	 */
 	public function setProvider( $provider );
 
@@ -62,22 +64,7 @@ interface Iface
 	 * Sets a new label for the service item.
 	 *
 	 * @param string $label Label as defined by the service provider
-	 * @return void
+	 * @return \Aimeos\MShop\Service\Item\Iface Service item for chaining method calls
 	 */
 	public function setLabel( $label );
-
-	/**
-	 * Returns the status of the service item.
-	 *
-	 * @return integer Status of the item
-	 */
-	public function getStatus();
-
-	/**
-	 * Sets the status of the item.
-	 *
-	 * @param integer $status Status of the item
-	 * @return void
-	 */
-	public function setStatus( $status );
 }

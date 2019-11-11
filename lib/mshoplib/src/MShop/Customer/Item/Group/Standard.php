@@ -2,7 +2,7 @@
 
 /**
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Customer
  */
@@ -21,19 +21,14 @@ class Standard
 	extends \Aimeos\MShop\Common\Item\Base
 	implements \Aimeos\MShop\Customer\Item\Group\Iface
 {
-	private $values;
-
-
 	/**
 	 * Initializes the customer group item
 	 *
 	 * @param array $values List of key/value pairs of the customer group
 	 */
-	public function __construct( $values = array() )
+	public function __construct( $values = [] )
 	{
 		parent::__construct( 'customer.group.', $values );
-
-		$this->values = $values;
 	}
 
 
@@ -44,7 +39,7 @@ class Standard
 	 */
 	public function getCode()
 	{
-		return ( isset( $this->values['code'] ) ? (string) $this->values['code'] : '' );
+		return (string) $this->get( 'customer.group.code', '' );
 	}
 
 
@@ -52,13 +47,11 @@ class Standard
 	 * Sets the new code of the customer group
 	 *
 	 * @param string $value Code of the customer group
+	 * @return \Aimeos\MShop\Customer\Item\Group\Iface Customer group item for chaining method calls
 	 */
 	public function setCode( $value )
 	{
-		if( $value == $this->getCode() ) { return; }
-
-		$this->values['code'] = (string) $value;
-		$this->setModified();
+		return $this->set( 'customer.group.code', (string) $value );
 	}
 
 
@@ -69,7 +62,7 @@ class Standard
 	 */
 	public function getLabel()
 	{
-		return ( isset( $this->values['label'] ) ? (string) $this->values['label'] : '' );
+		return (string) $this->get( 'customer.group.label', '' );
 	}
 
 
@@ -77,49 +70,61 @@ class Standard
 	 * Sets the new label of the customer group
 	 *
 	 * @param string $value Label of the customer group
+	 * @return \Aimeos\MShop\Customer\Item\Group\Iface Customer group item for chaining method calls
 	 */
 	public function setLabel( $value )
 	{
-		if( $value == $this->getLabel() ) { return; }
-
-		$this->values['label'] = (string) $value;
-		$this->setModified();
+		return $this->set( 'customer.group.label', (string) $value );
 	}
 
 
 	/**
-	 * Sets the item values from the given array.
+	 * Returns the item type
 	 *
-	 * @param array $list Associative list of item keys and their values
-	 * @return array Associative list of keys and their values that are unknown
+	 * @return string Item type, subtypes are separated by slashes
 	 */
-	public function fromArray( array $list )
+	public function getResourceType()
 	{
-		$unknown = array();
-		$list = parent::fromArray( $list );
+		return 'customer/group';
+	}
+
+
+	/*
+	 * Sets the item values from the given array and removes that entries from the list
+	 *
+	 * @param array &$list Associative list of item keys and their values
+	 * @param boolean True to set private properties too, false for public only
+	 * @return \Aimeos\MShop\Customer\Item\Group\Iface Group item for chaining method calls
+	 */
+	public function fromArray( array &$list, $private = false )
+	{
+		$item = parent::fromArray( $list, $private );
 
 		foreach( $list as $key => $value )
 		{
 			switch( $key )
 			{
-				case 'customer.group.code': $this->setCode( $value ); break;
-				case 'customer.group.label': $this->setLabel( $value ); break;
-				default: $unknown[$key] = $value;
+				case 'customer.group.code': $item = $item->setCode( $value ); break;
+				case 'customer.group.label': $item = $item->setLabel( $value ); break;
+				default: continue 2;
 			}
+
+			unset( $list[$key] );
 		}
 
-		return $unknown;
+		return $item;
 	}
 
 
 	/**
 	 * Returns the item values as array.
 	 *
+	 * @param boolean True to return private properties, false for public only
 	 * @return array Associative list of item properties and their values
 	 */
-	public function toArray()
+	public function toArray( $private = false )
 	{
-		$list = parent::toArray();
+		$list = parent::toArray( $private );
 
 		$list['customer.group.code'] = $this->getCode();
 		$list['customer.group.label'] = $this->getLabel();

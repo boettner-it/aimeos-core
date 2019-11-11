@@ -2,7 +2,7 @@
 
 /**
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Container
  */
@@ -27,16 +27,17 @@ class Gzip
 
 
 	/**
-	 * Initializes the text content object.
+	 * Initializes the Gzip content object.
 	 *
 	 * Supported options are:
+	 * - gzip-mode ("rb" for reading, "wb" for writing)
 	 * - gzip-level (default: 5)
 	 *
 	 * @param string $resource Path to the actual file
 	 * @param string $name Name of the file
 	 * @param array $options Associative list of key/value pairs for configuration
 	 */
-	public function __construct( $resource, $name, array $options = array() )
+	public function __construct( $resource, $name, array $options = [] )
 	{
 		if( !is_file( $resource ) && substr( $resource, -3 ) !== '.gz' ) {
 			$resource .= '.gz';
@@ -46,15 +47,14 @@ class Gzip
 			$name .= '.gz';
 		}
 
+		parent::__construct( $resource, $name, $options );
+
+		$mode = $this->getOption( 'gzip-mode', 'rb' );
 		$level = $this->getOption( 'gzip-level', 5 );
 
-		if( ( $this->fh = @gzopen( $resource, 'rb' . $level ) ) === false
-			&& ( $this->fh = gzopen( $resource, 'wb' ) ) === false
-		) {
+		if( ( $this->fh = gzopen( $resource, $mode . $level ) ) === false ) {
 			throw new \Aimeos\MW\Container\Exception( sprintf( 'Unable to open file "%1$s"', $resource ) );
 		}
-
-		parent::__construct( $resource, $name, $options );
 
 		$this->data = $this->getData();
 	}
@@ -63,6 +63,7 @@ class Gzip
 	/**
 	 * Closes the gzip file so it's written to disk.
 	 *
+	 * @return \Aimeos\MW\Container\Content\Iface Container content instance for method chaining
 	 * @throws \Aimeos\MW\Container\Exception If the file handle couldn't be flushed or closed
 	 */
 	public function close()
@@ -70,28 +71,33 @@ class Gzip
 		if( gzclose( $this->fh ) === false ) {
 			throw new \Aimeos\MW\Container\Exception( sprintf( 'Unable to close file "%1$s"', $this->getResource() ) );
 		}
+
+		return $this;
 	}
 
 
 	/**
 	 * Adds content to the gzip file.
 	 *
-	 * @param string[] $data Data to add
+	 * @param string $data Data to add
+	 * @return \Aimeos\MW\Container\Content\Iface Container content instance for method chaining
 	 */
 	public function add( $data )
 	{
 		if( gzwrite( $this->fh, $data ) === false ) {
 			throw new \Aimeos\MW\Container\Exception( sprintf( 'Unable to add content to file "%1$s"', $this->getName() ) );
 		}
+
+		return $this;
 	}
 
 
 	/**
 	 * Return the current element.
 	 *
-	 * @return string Content line ending with
+	 * @return string|null Content line ending with
 	 */
-	function current()
+	public function current()
 	{
 		return $this->data;
 	}
@@ -102,7 +108,7 @@ class Gzip
 	 *
 	 * @return integer|null Position within the text file or null if end of file is reached
 	 */
-	function key()
+	public function key()
 	{
 		if( $this->data !== null ) {
 			return $this->position;
@@ -115,7 +121,7 @@ class Gzip
 	/**
 	 * Moves forward to next element.
 	 */
-	function next()
+	public function next()
 	{
 		$this->position++;
 		$this->data = $this->getData();
@@ -125,7 +131,7 @@ class Gzip
 	/**
 	 * Rewinds the file pointer to the beginning.
 	 */
-	function rewind()
+	public function rewind()
 	{
 		if( gzrewind( $this->fh ) === false ) {
 			throw new \Aimeos\MW\Container\Exception( sprintf( 'Unable to rewind file "%1$s"', $this->getResource() ) );
@@ -141,7 +147,7 @@ class Gzip
 	 *
 	 * @return boolean True on success or false on failure
 	 */
-	function valid()
+	public function valid()
 	{
 		return ( $this->data === null ? !gzeof( $this->fh ) : true );
 	}
@@ -150,7 +156,7 @@ class Gzip
 	/**
 	 * Reads the next line from the file.
 	 *
-	 * @return String Content
+	 * @return string|null Content
 	 */
 	protected function getData()
 	{

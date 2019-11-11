@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Common
  */
@@ -63,16 +63,17 @@ abstract class Base implements \Aimeos\MW\Criteria\Iface
 			return $this->compare( '==', '1', '1' );
 		}
 
-		if( ( list( $op, $value ) = each( $array ) ) === false ) {
+		if( ( $value = reset( $array ) ) === false ) {
 			throw new \Aimeos\MW\Common\Exception( sprintf( 'Invalid condition array "%1$s"', json_encode( $array ) ) );
 		}
 
+		$op = key( $array );
 		$operators = $this->getOperators();
 
-		if( in_array( $op, $operators['combine'] ) ) {
+		if( in_array( $op, $operators['combine'], true ) ) {
 			return $this->createCombineExpression( $op, (array) $value );
 		}
-		else if( in_array( $op, $operators['compare'] ) ) {
+		else if( in_array( $op, $operators['compare'], true ) ) {
 			return $this->createCompareExpression( $op, (array) $value );
 		}
 
@@ -89,18 +90,40 @@ abstract class Base implements \Aimeos\MW\Criteria\Iface
 	 * 		'name2' => '-',
 	 * 	);
 	 *
-	 * @param array $array Single-dimensional array of name and operator pairs
-	 * @return array List of sort expressions implementing \Aimeos\MW\Criteria\Expression\Sort\Iface
+	 * @param string[] $array Single-dimensional array of name and operator pairs
+	 * @return \Aimeos\MW\Criteria\Expression\Sort\Iface[] List of sort expressions
 	 */
 	public function toSortations( array $array )
 	{
-		$results = array();
+		$results = [];
 
 		foreach( $array as $name => $op ) {
 			$results[] = $this->sort( $op, $name );
 		}
 
 		return $results;
+	}
+
+
+	/**
+	 * Returns the list of translated colums
+	 *
+	 * @param array $columns List of objects implementing getName() method
+	 * @param array $translations Associative list of item names that should be translated
+	 * @return array List of translated columns
+	 */
+	public function translate( array $columns, array $translations = [] )
+	{
+		$list = [];
+
+		foreach( $columns as $item )
+		{
+			if( ( $value = $item->translate( $translations ) ) !== null ) {
+				$list[] = $value;
+			}
+		}
+
+		return $list;
 	}
 
 
@@ -113,14 +136,14 @@ abstract class Base implements \Aimeos\MW\Criteria\Iface
 	 */
 	protected function createCombineExpression( $operator, array $list )
 	{
-		$results = array();
+		$results = [];
 		$operators = $this->getOperators();
 
 		foreach( $list as $entry )
 		{
 			$entry = (array) $entry;
 
-			if( ( list( $op, $value ) = each( $entry ) ) === false ) {
+			if( ( $op = key( $entry ) ) === null ) {
 				throw new \Aimeos\MW\Common\Exception( sprintf( 'Invalid combine condition array "%1$s"', json_encode( $entry ) ) );
 			}
 
@@ -148,10 +171,10 @@ abstract class Base implements \Aimeos\MW\Criteria\Iface
 	 */
 	protected function createCompareExpression( $op, array $pair )
 	{
-		if( ( list( $name, $value ) = each( $pair ) ) === false ) {
+		if( ( $value = reset( $pair ) ) === false ) {
 			throw new \Aimeos\MW\Common\Exception( sprintf( 'Invalid compare condition array "%1$s"', json_encode( $pair ) ) );
 		}
 
-		return $this->compare( $op, $name, $value );
+		return $this->compare( $op, key( $pair ), $value );
 	}
 }

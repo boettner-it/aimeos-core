@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Common
  */
@@ -20,8 +20,8 @@ namespace Aimeos\MW\Criteria\Expression\Compare;
  */
 class SQL extends \Aimeos\MW\Criteria\Expression\Compare\Base
 {
-	private static $operators = array( '==' => '=', '!=' => '<>', '~=' => 'LIKE', '>=' => '>=', '<=' => '<=', '>' => '>', '<' => '<', '&' => '&', '|' => '|', '=~' => 'LIKE' );
-	private $conn = null;
+	private static $operators = array( '=~' => 'LIKE', '~=' => 'LIKE', '==' => '=', '!=' => '<>', '>' => '>', '>=' => '>=', '<' => '<', '<=' => '<=' );
+	private $conn;
 
 
 	/**
@@ -64,18 +64,28 @@ class SQL extends \Aimeos\MW\Criteria\Expression\Compare\Base
 	 */
 	protected function createTerm( $name, $type, $value )
 	{
-		return $name . ' ' . self::$operators[$this->getOperator()] . ' ' . $this->escape( $this->getOperator(), $type, $value );
+		$term = $name . ' ' . self::$operators[$this->getOperator()] . ' ' . $this->escape( $this->getOperator(), $type, $value );
+
+		if( in_array( $this->getOperator(), array( '=~', '~=' ), true ) ) {
+			$term .= ' ESCAPE \'#\'';
+		}
+
+		return $term;
 	}
 
 
 	/**
 	 * Creates a term which contains a null value.
 	 *
-	 * @param string $name Translated name of the variable or column
+	 * @param string|array $name Translated name of the variable or column
 	 * @return string String that can be inserted into a SQL statement
 	 */
 	protected function createNullTerm( $name )
 	{
+		if( is_array( $name ) ) {
+			return '';
+		}
+
 		switch( $this->getOperator() )
 		{
 			case '==':
@@ -104,7 +114,7 @@ class SQL extends \Aimeos\MW\Criteria\Expression\Compare\Base
 			case '!=':
 				return $name . ' NOT IN ' . $this->createValueList( $type, (array) $this->getValue() );
 			default:
-				$terms = array();
+				$terms = [];
 
 				foreach( (array) $this->getValue() as $val ) {
 					$terms[] = $this->createTerm( $name, $type, $val );
@@ -134,7 +144,7 @@ class SQL extends \Aimeos\MW\Criteria\Expression\Compare\Base
 			$values[$key] = $this->escape( $operator, $type, $value );
 		}
 
-		return '(' . implode(',', $values) . ')';
+		return '(' . implode( ',', $values ) . ')';
 	}
 
 
@@ -144,7 +154,7 @@ class SQL extends \Aimeos\MW\Criteria\Expression\Compare\Base
 	 * @param string $operator Operator used for the expression
 	 * @param integer $type Type constant
 	 * @param mixed $value Value that the variable or column should be compared to
-	 * @return string Escaped value
+	 * @return double|string|integer Escaped value
 	 */
 	protected function escape( $operator, $type, $value )
 	{
@@ -152,24 +162,37 @@ class SQL extends \Aimeos\MW\Criteria\Expression\Compare\Base
 
 		switch( $type )
 		{
+			case \Aimeos\MW\DB\Statement\Base::PARAM_NULL:
+				$value = 'null'; break;
 			case \Aimeos\MW\DB\Statement\Base::PARAM_BOOL:
 				$value = (int) (bool) $value; break;
 			case \Aimeos\MW\DB\Statement\Base::PARAM_INT:
-				$value = (int) $value; break;
+				$value = (int) (string) $value; break;
 			case \Aimeos\MW\DB\Statement\Base::PARAM_FLOAT:
-				$value = (float) $value; break;
+				$value = (double) (string) $value; break;
 			case \Aimeos\MW\DB\Statement\Base::PARAM_STR:
-				if( $operator == '~=' ) {
-					$value = '\'%' . $this->conn->escape( $value ) . '%\''; break;
+				if( $operator === '~=' ) {
+					$value = '\'%' . str_replace( ['#', '%', '_', '['], ['##', '#%', '#_', '#['], $this->conn->escape( $value ) ) . '%\''; break;
 				}
-				if( $operator == '=~' ) {
-					$value = '\'' . $this->conn->escape( $value ) . '%\''; break;
+				if( $operator === '=~' ) {
+					$value = '\'' . str_replace( ['#', '%', '_', '['], ['##', '#%', '#_', '#['], $this->conn->escape( $value ) ) . '%\''; break;
 				}
-			default:
+			default: // all other operators: escape in default case
 				$value = '\'' . $this->conn->escape( $value ) . '\'';
 		}
 
 		return $value;
+	}
+
+
+	/**
+	 * Returns the connection object.
+	 *
+	 * return \Aimeos\MW\DB\Connection\Iface Connection object
+	 */
+	public function getConnection()
+	{
+		return $this->conn;
 	}
 
 
@@ -190,13 +213,17 @@ class SQL extends \Aimeos\MW\Criteria\Expression\Compare\Base
 
 			return \Aimeos\MW\DB\Statement\Base::PARAM_STR;
 		}
-		else if( strpos( $item, '.' ) !== false )
+		elseif( strpos( $item, '.' ) !== false )
 		{
 			return \Aimeos\MW\DB\Statement\Base::PARAM_FLOAT;
 		}
-		else if( ctype_digit( $item ) !== false )
+		elseif( ctype_digit( $item ) !== false )
 		{
 			return \Aimeos\MW\DB\Statement\Base::PARAM_INT;
+		}
+		elseif( $item === 'null' )
+		{
+			return \Aimeos\MW\DB\Statement\Base::PARAM_NULL;
 		}
 
 		return \Aimeos\MW\DB\Statement\Base::PARAM_STR;

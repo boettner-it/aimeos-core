@@ -1,67 +1,71 @@
 <?php
 
+/**
+ * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
+ * @copyright Metaways Infosystems GmbH, 2014
+ * @copyright Aimeos (aimeos.org), 2015-2018
+ */
+
+
 namespace Aimeos\MAdmin\Cache\Manager;
 
 
-/**
- * @copyright Metaways Infosystems GmbH, 2014
- * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
- */
-class StandardTest extends \PHPUnit_Framework_TestCase
+class StandardTest extends \PHPUnit\Framework\TestCase
 {
 	private $object;
 	private $context;
 
 
-	/**
-	 * Sets up the fixture, for example, opens a network connection.
-	 * This method is called before a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function setUp()
 	{
-		$this->context = \TestHelper::getContext();
+		$this->context = \TestHelperMShop::getContext();
 		$this->object = new \Aimeos\MAdmin\Cache\Manager\Standard( $this->context );
 	}
 
 
-	/**
-	 * Tears down the fixture, for example, closes a network connection.
-	 * This method is called after a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function tearDown()
 	{
 		$this->object = null;
 	}
 
 
-	public function testCleanup()
+	public function testClear()
 	{
-		$this->object->cleanup( array( -1 ) );
+		$this->assertInstanceOf( \Aimeos\MAdmin\Cache\Manager\Iface::class, $this->object->clear( [-1] ) );
 	}
 
 
 	public function testCreateItem()
 	{
-		$this->assertInstanceOf( '\\Aimeos\\MAdmin\\Cache\\Item\\Iface', $this->object->createItem() );
+		$this->assertInstanceOf( \Aimeos\MAdmin\Cache\Item\Iface::class, $this->object->createItem() );
+	}
+
+
+	public function testDeleteItems()
+	{
+		$this->assertInstanceOf( \Aimeos\MAdmin\Cache\Manager\Iface::class, $this->object->deleteItems( [-1] ) );
+	}
+
+
+	public function testGetResourceType()
+	{
+		$result = $this->object->getResourceType();
+
+		$this->assertContains( 'cache', $result );
 	}
 
 
 	public function testGetSearchAttributes()
 	{
 		foreach( $this->object->getSearchAttributes() as $attr ) {
-			$this->assertInstanceOf( '\\Aimeos\\MW\\Criteria\\Attribute\\Iface', $attr );
+			$this->assertInstanceOf( \Aimeos\MW\Criteria\Attribute\Iface::class, $attr );
 		}
 	}
 
 
 	public function testGetSubManager()
 	{
-		$this->setExpectedException( '\\Aimeos\\MAdmin\\Exception' );
+		$this->setExpectedException( \Aimeos\MAdmin\Exception::class );
 		$this->object->getSubManager( 'unknown' );
 	}
 
@@ -102,12 +106,12 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$item = $this->object->createItem();
 		$item->setId( 'unittest2' );
 		$item->setValue( 'test2' );
-		$this->object->saveItem( $item );
+		$resultSaved = $this->object->saveItem( $item );
 		$itemSaved = $this->object->getItem( $item->getId() );
 
 		$itemExp = clone $itemSaved;
 		$itemExp->setValue( 'test3' );
-		$this->object->saveItem( $itemExp );
+		$resultUpd = $this->object->saveItem( $itemExp );
 		$itemUpd = $this->object->getItem( $item->getId() );
 
 		$this->object->deleteItem( $item->getId() );
@@ -125,7 +129,10 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals( $itemExp->getValue(), $itemUpd->getValue() );
 		$this->assertEquals( $itemExp->getTags(), $itemUpd->getTags() );
 
-		$this->setExpectedException( '\\Aimeos\\MAdmin\\Cache\\Exception' );
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Item\Iface::class, $resultSaved );
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Item\Iface::class, $resultUpd );
+
+		$this->setExpectedException( \Aimeos\MAdmin\Cache\Exception::class );
 		$this->object->getItem( $item->getId() );
 	}
 }

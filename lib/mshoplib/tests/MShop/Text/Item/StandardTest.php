@@ -1,59 +1,45 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 
 namespace Aimeos\MShop\Text\Item;
 
 
-/**
- * Test class for \Aimeos\MShop\Test\Item\Standard.
- */
-class StandardTest extends \PHPUnit_Framework_TestCase
+class StandardTest extends \PHPUnit\Framework\TestCase
 {
 	private $object;
 	private $values;
 
 
-	/**
-	 * Sets up the fixture, for example, opens a network connection.
-	 * This method is called before a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function setUp()
 	{
 		$this->values = array(
-			'id' => 10,
-			'siteid' => 99,
-			'langid' => 'de',
-			'typeid' => 1,
-			'label' => 'unittest label',
-			'domain' => 'product',
-			'content' => 'unittest text',
-			'status' => 2,
-			'mtime' => '2011-01-01 00:00:02',
-			'ctime' => '2011-01-01 00:00:01',
-			'editor' => 'unitTestUser'
+			'text.id' => 10,
+			'text.siteid' => 99,
+			'text.languageid' => 'de',
+			'text.type' => 'name',
+			'text.label' => 'unittest label',
+			'text.domain' => 'product',
+			'text.content' => 'unittest text',
+			'text.status' => 2,
+			'text.mtime' => '2011-01-01 00:00:02',
+			'text.ctime' => '2011-01-01 00:00:01',
+			'text.editor' => 'unitTestUser',
+			'.languageid' => 'de',
 		);
 
 		$this->object = new \Aimeos\MShop\Text\Item\Standard( $this->values );
 	}
 
 
-	/**
-	 * Tears down the fixture, for example, closes a network connection.
-	 * This method is called after a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function tearDown()
 	{
-		$this->object = null;
+		unset( $this->object );
 	}
 
 
@@ -71,9 +57,10 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testSetId()
 	{
-		$this->object->setId( null );
-		$this->assertNull( $this->object->getId() );
+		$return = $this->object->setId( null );
 
+		$this->assertInstanceOf( \Aimeos\MShop\Text\Item\Iface::class, $return );
+		$this->assertNull( $this->object->getId() );
 		$this->assertTrue( $this->object->isModified() );
 	}
 
@@ -84,17 +71,18 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	}
 
 
-	public function testGetTypeId()
+	public function testGetType()
 	{
-		$this->assertEquals( 1, $this->object->getTypeId() );
+		$this->assertEquals( 'name', $this->object->getType() );
 	}
 
 
-	public function testSetTypeId()
+	public function testSetType()
 	{
-		$this->object->setTypeId( 2 );
-		$this->assertEquals( 2, $this->object->getTypeId() );
+		$return = $this->object->setType( 'test' );
 
+		$this->assertInstanceOf( \Aimeos\MShop\Text\Item\Iface::class, $return );
+		$this->assertEquals( 'test', $this->object->getType() );
 		$this->assertTrue( $this->object->isModified() );
 	}
 
@@ -107,9 +95,10 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testSetLabel()
 	{
-		$this->object->setLabel( 'unittest set label' );
-		$this->assertEquals( 'unittest set label', $this->object->getLabel() );
+		$return = $this->object->setLabel( 'unittest set label' );
 
+		$this->assertInstanceOf( \Aimeos\MShop\Text\Item\Iface::class, $return );
+		$this->assertEquals( 'unittest set label', $this->object->getLabel() );
 		$this->assertTrue( $this->object->isModified() );
 	}
 
@@ -122,9 +111,10 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testSetDomain()
 	{
-		$this->object->setDomain( 'catalog' );
-		$this->assertEquals( 'catalog', $this->object->getDomain() );
+		$return = $this->object->setDomain( 'catalog' );
 
+		$this->assertInstanceOf( \Aimeos\MShop\Text\Item\Iface::class, $return );
+		$this->assertEquals( 'catalog', $this->object->getDomain() );
 		$this->assertTrue( $this->object->isModified() );
 	}
 
@@ -137,7 +127,9 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testSetContent()
 	{
-		$this->object->setContent( 'unit test text' );
+		$return = $this->object->setContent( 'unit test text' );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Text\Item\Iface::class, $return );
 		$this->assertEquals( 'unit test text', $this->object->getContent() );
 
 		$this->object->setContent( mb_convert_encoding( '&#x0630;&#x0631;&#x0632;', 'UTF-8', 'HTML-ENTITIES' ) );
@@ -168,9 +160,10 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testSetStatus()
 	{
-		$this->object->setStatus( 0 );
-		$this->assertEquals( 0, $this->object->getStatus() );
+		$return = $this->object->setStatus( 0 );
 
+		$this->assertInstanceOf( \Aimeos\MShop\Text\Item\Iface::class, $return );
+		$this->assertEquals( 0, $this->object->getStatus() );
 		$this->assertTrue( $this->object->isModified() );
 	}
 
@@ -193,13 +186,19 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	}
 
 
+	public function testGetResourceType()
+	{
+		$this->assertEquals( 'text', $this->object->getResourceType() );
+	}
+
+
 	public function testFromArray()
 	{
 		$item = new \Aimeos\MShop\Text\Item\Standard();
 
-		$list = array(
+		$list = $entries = array(
 			'text.id' => 1,
-			'text.typeid' => 2,
+			'text.type' => 'test',
 			'text.languageid' => 'de',
 			'text.label' => 'test item',
 			'text.domain' => 'product',
@@ -207,28 +206,30 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 			'text.status' => 0,
 		);
 
-		$unknown = $item->fromArray( $list );
+		$item = $item->fromArray( $entries, true );
 
-		$this->assertEquals( array(), $unknown );
-
+		$this->assertEquals( [], $entries );
 		$this->assertEquals( $list['text.id'], $item->getId() );
-		$this->assertEquals( $list['text.typeid'], $item->getTypeId() );
+		$this->assertEquals( $list['text.type'], $item->getType() );
 		$this->assertEquals( $list['text.languageid'], $item->getLanguageId() );
 		$this->assertEquals( $list['text.label'], $item->getLabel() );
 		$this->assertEquals( $list['text.domain'], $item->getDomain() );
 		$this->assertEquals( $list['text.content'], $item->getContent() );
 		$this->assertEquals( $list['text.status'], $item->getStatus() );
+		$this->assertNull( $item->getSiteId() );
 	}
 
 
 	public function testToArray()
 	{
-		$data = $this->object->toArray();
+		$data = $this->object->toArray( true );
+
+		$this->assertEquals( count( $this->values ) - 1, count( $data ) );
 
 		$this->assertEquals( $this->object->getId(), $data['text.id'] );
 		$this->assertEquals( $this->object->getSiteId(), $data['text.siteid'] );
 		$this->assertEquals( $this->object->getLanguageId(), $data['text.languageid'] );
-		$this->assertEquals( $this->object->getTypeId(), $data['text.typeid'] );
+		$this->assertEquals( $this->object->getType(), $data['text.type'] );
 		$this->assertEquals( $this->object->getLabel(), $data['text.label'] );
 		$this->assertEquals( $this->object->getDomain(), $data['text.domain'] );
 		$this->assertEquals( $this->object->getContent(), $data['text.content'] );
@@ -249,15 +250,30 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	{
 		$this->object->setLanguageId( 'en' );
 		$this->assertEquals( 'en', $this->object->getLanguageId() );
-
-		$this->setExpectedException( '\\Aimeos\\MShop\\Exception' );
-		$this->object->setLanguageId( 0 );
 	}
 
 
 	public function testSetLanguageIdInvalid()
 	{
-		$this->setExpectedException( '\\Aimeos\\MShop\\Exception' );
-		$this->object->setLanguageId( 0 );
+		$this->setExpectedException( \Aimeos\MShop\Exception::class );
+		$this->object->setLanguageId( '10' );
+	}
+
+
+	public function testIsAvailable()
+	{
+		$this->assertTrue( $this->object->isAvailable() );
+		$this->object->setAvailable( false );
+		$this->assertFalse( $this->object->isAvailable() );
+	}
+
+
+	public function testIsAvailableOnStatus()
+	{
+		$this->assertTrue( $this->object->isAvailable() );
+		$this->object->setStatus( 0 );
+		$this->assertFalse( $this->object->isAvailable() );
+		$this->object->setStatus( -1 );
+		$this->assertFalse( $this->object->isAvailable() );
 	}
 }

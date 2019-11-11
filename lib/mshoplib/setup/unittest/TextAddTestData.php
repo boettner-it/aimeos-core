@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2012
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2012
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 
@@ -22,42 +22,19 @@ class TextAddTestData extends \Aimeos\MW\Setup\Task\Base
 	 */
 	public function getPreDependencies()
 	{
-		return array( 'MShopSetLocale' );
-	}
-
-
-	/**
-	 * Returns the list of task names which depends on this task.
-	 *
-	 * @return string[] List of task names
-	 */
-	public function getPostDependencies()
-	{
-		return array( 'CatalogRebuildTestIndex' );
-	}
-
-
-	/**
-	 * Executes the task for MySQL databases.
-	 */
-	protected function mysql()
-	{
-		$this->process();
+		return ['MShopSetLocale'];
 	}
 
 
 	/**
 	 * Adds attribute test data.
 	 */
-	protected function process()
+	public function migrate()
 	{
-		$iface = '\\Aimeos\\MShop\\Context\\Item\\Iface';
-		if( !( $this->additional instanceof $iface ) ) {
-			throw new \Aimeos\MW\Setup\Exception( sprintf( 'Additionally provided object is not of type "%1$s"', $iface ) );
-		}
+		\Aimeos\MW\Common\Base::checkClass( \Aimeos\MShop\Context\Item\Iface::class, $this->additional );
 
 		$this->msg( 'Adding text test data', 0 );
-		$this->additional->setEditor( 'core:unittest' );
+		$this->additional->setEditor( 'core:lib/mshoplib' );
 
 		$ds = DIRECTORY_SEPARATOR;
 		$path = __DIR__ . $ds . 'data' . $ds . 'text.php';
@@ -80,13 +57,12 @@ class TextAddTestData extends \Aimeos\MW\Setup\Task\Base
 	 */
 	private function addTextData( array $testdata )
 	{
-		$textManager = \Aimeos\MShop\Text\Manager\Factory::createManager( $this->additional, 'Standard' );
+		$textManager = \Aimeos\MShop\Text\Manager\Factory::create( $this->additional, 'Standard' );
 		$textTypeManager = $textManager->getSubManager( 'type', 'Standard' );
 
-		$ttypeIds = array();
 		$ttype = $textTypeManager->createItem();
 
-		$this->conn->begin();
+		$textManager->begin();
 
 		foreach( $testdata['text/type'] as $key => $dataset )
 		{
@@ -97,19 +73,14 @@ class TextAddTestData extends \Aimeos\MW\Setup\Task\Base
 			$ttype->setStatus( $dataset['status'] );
 
 			$textTypeManager->saveItem( $ttype );
-			$ttypeIds[$key] = $ttype->getId();
 		}
 
 		$text = $textManager->createItem();
 		foreach( $testdata['text'] as $key => $dataset )
 		{
-			if( !isset( $ttypeIds[$dataset['typeid']] ) ) {
-				throw new \Aimeos\MW\Setup\Exception( sprintf( 'No text type ID found for "%1$s"', $dataset['typeid'] ) );
-			}
-
 			$text->setId( null );
 			$text->setLanguageId( $dataset['langid'] );
-			$text->setTypeId( $ttypeIds[$dataset['typeid']] );
+			$text->setType( $dataset['type'] );
 			$text->setDomain( $dataset['domain'] );
 			$text->setLabel( $dataset['label'] );
 			$text->setContent( $dataset['content'] );
@@ -118,6 +89,6 @@ class TextAddTestData extends \Aimeos\MW\Setup\Task\Base
 			$textManager->saveItem( $text, false );
 		}
 
-		$this->conn->commit();
+		$textManager->commit();
 	}
 }

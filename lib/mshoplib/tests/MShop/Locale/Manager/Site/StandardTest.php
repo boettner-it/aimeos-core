@@ -1,19 +1,16 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 
 namespace Aimeos\MShop\Locale\Manager\Site;
 
 
-/**
- * Test class for \Aimeos\MShop\Locale\Manager\Site\Standard.
- */
-class StandardTest extends \PHPUnit_Framework_TestCase
+class StandardTest extends \PHPUnit\Framework\TestCase
 {
 	private $context;
 	private $object;
@@ -21,7 +18,7 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	protected function setUp()
 	{
-		$this->context = \TestHelper::getContext();
+		$this->context = \TestHelperMShop::getContext();
 		$this->object = new \Aimeos\MShop\Locale\Manager\Site\Standard( $this->context );
 	}
 
@@ -32,9 +29,28 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	}
 
 
+	public function testClear()
+	{
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Manager\Iface::class, $this->object->clear( [-1] ) );
+	}
+
+
+	public function testDeleteItems()
+	{
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Manager\Iface::class, $this->object->deleteItems( [-1] ) );
+	}
+
+
 	public function testCreateItem()
 	{
-		$this->assertInstanceOf( '\\Aimeos\\MShop\\Locale\\Item\\Site\\Iface', $this->object->createItem() );
+		$this->assertInstanceOf( \Aimeos\MShop\Locale\Item\Site\Iface::class, $this->object->createItem() );
+	}
+
+
+	public function testSaveIdException()
+	{
+		$this->setExpectedException( \Aimeos\MShop\Locale\Exception::class );
+		$this->object->saveItem( $this->object->createItem() );
 	}
 
 
@@ -44,17 +60,17 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$item->setLabel( 'new name' );
 		$item->setStatus( 1 );
 		$item->setCode( 'xx' );
-		$this->object->insertItem( $item );
+		$resultSaved = $this->object->insertItem( $item );
 		$itemSaved = $this->object->getItem( $item->getId() );
 
 		$itemExp = clone $itemSaved;
 		$itemExp->setLabel( 'new new name' );
-		$this->object->saveItem( $itemExp );
+		$resultUpd = $this->object->saveItem( $itemExp );
 		$itemUpd = $this->object->getItem( $itemExp->getId() );
 
 		$this->object->deleteItem( $item->getId() );
 
-		$context = \TestHelper::getContext();
+		$context = \TestHelperMShop::getContext();
 
 		$this->assertTrue( $item->getId() !== null );
 		$this->assertEquals( $item->getId(), $itemSaved->getId() );
@@ -81,24 +97,35 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals( $itemExp->getTimeCreated(), $itemUpd->getTimeCreated() );
 		$this->assertRegExp( '/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/', $itemUpd->getTimeModified() );
 
-		$this->setExpectedException( '\\Aimeos\\MShop\\Exception' );
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Item\Iface::class, $resultSaved );
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Item\Iface::class, $resultUpd );
+
+		$this->setExpectedException( \Aimeos\MShop\Exception::class );
 		$this->object->getItem( $item->getId() );
+	}
+
+
+	public function testFindItem()
+	{
+		$item = $this->object->findItem( 'unittest' );
+
+		$this->assertEquals( 'unittest', $item->getCode() );
 	}
 
 
 	public function testGetItem()
 	{
-		$search = $this->object->createSearch();
-		$search->setConditions( $search->compare( '~=', 'locale.site.code', 'unittest' ) );
+		$search = $this->object->createSearch()->setSlice( 0, 1 );
+		$search->setConditions( $search->compare( '==', 'locale.site.code', 'unittest' ) );
 
 		$a = $this->object->searchItems( $search );
 		if( ( $expected = reset( $a ) ) === false ) {
-			throw new \Exception( 'Site item not found' );
+			throw new \RuntimeException( 'Site item not found' );
 		}
 
 		$actual = $this->object->getItem( $expected->getId() );
 
-		$this->assertInstanceOf( '\\Aimeos\\MShop\\Locale\\Item\\Site\\Iface', $actual );
+		$this->assertInstanceOf( \Aimeos\MShop\Locale\Item\Site\Iface::class, $actual );
 		$this->assertEquals( $expected, $actual );
 	}
 
@@ -109,7 +136,7 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 		$search = $this->object->createSearch();
 
-		$expr = array();
+		$expr = [];
 		$expr[] = $search->compare( '!=', 'locale.site.id', null );
 		$expr[] = $search->compare( '==', 'locale.site.siteid', $siteid );
 		$expr[] = $search->compare( '==', 'locale.site.code', 'unittest' );
@@ -122,7 +149,7 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 		$total = 0;
 		$search->setConditions( $search->combine( '&&', $expr ) );
-		$results = $this->object->searchItems( $search, array(), $total );
+		$results = $this->object->searchItems( $search, [], $total );
 
 		$this->assertEquals( 1, count( $results ) );
 		$this->assertEquals( 1, $total );
@@ -132,7 +159,7 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$search->setConditions( $search->compare( '==', 'locale.site.code', array( 'unittest' ) ) );
 		$search->setSlice( 0, 1 );
 
-		$results = $this->object->searchItems( $search, array(), $total );
+		$results = $this->object->searchItems( $search, [], $total );
 		$this->assertEquals( 1, count( $results ) );
 		$this->assertGreaterThanOrEqual( 1, $total );
 
@@ -142,17 +169,25 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	}
 
 
+	public function testGetResourceType()
+	{
+		$result = $this->object->getResourceType();
+
+		$this->assertContains( 'locale/site', $result );
+	}
+
+
 	public function testGetSearchAttributes()
 	{
 		foreach( $this->object->getSearchAttributes() as $attribute ) {
-			$this->assertInstanceOf( '\\Aimeos\\MW\\Criteria\\Attribute\\Iface', $attribute );
+			$this->assertInstanceOf( \Aimeos\MW\Criteria\Attribute\Iface::class, $attribute );
 		}
 	}
 
 
 	public function testGetSubManager()
 	{
-		$this->setExpectedException( '\\Aimeos\\MShop\\Exception' );
+		$this->setExpectedException( \Aimeos\MShop\Exception::class );
 		$this->object->getSubManager( 'unknown' );
 	}
 
@@ -165,7 +200,7 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$results = $this->object->searchItems( $search );
 
 		if( ( $expected = reset( $results ) ) === false ) {
-			throw new \Exception( 'No item found' );
+			throw new \RuntimeException( 'No item found' );
 		}
 
 		$list = $this->object->getPath( $expected->getId() );
@@ -182,11 +217,40 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$results = $this->object->searchItems( $search );
 
 		if( ( $expected = reset( $results ) ) === false ) {
-			throw new \Exception( 'No item found' );
+			throw new \RuntimeException( 'No item found' );
 		}
 
 		$item = $this->object->getTree( $expected->getId() );
 		$this->assertEquals( $expected, $item );
+	}
+
+
+	public function testGetTreeNoId()
+	{
+		$object = $this->getMockBuilder( \Aimeos\MShop\Locale\Manager\Site\Standard::class )
+			->setConstructorArgs( array( $this->context ) )
+			->setMethods( array( 'searchItems' ) )
+			->getMock();
+
+		$object->expects( $this->once() )->method( 'searchItems' )
+			->will( $this->returnValue( array( $object->createItem() ) ) );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Locale\Item\Site\Iface::class, $object->getTree() );
+	}
+
+
+	public function testGetTreeNoItem()
+	{
+		$object = $this->getMockBuilder( \Aimeos\MShop\Locale\Manager\Site\Standard::class )
+			->setConstructorArgs( array( $this->context ) )
+			->setMethods( array( 'searchItems' ) )
+			->getMock();
+
+		$object->expects( $this->once() )->method( 'searchItems' )
+			->will( $this->returnValue( [] ) );
+
+		$this->setExpectedException( \Aimeos\MShop\Locale\Exception::class );
+		$object->getTree();
 	}
 
 
@@ -198,7 +262,7 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$results = $this->object->searchItems( $search );
 
 		if( ( $expected = reset( $results ) ) === false ) {
-			throw new \Exception( 'No item found' );
+			throw new \RuntimeException( 'No item found' );
 		}
 
 		$item = $this->object->getTree( $expected->getId() );
@@ -225,7 +289,7 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testMoveItem()
 	{
-		$this->setExpectedException( '\\Aimeos\\MShop\\Locale\\Exception' );
+		$this->setExpectedException( \Aimeos\MShop\Locale\Exception::class );
 		$this->object->moveItem( null, null, null );
 	}
 }

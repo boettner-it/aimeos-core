@@ -1,35 +1,91 @@
 <?php
 
+/**
+ * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
+ * @copyright Metaways Infosystems GmbH, 2014
+ * @copyright Aimeos (aimeos.org), 2015-2018
+ */
+
+
 namespace Aimeos\MW\Cache;
 
 
-/**
- * Test class for \Aimeos\MW\Cache\Mysql.
- *
- * @copyright Metaways Infosystems GmbH, 2014
- * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
- */
-class MysqlTest extends \PHPUnit_Framework_TestCase
+class MysqlTest extends \PHPUnit\Framework\TestCase
 {
-	private $dbm;
+	private static $dbm;
 	private $config;
 	private $object;
 
 
-	/**
-	 * Sets up the fixture, for example, opens a network connection.
-	 * This method is called before a test is executed.
-	 *
-	 * @access protected
-	 */
+	public static function setUpBeforeClass()
+	{
+		self::$dbm = \TestHelperMw::getDBManager();
+
+		if( !( self::$dbm instanceof \Aimeos\MW\DB\Manager\DBAL ) ) {
+			return;
+		}
+
+		$schema = new \Doctrine\DBAL\Schema\Schema();
+
+		$cacheTable = $schema->createTable( 'mw_cache_test' );
+		$cacheTable->addColumn( 'id', 'string', array( 'length' => 255 ) );
+		$cacheTable->addColumn( 'siteid', 'integer', array( 'notnull' => false ) );
+		$cacheTable->addColumn( 'expire', 'datetime', array( 'notnull' => false ) );
+		$cacheTable->addColumn( 'value', 'text', array( 'length' => 0xffff ) );
+		$cacheTable->addUniqueIndex( array( 'id', 'siteid' ) );
+		$cacheTable->addIndex( array( 'expire' ) );
+
+		$tagTable = $schema->createTable( 'mw_cache_tag_test' );
+		$tagTable->addColumn( 'tid', 'string', array( 'length' => 255 ) );
+		$tagTable->addColumn( 'tsiteid', 'integer', array( 'notnull' => false ) );
+		$tagTable->addColumn( 'tname', 'string', array( 'length' => 255 ) );
+		$tagTable->addUniqueIndex( array( 'tid', 'tsiteid', 'tname' ) );
+		$tagTable->addForeignKeyConstraint( 'mw_cache_test', array( 'tid', 'tsiteid' ), array( 'id', 'siteid' ), array( 'onDelete' => 'CASCADE' ) );
+
+
+		$conn = self::$dbm->acquire();
+
+		foreach( $schema->toSQL( $conn->getRawObject()->getDatabasePlatform() ) as $sql ) {
+			$conn->create( $sql )->execute()->finish();
+		}
+
+		self::$dbm->release( $conn );
+	}
+
+
+	public static function tearDownAfterClass()
+	{
+		if( self::$dbm instanceof \Aimeos\MW\DB\Manager\DBAL )
+		{
+			$conn = self::$dbm->acquire();
+
+			$conn->create( 'DROP TABLE "mw_cache_tag_test"' )->execute()->finish();
+			$conn->create( 'DROP TABLE "mw_cache_test"' )->execute()->finish();
+
+			self::$dbm->release( $conn );
+		}
+	}
+
+
 	protected function setUp()
 	{
-		$adapter = \TestHelper::getConfig()->get( 'resource/db/adapter', false );
-
-		if( $adapter === false || $adapter !== 'mysql' ) {
-			$this->markTestSkipped( 'No MySQL database configured' );
+		if( !( self::$dbm instanceof \Aimeos\MW\DB\Manager\DBAL ) ) {
+			$this->markTestSkipped( 'No DBAL database manager configured' );
 		}
+
+
+		$conn = self::$dbm->acquire();
+
+		$sql = 'INSERT INTO "mw_cache_test" ("id", "siteid", "expire", "value") VALUES (\'t:1\', 1, NULL, \'test 1\')';
+		$conn->create( $sql )->execute()->finish();
+
+		$sql = 'INSERT INTO "mw_cache_test" ("id", "siteid", "expire", "value") VALUES (\'t:2\', 1, \'2000-01-01 00:00:00\', \'test 2\')';
+		$conn->create( $sql )->execute()->finish();
+
+		$sql = 'INSERT INTO "mw_cache_tag_test" ("tid", "tsiteid", "tname") VALUES (\'t:1\', 1, \'tag:1\')';
+		$conn->create( $sql )->execute()->finish();
+
+		self::$dbm->release( $conn );
 
 
 		$this->config = array( 'siteid' => 1 );
@@ -60,108 +116,79 @@ class MysqlTest extends \PHPUnit_Framework_TestCase
 				WHERE siteid = ? AND tsiteid = ? AND :cond
 			',
 			'set' => '
-				REPLACE INTO "mw_cache_test" ( "id", "siteid", "expire", "value" ) VALUES ( ?, ?, ?, ? )
+				INSERT INTO "mw_cache_test" ( "id", "siteid", "expire", "value" ) VALUES ( ?, ?, ?, ? )
 			',
 			'settag' => '
-				REPLACE INTO "mw_cache_tag_test" ( "tid", "tsiteid", "tname" ) VALUES  :tuples
+				INSERT INTO "mw_cache_tag_test" ( "tid", "tsiteid", "tname" ) VALUES ( ?, ?, ? )
 			',
 		);
 
-
-		$this->dbm = \TestHelper::getDBManager();
-		$conn = $this->dbm->acquire();
-
-
-		$sql = 'DROP TABLE IF EXISTS "mw_cache_tag_test"';
-		$conn->create( $sql )->execute()->finish();
-
-		$sql = 'DROP TABLE IF EXISTS "mw_cache_test"';
-		$conn->create( $sql )->execute()->finish();
-
-		$sql = '
-			CREATE TABLE IF NOT EXISTS "mw_cache_test" (
-				"id" VARCHAR(255) NOT NULL,
-				"siteid" INTEGER NULL,
-				"expire" DATETIME NULL,
-				"value" MEDIUMTEXT NOT NULL,
-				KEY ("expire"),
-				CONSTRAINT PRIMARY KEY ("id", "siteid")
-			);
-		';
-		$conn->create( $sql )->execute()->finish();
-
-		$sql = '
-			CREATE TABLE IF NOT EXISTS "mw_cache_tag_test" (
-				"tid" VARCHAR(255) NOT NULL,
-				"tsiteid" INTEGER NULL,
-				"tname" VARCHAR(255) NOT NULL,
-				CONSTRAINT UNIQUE ("tid", "tsiteid", "tname"),
-				CONSTRAINT FOREIGN KEY ("tid") REFERENCES "mw_cache_test" ("id") ON DELETE CASCADE
-			);
-		';
-		$conn->create( $sql )->execute()->finish();
-
-
-		$sql = 'INSERT INTO "mw_cache_test" ("id", "siteid", "expire", "value") VALUES (\'t:1\', 1, NULL, \'test 1\')';
-		$conn->create( $sql )->execute()->finish();
-
-		$sql = 'INSERT INTO "mw_cache_tag_test" ("tid", "tsiteid", "tname") VALUES (\'t:1\', 1, \'tag:1\')';
-		$conn->create( $sql )->execute()->finish();
-
-
-		$this->dbm->release( $conn );
-
-
-		$this->object = new \Aimeos\MW\Cache\Mysql( $this->config, $this->dbm );
+		$this->object = new \Aimeos\MW\Cache\DB( $this->config, self::$dbm );
 	}
 
 
-	/**
-	 * Tears down the fixture, for example, closes a network connection.
-	 * This method is called after a test is executed.
-	 *
-	 * @access protected
-	 */
-	protected function tearDown()
+	public function tearDown()
 	{
-		$this->dbm = \TestHelper::getDBManager();
-		$conn = $this->dbm->acquire();
+		if( self::$dbm instanceof \Aimeos\MW\DB\Manager\DBAL )
+		{
+			$conn = self::$dbm->acquire();
 
-		$conn->create( 'DROP TABLE "mw_cache_tag_test"' )->execute()->finish();
-		$conn->create( 'DROP TABLE "mw_cache_test"' )->execute()->finish();
+			$conn->create( 'DELETE FROM "mw_cache_tag_test"' )->execute()->finish();
+			$conn->create( 'DELETE FROM "mw_cache_test"' )->execute()->finish();
 
-		$this->dbm->release( $conn );
+			self::$dbm->release( $conn );
+		}
 	}
 
 
-	public function testSetList()
+	public function testSetMultiple()
 	{
-		$pairs = array( 't:1' => 'test 2' );
-		$tags = array( 't:1' => array( 'tag:1', 'tag:2', 'tag:3' ) );
-		$expires = array( 't:1' => '2100-00-00 00:00:00' );
+		$pairs = ['t:3' => 'test 3', 't:2' => 'test 4'];
 
-		$this->object->setList( $pairs, $tags, $expires );
+		$this->assertTrue( $this->object->setMultiple( $pairs, '2100-01-01 00:00:00', ['tag:2', 'tag:3'] ) );
 
 
-		$conn = $this->dbm->acquire();
-		$result = $conn->create( 'SELECT "tname" FROM "mw_cache_tag_test" WHERE "tid" = \'t:1\' ORDER BY "tname"' )->execute();
-		$this->dbm->release( $conn );
+		$conn = self::$dbm->acquire();
+		$result = $conn->create( 'SELECT "tname" FROM "mw_cache_tag_test" WHERE "tid" = \'t:3\' ORDER BY "tname"' )->execute();
+		self::$dbm->release( $conn );
 
-		$this->assertEquals( array( 'tname' => 'tag:1' ), $result->fetch() );
 		$this->assertEquals( array( 'tname' => 'tag:2' ), $result->fetch() );
 		$this->assertEquals( array( 'tname' => 'tag:3' ), $result->fetch() );
 		$this->assertFalse( $result->fetch() );
 
 
-		$conn = $this->dbm->acquire();
-		$result = $conn->create( 'SELECT * FROM "mw_cache_test" WHERE "id" = \'t:1\'' )->execute();
-		$this->dbm->release( $conn );
+		$conn = self::$dbm->acquire();
+		$result = $conn->create( 'SELECT "tname" FROM "mw_cache_tag_test" WHERE "tid" = \'t:2\' ORDER BY "tname"' )->execute();
+		self::$dbm->release( $conn );
+
+		$this->assertEquals( array( 'tname' => 'tag:2' ), $result->fetch() );
+		$this->assertEquals( array( 'tname' => 'tag:3' ), $result->fetch() );
+		$this->assertFalse( $result->fetch() );
+
+
+		$conn = self::$dbm->acquire();
+		$result = $conn->create( 'SELECT * FROM "mw_cache_test" WHERE "id" = \'t:3\'' )->execute();
+		self::$dbm->release( $conn );
 
 		$expected = array(
-			'expire' => '2100-00-00 00:00:00',
-			'id' => 't:1',
+			'expire' => '2100-01-01 00:00:00',
+			'id' => 't:3',
 			'siteid' => 1,
-			'value' => 'test 2',
+			'value' => 'test 3',
+		);
+		$this->assertEquals( $expected, $result->fetch() );
+		$this->assertFalse( $result->fetch() );
+
+
+		$conn = self::$dbm->acquire();
+		$result = $conn->create( 'SELECT * FROM "mw_cache_test" WHERE "id" = \'t:2\'' )->execute();
+		self::$dbm->release( $conn );
+
+		$expected = array(
+			'expire' => '2100-01-01 00:00:00',
+			'id' => 't:2',
+			'siteid' => 1,
+			'value' => 'test 4',
 		);
 		$this->assertEquals( $expected, $result->fetch() );
 		$this->assertFalse( $result->fetch() );

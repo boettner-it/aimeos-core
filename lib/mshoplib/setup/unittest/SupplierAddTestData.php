@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2012
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2012
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 
@@ -22,42 +22,19 @@ class SupplierAddTestData extends \Aimeos\MW\Setup\Task\Base
 	 */
 	public function getPreDependencies()
 	{
-		return array( 'MShopSetLocale', 'ProductListAddTestData' );
-	}
-
-
-	/**
-	 * Returns the list of task names which depends on this task.
-	 *
-	 * @return array List of task names
-	 */
-	public function getPostDependencies()
-	{
-		return array();
-	}
-
-
-	/**
-	 * Executes the task for MySQL databases.
-	 */
-	protected function mysql()
-	{
-		$this->process();
+		return ['MShopSetLocale'];
 	}
 
 
 	/**
 	 * Adds supplier test data.
 	 */
-	protected function process()
+	public function migrate()
 	{
-		$iface = '\\Aimeos\\MShop\\Context\\Item\\Iface';
-		if( !( $this->additional instanceof $iface ) ) {
-			throw new \Aimeos\MW\Setup\Exception( sprintf( 'Additionally provided object is not of type "%1$s"', $iface ) );
-		}
+		\Aimeos\MW\Common\Base::checkClass( \Aimeos\MShop\Context\Item\Iface::class, $this->additional );
 
 		$this->msg( 'Adding supplier test data', 0 );
-		$this->additional->setEditor( 'core:unittest' );
+		$this->additional->setEditor( 'core:lib/mshoplib' );
 
 		$this->addSupplierData();
 
@@ -72,7 +49,7 @@ class SupplierAddTestData extends \Aimeos\MW\Setup\Task\Base
 	 */
 	private function addSupplierData()
 	{
-		$supplierManager = \Aimeos\MShop\Supplier\Manager\Factory::createManager( $this->additional, 'Standard' );
+		$supplierManager = \Aimeos\MShop\Supplier\Manager\Factory::create( $this->additional, 'Standard' );
 		$supplierAddressManager = $supplierManager->getSubManager( 'address', 'Standard' );
 
 		$ds = DIRECTORY_SEPARATOR;
@@ -82,10 +59,10 @@ class SupplierAddTestData extends \Aimeos\MW\Setup\Task\Base
 			throw new \Aimeos\MShop\Exception( sprintf( 'No file "%1$s" found for supplier domain', $path ) );
 		}
 
-		$supIds = array();
+		$supIds = [];
 		$supplier = $supplierManager->createItem();
 
-		$this->conn->begin();
+		$supplierManager->begin();
 
 		foreach( $testdata['supplier'] as $key => $dataset )
 		{
@@ -101,7 +78,7 @@ class SupplierAddTestData extends \Aimeos\MW\Setup\Task\Base
 		$supAdr = $supplierAddressManager->createItem();
 		foreach( $testdata['supplier/address'] as $dataset )
 		{
-			if( !isset( $supIds[$dataset['refid']] ) ) {
+			if( !isset( $supIds[$dataset['parentid']] ) ) {
 				throw new \Aimeos\MW\Setup\Exception( sprintf( 'No supplier ID found for "%1$s"', $dataset['refid'] ) );
 			}
 
@@ -125,11 +102,13 @@ class SupplierAddTestData extends \Aimeos\MW\Setup\Task\Base
 			$supAdr->setTelefax( $dataset['telefax'] );
 			$supAdr->setWebsite( $dataset['website'] );
 			$supAdr->setLanguageId( $dataset['langid'] );
-			$supAdr->setRefId( $supIds[$dataset['refid']] );
+			$supAdr->setLatitude( $dataset['latitude'] );
+			$supAdr->setLongitude( $dataset['longitude'] );
+			$supAdr->setParentId( $supIds[$dataset['parentid']] );
 
 			$supplierAddressManager->saveItem( $supAdr, false );
 		}
 
-		$this->conn->commit();
+		$supplierManager->commit();
 	}
 }

@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Setup
  */
@@ -21,10 +21,26 @@ namespace Aimeos\MW\Setup\Manager;
 interface Iface
 {
 	/**
-	 * Executes all tasks for the given database type.
+	 * Updates the schema and migrates the data
 	 *
-	 * @param string $dbtype Name of the database type (mysql, etc.)
-	 * @return void
+	 * @param string|null $task Name of the task
+	 * @return null
 	 */
-	public function run( $dbtype );
+	public function migrate( $task = null );
+
+	/**
+	 * Undo all schema changes and migrate data back
+	 *
+	 * @param string|null $task Name of the task
+	 * @return null
+	 */
+	public function rollback( $task = null );
+
+	/**
+	 * Cleans up old data required for roll back
+	 *
+	 * @param string|null $task Name of the task
+	 * @return null
+	 */
+	public function clean( $task = null );
 }

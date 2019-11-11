@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2013
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2013
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 
@@ -13,7 +13,7 @@ namespace Aimeos\MShop\Common\Factory;
 /**
  * Test class for \Aimeos\MShop\Common\Factory\Base.
  */
-class BaseTest extends \PHPUnit_Framework_TestCase
+class BaseTest extends \PHPUnit\Framework\TestCase
 {
 	private $context;
 
@@ -26,27 +26,27 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 	 */
 	protected function setUp()
 	{
-		$this->context = \TestHelper::getContext();
+		$this->context = \TestHelperMShop::getContext();
 		$config = $this->context->getConfig();
 
-		$config->set( 'mshop/common/manager/decorators/default', array() );
-		$config->set( 'mshop/attribute/manager/decorators/global', array() );
-		$config->set( 'mshop/attribute/manager/decorators/local', array() );
+		$config->set( 'mshop/common/manager/decorators/default', [] );
+		$config->set( 'mshop/attribute/manager/decorators/global', [] );
+		$config->set( 'mshop/attribute/manager/decorators/local', [] );
 	}
 
 
 	protected function tearDown()
 	{
-		\Aimeos\MShop\Attribute\Manager\Factory::injectManager( '\\Aimeos\\MShop\\Attribute\\Manager\\StandardMock', null );
+		\Aimeos\MShop\Attribute\Manager\Factory::injectManager( '\Aimeos\MShop\Attribute\Manager\StandardMock', null );
 	}
 
 
 	public function testInjectManager()
 	{
-		$manager = \Aimeos\MShop\Attribute\Manager\Factory::createManager( $this->context, 'Standard' );
-		\Aimeos\MShop\Attribute\Manager\Factory::injectManager( '\\Aimeos\\MShop\\Attribute\\Manager\\StandardMock', $manager );
+		$manager = \Aimeos\MShop\Attribute\Manager\Factory::create( $this->context, 'Standard' );
+		\Aimeos\MShop\Attribute\Manager\Factory::injectManager( '\Aimeos\MShop\Attribute\Manager\StandardMock', $manager );
 
-		$injectedManager = \Aimeos\MShop\Attribute\Manager\Factory::createManager( $this->context, 'StandardMock' );
+		$injectedManager = \Aimeos\MShop\Attribute\Manager\Factory::create( $this->context, 'StandardMock' );
 
 		$this->assertSame( $manager, $injectedManager );
 	}
@@ -54,12 +54,12 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 
 	public function testInjectManagerReset()
 	{
-		$manager = \Aimeos\MShop\Attribute\Manager\Factory::createManager( $this->context, 'Standard' );
-		\Aimeos\MShop\Attribute\Manager\Factory::injectManager( '\\Aimeos\\MShop\\Attribute\\Manager\\StandardMock', $manager );
-		\Aimeos\MShop\Attribute\Manager\Factory::injectManager( '\\Aimeos\\MShop\\Attribute\\Manager\\StandardMock', null );
+		$manager = \Aimeos\MShop\Attribute\Manager\Factory::create( $this->context, 'Standard' );
+		\Aimeos\MShop\Attribute\Manager\Factory::injectManager( '\Aimeos\MShop\Attribute\Manager\StandardMock', $manager );
+		\Aimeos\MShop\Attribute\Manager\Factory::injectManager( '\Aimeos\MShop\Attribute\Manager\StandardMock', null );
 
-		$this->setExpectedException( '\\Aimeos\\MShop\\Exception' );
-		\Aimeos\MShop\Attribute\Manager\Factory::createManager( $this->context, 'StandardMock' );
+		$this->setExpectedException( \Aimeos\MShop\Exception::class );
+		\Aimeos\MShop\Attribute\Manager\Factory::create( $this->context, 'StandardMock' );
 	}
 
 }

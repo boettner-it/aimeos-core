@@ -1,126 +1,144 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 
 namespace Aimeos\MShop\Media\Manager;
 
 
-/**
- * Test class for \Aimeos\MShop\Media\Manager\Standard
- */
-class StandardTest extends \PHPUnit_Framework_TestCase
+class StandardTest extends \PHPUnit\Framework\TestCase
 {
 	private $object = null;
 	private $editor = '';
 
 
-	/**
-	 * Sets up the fixture. This method is called before a test is executed.
-	 */
 	protected function setUp()
 	{
-		$this->editor = \TestHelper::getContext()->getEditor();
-		$this->object = \Aimeos\MShop\Media\Manager\Factory::createManager( \TestHelper::getContext() );
+		$this->editor = \TestHelperMShop::getContext()->getEditor();
+		$this->object = \Aimeos\MShop\Media\Manager\Factory::create( \TestHelperMShop::getContext() );
 	}
 
-	/**
-	 * Tears down the fixture. This method is called after a test is executed.
-	 */
 	protected function tearDown()
 	{
 		unset( $this->object );
 	}
 
 
-	public function testCleanup()
+	public function testClear()
 	{
-		$this->object->cleanup( array( -1 ) );
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Manager\Iface::class, $this->object->clear( [-1] ) );
 	}
+
+
+	public function testDeleteItems()
+	{
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Manager\Iface::class, $this->object->deleteItems( [-1] ) );
+	}
+
+
+	public function testGetResourceType()
+	{
+		$result = $this->object->getResourceType();
+
+		$this->assertContains( 'media', $result );
+		$this->assertContains( 'media/lists', $result );
+	}
+
 
 	public function testGetSearchAttributes()
 	{
 		foreach( $this->object->getSearchAttributes() as $attribute ) {
-			$this->assertInstanceOf( '\\Aimeos\\MW\\Criteria\\Attribute\\Iface', $attribute );
+			$this->assertInstanceOf( \Aimeos\MW\Criteria\Attribute\Iface::class, $attribute );
 		}
 	}
+
 
 	public function testCreateItem()
 	{
 		$item = $this->object->createItem();
-		$this->assertInstanceOf( '\\Aimeos\\MShop\\Media\\Item\\Iface', $item );
+		$this->assertInstanceOf( \Aimeos\MShop\Media\Item\Iface::class, $item );
 	}
+
+
+	public function testCreateItemType()
+	{
+		$item = $this->object->createItem( ['media.type' => 'default'] );
+		$this->assertEquals( 'default', $item->getType() );
+	}
+
 
 	public function testCreateSearch()
 	{
-		$this->assertInstanceOf( '\\Aimeos\\MW\\Criteria\\Iface', $this->object->createSearch() );
+		$this->assertInstanceOf( \Aimeos\MW\Criteria\Iface::class, $this->object->createSearch() );
 	}
+
 
 	public function testSearchItem()
 	{
-		//search without base criteria
+		$search = $this->object->createSearch();
+		$search->setConditions( $search->compare( '==', 'media.url', 'prod_266x221/198_prod_266x221.jpg' ) );
+		$item = current( $this->object->searchItems( $search, ['attribute'] ) );
+
+		if( $item && ( $listItem = current( $item->getListItems( 'attribute', 'option' ) ) ) === false ) {
+			throw new \RuntimeException( 'No list item found' );
+		}
+
 		$search = $this->object->createSearch();
 
-		$expr = array();
+		$expr = [];
 		$expr[] = $search->compare( '!=', 'media.id', null );
 		$expr[] = $search->compare( '!=', 'media.siteid', null );
 		$expr[] = $search->compare( '==', 'media.languageid', 'de' );
-		$expr[] = $search->compare( '>', 'media.typeid', 0 );
+		$expr[] = $search->compare( '==', 'media.type', 'prod_266x221' );
 		$expr[] = $search->compare( '==', 'media.domain', 'product' );
-		$expr[] = $search->compare( '==', 'media.label', 'cn_colombie_266x221' );
+		$expr[] = $search->compare( '==', 'media.label', 'prod_266x221/198_prod_266x221.jpg' );
 		$expr[] = $search->compare( '==', 'media.url', 'prod_266x221/198_prod_266x221.jpg' );
-		$expr[] = $search->compare( '==', 'media.preview', '' );
-		$expr[] = $search->compare( '==', 'media.mimetype', '' );
+		$expr[] = $search->compare( '=~', 'media.preview', '{' );
+		$expr[] = $search->compare( '==', 'media.mimetype', 'image/jpeg' );
 		$expr[] = $search->compare( '==', 'media.status', 1 );
 		$expr[] = $search->compare( '>=', 'media.mtime', '1970-01-01 00:00:00' );
 		$expr[] = $search->compare( '>=', 'media.ctime', '1970-01-01 00:00:00' );
 		$expr[] = $search->compare( '==', 'media.editor', $this->editor );
 
-		$expr[] = $search->compare( '!=', 'media.type.id', null );
-		$expr[] = $search->compare( '!=', 'media.type.siteid', null );
-		$expr[] = $search->compare( '==', 'media.type.domain', 'product' );
-		$expr[] = $search->compare( '==', 'media.type.code', 'prod_266x221' );
-		$expr[] = $search->compare( '>', 'media.type.label', '' );
-		$expr[] = $search->compare( '==', 'media.type.status', 1 );
-		$expr[] = $search->compare( '>=', 'media.type.mtime', '1970-01-01 00:00:00' );
-		$expr[] = $search->compare( '>=', 'media.type.ctime', '1970-01-01 00:00:00' );
-		$expr[] = $search->compare( '==', 'media.type.editor', $this->editor );
+		$param = ['attribute', 'option', '0'];
+		$expr[] = $search->compare( '==', $search->createFunction( 'media:has', $param ), null );
 
-		$expr[] = $search->compare( '!=', 'media.lists.id', null );
-		$expr[] = $search->compare( '!=', 'media.lists.siteid', null );
-		$expr[] = $search->compare( '>', 'media.lists.parentid', 0 );
-		$expr[] = $search->compare( '==', 'media.lists.domain', 'text' );
-		$expr[] = $search->compare( '>', 'media.lists.typeid', 0 );
-		$expr[] = $search->compare( '>', 'media.lists.refid', 0 );
-		$expr[] = $search->compare( '==', 'media.lists.datestart', null );
-		$expr[] = $search->compare( '==', 'media.lists.dateend', null );
-		$expr[] = $search->compare( '!=', 'media.lists.config', null );
-		$expr[] = $search->compare( '==', 'media.lists.position', 0 );
-		$expr[] = $search->compare( '==', 'media.lists.status', 1 );
-		$expr[] = $search->compare( '>=', 'media.lists.mtime', '1970-01-01 00:00:00' );
-		$expr[] = $search->compare( '>=', 'media.lists.ctime', '1970-01-01 00:00:00' );
-		$expr[] = $search->compare( '==', 'media.lists.editor', $this->editor );
+		$param = ['attribute', 'option', $listItem->getRefId()];
+		$expr[] = $search->compare( '!=', $search->createFunction( 'media:has', $param ), null );
 
-		$expr[] = $search->compare( '!=', 'media.lists.type.id', null );
-		$expr[] = $search->compare( '!=', 'media.lists.type.siteid', null );
-		$expr[] = $search->compare( '==', 'media.lists.type.code', 'option' );
-		$expr[] = $search->compare( '==', 'media.lists.type.domain', 'attribute' );
-		$expr[] = $search->compare( '>', 'media.lists.type.label', '' );
-		$expr[] = $search->compare( '==', 'media.lists.type.status', 1 );
-		$expr[] = $search->compare( '>=', 'media.lists.type.mtime', '1970-01-01 00:00:00' );
-		$expr[] = $search->compare( '>=', 'media.lists.type.ctime', '1970-01-01 00:00:00' );
-		$expr[] = $search->compare( '==', 'media.lists.type.editor', $this->editor );
+		$param = ['attribute', 'option'];
+		$expr[] = $search->compare( '!=', $search->createFunction( 'media:has', $param ), null );
+
+		$param = ['attribute'];
+		$expr[] = $search->compare( '!=', $search->createFunction( 'media:has', $param ), null );
+
+		$param = ['copyright', null, 'me'];
+		$expr[] = $search->compare( '==', $search->createFunction( 'media:prop', $param ), null );
+
+		$param = ['copyright', 'de', 'ich, 2019'];
+		$expr[] = $search->compare( '!=', $search->createFunction( 'media:prop', $param ), null );
+
+		$param = ['copyright', 'de'];
+		$expr[] = $search->compare( '!=', $search->createFunction( 'media:prop', $param ), null );
+
+		$param = ['copyright'];
+		$expr[] = $search->compare( '!=', $search->createFunction( 'media:prop', $param ), null );
 
 		$total = 0;
 		$search->setConditions( $search->combine( '&&', $expr ) );
-		$results = $this->object->searchItems( $search, array(), $total );
+		$results = $this->object->searchItems( $search, [], $total );
+
 		$this->assertEquals( 1, count( $results ) );
 		$this->assertEquals( 1, $total );
+	}
 
+
+	public function testSearchItemBase()
+	{
 		//search with base criteria
 		$search = $this->object->createSearch( true );
 		$conditions = array(
@@ -129,9 +147,12 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		);
 		$search->setConditions( $search->combine( '&&', $conditions ) );
 		$search->setSlice( 0, 4 );
-		$results = $this->object->searchItems( $search, array(), $total );
+
+		$total = 0;
+		$results = $this->object->searchItems( $search, [], $total );
+
 		$this->assertEquals( 4, count( $results ) );
-		$this->assertEquals( 11, $total );
+		$this->assertEquals( 17, $total );
 
 		foreach( $results as $itemId => $item ) {
 			$this->assertEquals( $itemId, $item->getId() );
@@ -140,20 +161,22 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testGetItem()
 	{
-		$search = $this->object->createSearch();
+		$search = $this->object->createSearch()->setSlice( 0, 1 );
 		$conditions = array(
-			$search->compare( '==', 'media.label', 'cn_colombie_123x103' ),
+			$search->compare( '==', 'media.label', 'path/to/folder/example1.jpg' ),
 			$search->compare( '==', 'media.editor', $this->editor )
 		);
 		$search->setConditions( $search->combine( '&&', $conditions ) );
-		$items = $this->object->searchItems( $search );
+		$items = $this->object->searchItems( $search, ['media/property'] );
 
 		if( ( $item = reset( $items ) ) === false ) {
-			throw new \Exception( 'No media item with label "cn_colombie_123x103" found' );
+			throw new \RuntimeException( 'No media item with label "path/to/folder/example1.jpg" found' );
 		}
 
-		$this->assertEquals( $item, $this->object->getItem( $item->getId() ) );
+		$this->assertEquals( $item, $this->object->getItem( $item->getId(), ['media/property'] ) );
+		$this->assertEquals( 2, count( $item->getPropertyItems() ) );
 	}
+
 
 	public function testSaveUpdateDeleteItem()
 	{
@@ -166,7 +189,7 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$items = $this->object->searchItems( $search );
 
 		if( ( $item = reset( $items ) ) === false ) {
-			throw new \Exception( 'No media item with label "cn_colombie_123x103" found' );
+			throw new \RuntimeException( 'No media item with label "cn_colombie_123x103" found' );
 		}
 
 		$item->setId( null );
@@ -177,22 +200,21 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$item->setUrl( 'test.jpg' );
 		$item->setPreview( 'xxxtest-preview.jpg' );
 
-		$this->object->saveItem( $item );
+		$resultSaved = $this->object->saveItem( $item );
 		$itemSaved = $this->object->getItem( $item->getId() );
 
 		$itemExp = clone $itemSaved;
 		$itemExp->setPreview( 'test-preview.jpg' );
-		$this->object->saveItem( $itemExp );
+		$resultUpd = $this->object->saveItem( $itemExp );
 		$itemUpd = $this->object->getItem( $itemExp->getId() );
 
 		$this->object->deleteItem( $item->getId() );
 
 
 		$this->assertTrue( $item->getId() !== null );
-		$this->assertTrue( $itemSaved->getType() !== null );
 		$this->assertEquals( $item->getId(), $itemSaved->getId() );
 		$this->assertEquals( $item->getSiteId(), $itemSaved->getSiteId() );
-		$this->assertEquals( $item->getTypeId(), $itemSaved->getTypeId() );
+		$this->assertEquals( $item->getType(), $itemSaved->getType() );
 		$this->assertEquals( $item->getLanguageId(), $itemSaved->getLanguageId() );
 		$this->assertEquals( $item->getDomain(), $itemSaved->getDomain() );
 		$this->assertEquals( $item->getLabel(), $itemSaved->getLabel() );
@@ -205,10 +227,9 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$this->assertRegExp( '/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/', $itemSaved->getTimeCreated() );
 		$this->assertRegExp( '/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/', $itemSaved->getTimeModified() );
 
-		$this->assertTrue( $itemUpd->getType() !== null );
 		$this->assertEquals( $itemExp->getId(), $itemUpd->getId() );
 		$this->assertEquals( $itemExp->getSiteId(), $itemUpd->getSiteId() );
-		$this->assertEquals( $itemExp->getTypeId(), $itemUpd->getTypeId() );
+		$this->assertEquals( $itemExp->getType(), $itemUpd->getType() );
 		$this->assertEquals( $itemExp->getLanguageId(), $itemUpd->getLanguageId() );
 		$this->assertEquals( $itemExp->getDomain(), $itemUpd->getDomain() );
 		$this->assertEquals( $itemExp->getLabel(), $itemUpd->getLabel() );
@@ -221,27 +242,51 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals( $itemExp->getTimeCreated(), $itemUpd->getTimeCreated() );
 		$this->assertRegExp( '/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/', $itemUpd->getTimeModified() );
 
-		$this->setExpectedException( '\\Aimeos\\MShop\\Exception' );
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Item\Iface::class, $resultSaved );
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Item\Iface::class, $resultUpd );
+
+		$this->setExpectedException( \Aimeos\MShop\Exception::class );
 		$this->object->getItem( $item->getId() );
+	}
+
+
+	public function testGetSavePropertyItems()
+	{
+		$search = $this->object->createSearch();
+		$search->setConditions( $search->compare( '==', 'media.label', 'path/to/folder/example1.jpg' ) );
+		$items = $this->object->searchItems( $search, ['media/property'] );
+		$item = reset( $items );
+
+		$item->setId( null )->setLabel( 'path/to/folder/example1-1.jpg' );
+		$this->object->saveItem( $item );
+
+		$search->setConditions( $search->compare( '==', 'media.label', 'path/to/folder/example1-1.jpg' ) );
+		$items = $this->object->searchItems( $search, ['media/property'] );
+		$item2 = reset( $items );
+
+		$this->object->deleteItem( $item->getId() );
+
+		$this->assertEquals( 2, count( $item->getPropertyItems() ) );
+		$this->assertEquals( 2, count( $item2->getPropertyItems() ) );
 	}
 
 
 	public function testGetSubManager()
 	{
-		$this->assertInstanceOf( '\\Aimeos\\MShop\\Common\\Manager\\Iface', $this->object->getSubManager( 'type' ) );
-		$this->assertInstanceOf( '\\Aimeos\\MShop\\Common\\Manager\\Iface', $this->object->getSubManager( 'type', 'Standard' ) );
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Manager\Iface::class, $this->object->getSubManager( 'type' ) );
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Manager\Iface::class, $this->object->getSubManager( 'type', 'Standard' ) );
 
-		$this->assertInstanceOf( '\\Aimeos\\MShop\\Common\\Manager\\Iface', $this->object->getSubManager( 'lists' ) );
-		$this->assertInstanceOf( '\\Aimeos\\MShop\\Common\\Manager\\Iface', $this->object->getSubManager( 'lists', 'Standard' ) );
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Manager\Iface::class, $this->object->getSubManager( 'lists' ) );
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Manager\Iface::class, $this->object->getSubManager( 'lists', 'Standard' ) );
 
-		$this->setExpectedException( '\\Aimeos\\MShop\\Exception' );
+		$this->setExpectedException( \Aimeos\MShop\Exception::class );
 		$this->object->getSubManager( 'unknown' );
 	}
 
 
 	public function testGetSubManagerInvalidName()
 	{
-		$this->setExpectedException( '\\Aimeos\\MShop\\Exception' );
+		$this->setExpectedException( \Aimeos\MShop\Exception::class );
 		$this->object->getSubManager( 'lists', 'unknown' );
 	}
 }

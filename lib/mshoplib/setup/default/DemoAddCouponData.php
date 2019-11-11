@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2014
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2014
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 
@@ -33,29 +33,28 @@ class DemoAddCouponData extends \Aimeos\MW\Setup\Task\MShopAddDataAbstract
 	 */
 	public function getPostDependencies()
 	{
-		return array();
-	}
-
-
-	/**
-	 * Executes the task for MySQL databases.
-	 */
-	protected function mysql()
-	{
-		$this->process();
+		return [];
 	}
 
 
 	/**
 	 * Insert service data.
 	 */
-	protected function process()
+	public function migrate()
 	{
 		$this->msg( 'Processing coupon demo data', 0 );
 
 		$context = $this->getContext();
-		$manager = \Aimeos\MShop\Factory::createManager( $context, 'coupon' );
+		$value = $context->getConfig()->get( 'setup/default/demo', '' );
 
+		if( $value === '' )
+		{
+			$this->status( 'OK' );
+			return;
+		}
+
+
+		$manager = \Aimeos\MShop::create( $context, 'coupon' );
 		$search = $manager->createSearch();
 		$search->setConditions( $search->compare( '=~', 'coupon.label', 'demo-' ) );
 		$services = $manager->searchItems( $search );
@@ -63,7 +62,7 @@ class DemoAddCouponData extends \Aimeos\MW\Setup\Task\MShopAddDataAbstract
 		$manager->deleteItems( array_keys( $services ) );
 
 
-		if( $context->getConfig()->get( 'setup/default/demo', false ) == true )
+		if( $value === '1' )
 		{
 			$ds = DIRECTORY_SEPARATOR;
 			$path = __DIR__ . $ds . 'data' . $ds . 'demo-coupon.php';
@@ -71,7 +70,6 @@ class DemoAddCouponData extends \Aimeos\MW\Setup\Task\MShopAddDataAbstract
 			if( ( $data = include( $path ) ) == false ) {
 				throw new \Aimeos\MShop\Exception( sprintf( 'No file "%1$s" found for coupon domain', $path ) );
 			}
-
 
 			foreach( $data as $entry )
 			{
@@ -105,12 +103,12 @@ class DemoAddCouponData extends \Aimeos\MW\Setup\Task\MShopAddDataAbstract
 	 */
 	protected function addCodes( $couponId, array $data )
 	{
-		$manager = \Aimeos\MShop\Factory::createManager( $this->getContext(), 'coupon/code' );
+		$manager = \Aimeos\MShop::create( $this->getContext(), 'coupon/code' );
 
 		foreach( $data as $entry )
 		{
 			$item = $manager->createItem();
-			$item->setCouponId( $couponId );
+			$item->setParentId( $couponId );
 			$item->setCode( $entry['code'] );
 			$item->setCount( $entry['count'] );
 			$item->setDateStart( $entry['datestart'] );

@@ -7,13 +7,34 @@ class TwoTask extends Base
 {
 	public function getPreDependencies()
 	{
-		return array();
+		return [];
 	}
 
 
 	public function getPostDependencies()
 	{
-		return array();
+		return [];
+	}
+
+
+	public function migrate()
+	{
+		$this->msg( 'Executing TwoTask' );
+		$this->status( 'OK' );
+	}
+
+
+	public function rollback()
+	{
+		$this->msg( 'Executing TwoTask' );
+		$this->status( 'OK' );
+	}
+
+
+	public function clean()
+	{
+		$this->msg( 'Executing TwoTask' );
+		$this->status( 'OK' );
 	}
 
 

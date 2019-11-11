@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Common
  */
@@ -58,6 +58,13 @@ interface Iface
 	public function getInternalDeps();
 
 	/**
+	 * Returns the helper function if available
+	 *
+	 * @return \Closure|null Helper function
+	 */
+	public function getFunction();
+
+	/**
 	 * Returns the human readable label for the search attribute.
 	 *
 	 * @return string Name of the search attribute
@@ -67,7 +74,7 @@ interface Iface
 	/**
 	 * Returns the default value of the search attribute.
 	 *
-	 * @return string Default value of the search attribute
+	 * @return mixed Default value of the search attribute
 	 */
 	public function getDefault();
 

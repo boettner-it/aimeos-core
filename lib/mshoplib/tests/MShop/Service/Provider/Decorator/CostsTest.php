@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2014
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2014
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 
@@ -13,7 +13,7 @@ namespace Aimeos\MShop\Service\Provider\Decorator;
 /**
  * Test class for \Aimeos\MShop\Service\Provider\Decorator\Costs.
  */
-class CostsTest extends \PHPUnit_Framework_TestCase
+class CostsTest extends \PHPUnit\Framework\TestCase
 {
 	private $object;
 	private $basket;
@@ -24,18 +24,18 @@ class CostsTest extends \PHPUnit_Framework_TestCase
 
 	protected function setUp()
 	{
-		$this->context = \TestHelper::getContext();
+		$this->context = \TestHelperMShop::getContext();
 
-		$servManager = \Aimeos\MShop\Factory::createManager( $this->context, 'service' );
+		$servManager = \Aimeos\MShop::create( $this->context, 'service' );
 		$this->servItem = $servManager->createItem();
 
-		$this->mockProvider = $this->getMockBuilder( '\\Aimeos\\MShop\\Service\\Provider\\Decorator\\Costs' )
+		$this->mockProvider = $this->getMockBuilder( \Aimeos\MShop\Service\Provider\Decorator\Costs::class )
 			->disableOriginalConstructor()->getMock();
 
-		$this->basket = \Aimeos\MShop\Order\Manager\Factory::createManager( $this->context )
-			->getSubManager( 'base' )->createItem();
+		$orderManager = \Aimeos\MShop\Order\Manager\Factory::create( $this->context );
+		$this->basket = $orderManager->getSubManager( 'base' )->createItem()->off(); // remove plugins
 
-		$this->object = new \Aimeos\MShop\Service\Provider\Decorator\Costs( $this->context, $this->servItem, $this->mockProvider );
+		$this->object = new \Aimeos\MShop\Service\Provider\Decorator\Costs( $this->mockProvider, $this->context, $this->servItem );
 	}
 
 
@@ -47,6 +47,8 @@ class CostsTest extends \PHPUnit_Framework_TestCase
 
 	public function testGetConfigBE()
 	{
+		$this->mockProvider->expects( $this->once() )->method( 'getConfigBE' )->will( $this->returnValue( [] ) );
+
 		$result = $this->object->getConfigBE();
 
 		$this->assertArrayHasKey( 'costs.percent', $result );
@@ -57,7 +59,7 @@ class CostsTest extends \PHPUnit_Framework_TestCase
 	{
 		$this->mockProvider->expects( $this->once() )
 			->method( 'checkConfigBE' )
-			->will( $this->returnValue( array() ) );
+			->will( $this->returnValue( [] ) );
 
 		$attributes = array( 'costs.percent' => '1.5' );
 		$result = $this->object->checkConfigBE( $attributes );
@@ -71,9 +73,9 @@ class CostsTest extends \PHPUnit_Framework_TestCase
 	{
 		$this->mockProvider->expects( $this->once() )
 			->method( 'checkConfigBE' )
-			->will( $this->returnValue( array() ) );
+			->will( $this->returnValue( [] ) );
 
-		$result = $this->object->checkConfigBE( array() );
+		$result = $this->object->checkConfigBE( [] );
 
 		$this->assertEquals( 1, count( $result ) );
 		$this->assertInternalType( 'string', $result['costs.percent'] );
@@ -84,7 +86,7 @@ class CostsTest extends \PHPUnit_Framework_TestCase
 	{
 		$this->basket->addProduct( $this->getOrderProduct() );
 		$this->servItem->setConfig( array( 'costs.percent' => 1.5 ) );
-		$priceItem = \Aimeos\MShop\Factory::createManager( $this->context, 'price' )->createItem();
+		$priceItem = \Aimeos\MShop::create( $this->context, 'price' )->createItem();
 
 		$this->mockProvider->expects( $this->once() )
 			->method( 'calcPrice' )
@@ -96,11 +98,16 @@ class CostsTest extends \PHPUnit_Framework_TestCase
 	}
 
 
+	/**
+	 * Returns an order product item
+	 *
+	 * @return \Aimeos\MShop\Order\Item\Base\Product\Iface Order product item
+	 */
 	protected function getOrderProduct()
 	{
-		$priceManager = \Aimeos\MShop\Factory::createManager( $this->context, 'price' );
-		$productManager = \Aimeos\MShop\Factory::createManager( $this->context, 'product' );
-		$orderProductManager = \Aimeos\MShop\Factory::createManager( $this->context, 'order/base/product' );
+		$priceManager = \Aimeos\MShop::create( $this->context, 'price' );
+		$productManager = \Aimeos\MShop::create( $this->context, 'product' );
+		$orderProductManager = \Aimeos\MShop::create( $this->context, 'order/base/product' );
 
 		$price = $priceManager->createItem();
 		$price->setValue( '20.00' );

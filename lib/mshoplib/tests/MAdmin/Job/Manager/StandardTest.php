@@ -1,65 +1,69 @@
 <?php
 
+/**
+ * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
+ */
+
+
 namespace Aimeos\MAdmin\Job\Manager;
 
 
-/**
- * @copyright Metaways Infosystems GmbH, 2011
- * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
- */
-class StandardTest extends \PHPUnit_Framework_TestCase
+class StandardTest extends \PHPUnit\Framework\TestCase
 {
 	private $object;
 
 
-	/**
-	 * Sets up the fixture, for example, opens a network connection.
-	 * This method is called before a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function setUp()
 	{
-		$this->object = new \Aimeos\MAdmin\Job\Manager\Standard( \TestHelper::getContext() );
+		$this->object = new \Aimeos\MAdmin\Job\Manager\Standard( \TestHelperMShop::getContext() );
 	}
 
 
-	/**
-	 * Tears down the fixture, for example, closes a network connection.
-	 * This method is called after a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function tearDown()
 	{
 		$this->object = null;
 	}
 
 
-	public function testCleanup()
+	public function testClear()
 	{
-		$this->object->cleanup( array( -1 ) );
+		$this->assertInstanceOf( \Aimeos\MAdmin\Job\Manager\Iface::class, $this->object->clear( [-1] ) );
 	}
 
 
 	public function testCreateItem()
 	{
-		$this->assertInstanceOf( '\\Aimeos\\MAdmin\\Job\\Item\\Iface', $this->object->createItem() );
+		$this->assertInstanceOf( \Aimeos\MAdmin\Job\Item\Iface::class, $this->object->createItem() );
+	}
+
+
+	public function testDeleteItems()
+	{
+		$this->assertInstanceOf( \Aimeos\MAdmin\Job\Manager\Iface::class, $this->object->deleteItems( [-1] ) );
+	}
+
+
+	public function testGetResourceType()
+	{
+		$result = $this->object->getResourceType();
+
+		$this->assertContains( 'job', $result );
 	}
 
 
 	public function testGetSearchAttributes()
 	{
 		foreach( $this->object->getSearchAttributes() as $attr ) {
-			$this->assertInstanceOf( '\\Aimeos\\MW\\Criteria\\Attribute\\Iface', $attr );
+			$this->assertInstanceOf( \Aimeos\MW\Criteria\Attribute\Iface::class, $attr );
 		}
 	}
 
 
 	public function testGetSubManager()
 	{
-		$this->setExpectedException( '\\Aimeos\\MAdmin\\Exception' );
+		$this->setExpectedException( \Aimeos\MAdmin\Exception::class );
 		$this->object->getSubManager( 'unknown' );
 	}
 
@@ -68,7 +72,7 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	{
 		$search = $this->object->createSearch();
 
-		$expr = array();
+		$expr = [];
 		$expr[] = $search->compare( '!=', 'job.id', null );
 		$expr[] = $search->compare( '!=', 'job.siteid', null );
 		$expr[] = $search->compare( '==', 'job.label', 'unittest job' );
@@ -82,7 +86,7 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 		$total = 0;
 		$search->setConditions( $search->combine( '&&', $expr ) );
-		$results = $this->object->searchItems( $search, array(), $total );
+		$results = $this->object->searchItems( $search, [], $total );
 
 		$this->assertEquals( 1, count( $results ) );
 		$this->assertEquals( 1, $total );
@@ -95,12 +99,12 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testGetItem()
 	{
-		$criteria = $this->object->createSearch();
+		$criteria = $this->object->createSearch()->setSlice( 0, 1 );
 		$criteria->setConditions( $criteria->compare( '==', 'job.method', 'controller.method' ) );
 		$result = $this->object->searchItems( $criteria );
 
 		if( ( $item = reset( $result ) ) === false ) {
-			throw new \Exception( 'No item found' );
+			throw new \RuntimeException( 'No item found' );
 		}
 
 		$this->assertEquals( $item, $this->object->getItem( $item->getId() ) );
@@ -112,18 +116,18 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$item = $this->object->createItem();
 		$item->setLabel( 'unit test' );
 		$item->setMethod( 'crtl.method' );
-		$this->object->saveItem( $item );
+		$resultSaved = $this->object->saveItem( $item );
 
 		$itemSaved = $this->object->getItem( $item->getId() );
 
 		$itemExp = clone $itemSaved;
 		$itemExp->setMethod( 'controll.method' );
-		$this->object->saveItem( $itemExp );
+		$resultUpd = $this->object->saveItem( $itemExp );
 		$itemUpd = $this->object->getItem( $item->getId() );
 
 		$this->object->deleteItem( $item->getId() );
 
-		$context = \TestHelper::getContext();
+		$context = \TestHelperMShop::getContext();
 
 		$this->assertTrue( $item->getId() !== null );
 		$this->assertEquals( $item->getId(), $itemSaved->getId() );
@@ -148,7 +152,10 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals( $itemExp->getTimeCreated(), $itemUpd->getTimeCreated() );
 		$this->assertRegExp( '/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/', $itemUpd->getTimeModified() );
 
-		$this->setExpectedException( '\\Aimeos\\MAdmin\\Job\\Exception' );
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Item\Iface::class, $resultSaved );
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Item\Iface::class, $resultUpd );
+
+		$this->setExpectedException( \Aimeos\MAdmin\Job\Exception::class );
 		$this->object->getItem( $item->getId() );
 	}
 }

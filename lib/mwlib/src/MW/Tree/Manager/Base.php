@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Tree
  */
@@ -42,9 +42,9 @@ abstract class Base extends \Aimeos\MW\Common\Manager\Base implements \Aimeos\MW
 	/**
 	 * Checks, whether a tree is read only.
 	 *
-	 * @return boolean True if tree is read-only, false if not
+	 * @return bool True if tree is read-only, false if not
 	 */
-	public function isReadOnly()
+	public function isReadOnly() : bool
 	{
 		return $this->readOnly;
 	}
@@ -53,10 +53,11 @@ abstract class Base extends \Aimeos\MW\Common\Manager\Base implements \Aimeos\MW
 	/**
 	 * Sets this manager to read only.
 	 *
-	 * @param boolean $flag True if tree is read-only, false if not
+	 * @param bool $flag True if tree is read-only, false if not
 	 */
-	protected function setReadOnly( $flag = true )
+	protected function setReadOnly( bool $flag = true ) : Iface
 	{
 		$this->readOnly = (bool) $flag;
+		return $this;
 	}
 }

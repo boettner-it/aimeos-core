@@ -7,13 +7,37 @@ class OneTask extends Base
 {
 	public function getPreDependencies()
 	{
-		return array();
+		return [];
 	}
 
 
 	public function getPostDependencies()
 	{
-		return array( 'TwoTask');
+		return array( 'TwoTask' );
+	}
+
+
+	public function migrate()
+	{
+		$this->status( '' );
+		$this->msg( 'Executing OneTask' );
+		$this->status( 'OK' );
+	}
+
+
+	public function rollback()
+	{
+		$this->status( '' );
+		$this->msg( 'Executing OneTask' );
+		$this->status( 'OK' );
+	}
+
+
+	public function clean()
+	{
+		$this->status( '' );
+		$this->msg( 'Executing OneTask' );
+		$this->status( 'OK' );
 	}
 
 

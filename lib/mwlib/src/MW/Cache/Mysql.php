@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2014
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2014
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Cache
  */
@@ -85,15 +85,15 @@ class Mysql
 	 *
 	 * @inheritDoc
 	 *
-	 * @param array $pairs Associative list of key/value pairs. Both must be
-	 * 	a string
-	 * @param array $tags Associative list of key/tag or key/tags pairs that should be
-	 * 	associated to the values identified by their key. The value associated
-	 * 	to the key can either be a tag string or an array of tag strings
-	 * @param array $expires Associative list of key/datetime pairs.
-	 * @throws \Aimeos\MW\Cache\Exception If the cache server doesn't respond
+	 * @param iterable $pairs Associative list of key/value pairs. Both must be a string
+	 * @param \DateInterval|int|string|null $expires Date interval object,
+	 *  date/time string in "YYYY-MM-DD HH:mm:ss" format or as integer TTL value
+	 *  when the cache entry will expiry
+	 * @param iterable $tags List of tags that should be associated to the cache entries
+	 * @return bool True on success and false on failure.
+	 * @throws \Psr\SimpleCache\InvalidArgumentException
 	 */
-	public function setList( array $pairs, array $tags = array(), array $expires = array() )
+	public function setMultiple( iterable $pairs, $expires = null, iterable $tags = [] ) : bool
 	{
 		$type = ( count( $pairs ) > 1 ? \Aimeos\MW\DB\Connection\Base::TYPE_PREP : \Aimeos\MW\DB\Connection\Base::TYPE_SIMPLE );
 		$conn = $this->dbm->acquire( $this->dbname );
@@ -105,33 +105,34 @@ class Mysql
 
 			foreach( $pairs as $key => $value )
 			{
-				$date = ( isset( $expires[$key] ) ? $expires[$key] : null );
+				if( $expires instanceof \DateInterval ) {
+					$expires = date_create()->add( $expires )->format( 'Y-m-d H:i:s' );
+				} elseif( is_int( $expires ) ) {
+					$expires = date( 'Y-m-d H:i:s', time() + $expires );
+				}
 
-				$stmt->bind( 1, $key );
+				$stmt->bind( 1, (string) $key );
 				$stmt->bind( 2, $this->siteid, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-				$stmt->bind( 3, $date );
-				$stmt->bind( 4, $value );
+				$stmt->bind( 3, $expires );
+				$stmt->bind( 4, (string) $value );
 				$stmt->execute()->finish();
 
-				if( isset( $tags[$key] ) )
+				if( !empty( $tags ) )
 				{
-					$parts = array();
+					$parts = [];
 					$stmtTagPart = $conn->create( '( ?, ?, ? )' );
 
-					foreach( (array) $tags[$key] as $name )
+					foreach( $tags as $name )
 					{
-						$stmtTagPart->bind( 1, $key );
+						$stmtTagPart->bind( 1, (string) $key );
 						$stmtTagPart->bind( 2, $this->siteid, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-						$stmtTagPart->bind( 3, $name );
+						$stmtTagPart->bind( 3, (string) $name );
 
 						$parts[] = (string) $stmtTagPart;
 					}
 
-					if( !empty ( $parts ) )
-					{
-						$stmtTag = $conn->create( str_replace( ':tuples', join( ',', $parts ), $this->sql['settag'] ) );
-						$stmtTag->execute()->finish();
-					}
+					$stmtTag = $conn->create( str_replace( ':tuples', join( ',', $parts ), $this->sql['settag'] ) );
+					$stmtTag->execute()->finish();
 				}
 			}
 
@@ -142,7 +143,11 @@ class Mysql
 		{
 			$conn->rollback();
 			$this->dbm->release( $conn, $this->dbname );
-			throw $e;
+
+			error_log( __METHOD__ . ': ' . $e->getMessage() );
+			return false;
 		}
+
+		return true;
 	}
 }

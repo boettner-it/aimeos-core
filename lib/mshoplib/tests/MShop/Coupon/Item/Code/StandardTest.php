@@ -1,150 +1,191 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2012
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2012
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 
 namespace Aimeos\MShop\Coupon\Item\Code;
 
 
-/**
- * Test class for \Aimeos\MShop\Coupon\Item\Code\Standard.
- */
-class StandardTest extends \PHPUnit_Framework_TestCase
+class StandardTest extends \PHPUnit\Framework\TestCase
 {
 	private $object;
 	private $values;
 
 
-	/**
-	 * Sets up the fixture, for example, opens a network connection.
-	 * This method is called before a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function setUp()
 	{
 		$this->values = array(
-			'id' => '1',
-			'siteid' => 123,
-			'couponid' => '2',
-			'code' => 'abcd',
-			'count' => '100',
-			'start' => null,
-			'end' => null,
-			'mtime' => '2011-01-01 00:00:02',
-			'ctime' => '2011-01-01 00:00:01',
-			'editor' => 'unitTestUser'
+			'coupon.code.id' => '1',
+			'coupon.code.siteid' => 123,
+			'coupon.code.parentid' => '2',
+			'coupon.code.code' => 'abcd',
+			'coupon.code.count' => '100',
+			'coupon.code.datestart' => null,
+			'coupon.code.dateend' => null,
+			'coupon.code.ref' => 'abc',
+			'coupon.code.mtime' => '2011-01-01 00:00:02',
+			'coupon.code.ctime' => '2011-01-01 00:00:01',
+			'coupon.code.editor' => 'unitTestUser',
+			'.date' => date( 'Y-m-d H:i:s' ),
 		);
 
 		$this->object = new \Aimeos\MShop\Coupon\Item\Code\Standard( $this->values );
 	}
 
-	/**
-	 * Tears down the fixture, for example, closes a network connection.
-	 * This method is called after a test is executed.
-	 *
-	 * @access protected
-	 */
+
 	protected function tearDown()
 	{
 		unset( $this->object );
 	}
+
 
 	public function testGetId()
 	{
 		$this->assertEquals( 1, $this->object->getId() );
 	}
 
+
 	public function testSetId()
 	{
-		$this->object->setId( '1' );
+		$return = $this->object->setId( '1' );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Coupon\Item\Code\Iface::class, $return );
+		$this->assertFalse( false, $this->object->isModified() );
 		$this->assertEquals( 1, $this->object->getId() );
 
-		$this->assertFalse( false, $this->object->isModified() );
+		$return = $this->object->setId( null );
 
-		$this->object->setId( null );
-		$this->assertEquals( null, $this->object->getId() );
-
+		$this->assertInstanceOf( \Aimeos\MShop\Coupon\Item\Code\Iface::class, $return );
 		$this->assertEquals( true, $this->object->isModified() );
+		$this->assertEquals( null, $this->object->getId() );
 	}
+
 
 	public function testGetSiteId()
 	{
 		$this->assertEquals( 123, $this->object->getSiteId() );
 	}
 
-	public function testGetCouponId()
+
+	public function testGetParentId()
 	{
-		$this->assertEquals( 2, $this->object->getCouponId() );
+		$this->assertEquals( 2, $this->object->getParentId() );
 	}
 
-	public function testSetCouponId()
-	{
-		$this->object->setCouponId( '3' );
-		$this->assertEquals( 3, $this->object->getCouponId() );
 
+	public function testSetParentId()
+	{
+		$return = $this->object->setParentId( '3' );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Coupon\Item\Code\Iface::class, $return );
+		$this->assertEquals( 3, $this->object->getParentId() );
 		$this->assertEquals( true, $this->object->isModified() );
 	}
+
 
 	public function testGetCode()
 	{
 		$this->assertEquals( 'abcd', $this->object->getCode() );
 	}
 
+
 	public function testSetCode()
 	{
-		$this->object->setCode( 'dcba' );
+		$return = $this->object->setCode( 'dcba' );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Coupon\Item\Code\Iface::class, $return );
 		$this->assertEquals( 'dcba', $this->object->getCode() );
 		$this->assertTrue( $this->object->isModified() );
 	}
+
 
 	public function testGetCount()
 	{
 		$this->assertEquals( 100, $this->object->getCount() );
 	}
 
+
+	public function testGetCountNull()
+	{
+		$this->object->setCount( null );
+		$this->assertEquals( null, $this->object->getCount() );
+		$this->assertTrue( $this->object->isModified() );
+	}
+
+
 	public function testSetCount()
 	{
-		$this->object->setCount( 50 );
+		$return = $this->object->setCount( 50 );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Coupon\Item\Code\Iface::class, $return );
 		$this->assertEquals( 50, $this->object->getCount() );
 		$this->assertTrue( $this->object->isModified() );
 	}
+
 
 	public function testGetDateStart()
 	{
 		$this->assertNull( $this->object->getDateStart() );
 	}
 
+
 	public function testSetDateStart()
 	{
-		$this->object->setDateStart( '2010-04-22 06:22:22' );
+		$return = $this->object->setDateStart( '2010-04-22 06:22:22' );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Coupon\Item\Code\Iface::class, $return );
 		$this->assertEquals( '2010-04-22 06:22:22', $this->object->getDateStart() );
+		$this->assertTrue( $this->object->isModified() );
 	}
+
 
 	public function testGetDateEnd()
 	{
 		$this->assertNull( $this->object->getDateEnd() );
 	}
 
+
 	public function testSetDateEnd()
 	{
-		$this->object->setDateEnd( '2010-05-22 06:22:22' );
+		$return = $this->object->setDateEnd( '2010-05-22 06:22:22' );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Coupon\Item\Code\Iface::class, $return );
 		$this->assertEquals( '2010-05-22 06:22:22', $this->object->getDateEnd() );
+		$this->assertTrue( $this->object->isModified() );
 	}
+
+
+	public function testGetRef()
+	{
+		$this->assertEquals( 'abc', $this->object->getRef() );
+	}
+
+
+	public function testSetRef()
+	{
+		$return = $this->object->setRef( 'xyz' );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Coupon\Item\Code\Iface::class, $return );
+		$this->assertEquals( 'xyz', $this->object->getRef() );
+		$this->assertTrue( $this->object->isModified() );
+	}
+
 
 	public function testGetTimeModified()
 	{
 		$this->assertEquals( '2011-01-01 00:00:02', $this->object->getTimeModified() );
 	}
 
+
 	public function testGetTimeCreated()
 	{
 		$this->assertEquals( '2011-01-01 00:00:01', $this->object->getTimeCreated() );
 	}
+
 
 	public function testGetEditor()
 	{
@@ -152,41 +193,57 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	}
 
 
+	public function testGetResourceType()
+	{
+		$this->assertEquals( 'coupon/code', $this->object->getResourceType() );
+	}
+
+
 	public function testFromArray()
 	{
 		$item = new \Aimeos\MShop\Coupon\Item\Code\Standard();
 
-		$list = array(
+		$list = $entries = array(
 			'coupon.code.id' => 1,
-			'coupon.code.couponid' => 2,
+			'coupon.code.parentid' => 2,
 			'coupon.code.code' => 'test',
 			'coupon.code.count' => 100,
+			'coupon.code.ref' => 'def',
 		);
 
-		$unknown = $item->fromArray( $list );
+		$item = $item->fromArray( $entries, true );
 
-		$this->assertEquals( array(), $unknown );
+		$this->assertEquals( [], $entries );
 
 		$this->assertEquals( $list['coupon.code.id'], $item->getId() );
-		$this->assertEquals( $list['coupon.code.couponid'], $item->getCouponId() );
+		$this->assertEquals( $list['coupon.code.parentid'], $item->getParentId() );
 		$this->assertEquals( $list['coupon.code.code'], $item->getCode() );
 		$this->assertEquals( $list['coupon.code.count'], $item->getCount() );
+		$this->assertEquals( $list['coupon.code.ref'], $item->getRef() );
 	}
 
 
 	public function testToArray()
 	{
-		$arrayObject = $this->object->toArray();
-		$this->assertEquals( count( $this->values ), count( $arrayObject ) );
+		$arrayObject = $this->object->toArray( true );
+		$this->assertEquals( count( $this->values ) - 1, count( $arrayObject ) );
 
 		$this->assertEquals( $this->object->getId(), $arrayObject['coupon.code.id'] );
 		$this->assertEquals( $this->object->getCode(), $arrayObject['coupon.code.code'] );
 		$this->assertEquals( $this->object->getCount(), $arrayObject['coupon.code.count'] );
-		$this->assertEquals( $this->object->getCouponId(), $arrayObject['coupon.code.couponid'] );
+		$this->assertEquals( $this->object->getParentId(), $arrayObject['coupon.code.parentid'] );
 		$this->assertEquals( $this->object->getTimeCreated(), $arrayObject['coupon.code.ctime'] );
 		$this->assertEquals( $this->object->getTimeModified(), $arrayObject['coupon.code.mtime'] );
 		$this->assertEquals( $this->object->getEditor(), $arrayObject['coupon.code.editor'] );
+		$this->assertEquals( $this->object->getRef(), $arrayObject['coupon.code.ref'] );
 	}
+
+
+	public function testIsAvailable()
+	{
+		$this->assertTrue( $this->object->isAvailable() );
+	}
+
 
 	public function testIsModified()
 	{

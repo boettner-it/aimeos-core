@@ -1,30 +1,37 @@
 {
 	"name": "aimeos/<extname>",
 	"description": "Aimeos <extname> extension",
-	"keywords": ["aimeos", "extension"]
+	"keywords": ["aimeos", "extension"],
 	"type": "aimeos-extension",
 	"license": "LGPL-3.0",
+	"prefer-stable": true,
+	"minimum-stability": "dev",
 	"require": {
-		"php": ">=5.3.3"
+		"php": ">=5.4.0",
+		"composer/installers": "^1.0"
 	},
 	"autoload": {
 		"psr-4": {
 			"Aimeos\\MW\\": "lib/mwlib/src/MW/",
 			"Aimeos\\MShop\\": "lib/mshoplib/src/MShop/",
 			"Aimeos\\MAdmin\\": "lib/mshoplib/src/MAdmin/",
-			"Aimeos\\Client\\Html\\": "client/html/src/Client/Html/",
 			"Aimeos\\Controller\\Common\\": "controller/common/src/Controller/Common/",
 			"Aimeos\\Controller\\Frontend\\": "controller/frontend/src/Controller/Frontend/",
-			"Aimeos\\Controller\\ExtJS\\": "controller/extjs/src/Controller/ExtJS/",
-			"Aimeos\\Controller\\Jobs\\": "controller/jobs/src/Controller/Jobs/"
+			"Aimeos\\Controller\\Jobs\\": "controller/jobs/src/Controller/Jobs/",
+			"Aimeos\\Admin\\Jsonadm\\": "admin/jsonadm/src/Admin/Jsonadm/",
+			"Aimeos\\Admin\\JQAdm\\": "admin/jqadm/src/Admin/JQAdm/",
+			"Aimeos\\Client\\Html\\": "client/html/src/Client/Html/",
+			"Aimeos\\Client\\Jsonapi\\": "client/jsonapi/src/Client/Jsonapi/"
 		},
 		"classmap": [
-			"lib/custom/src",
 			"client/html/src",
+			"client/jsonapi/src",
+			"admin/jqadm/src",
+			"admin/jsonadm/src",
 			"controller/common/src",
 			"controller/frontend/src",
-			"controller/extjs/src",
-			"controller/jobs/src"
+			"controller/jobs/src",
+			"lib/custom/src"
 		]
 	}
 }

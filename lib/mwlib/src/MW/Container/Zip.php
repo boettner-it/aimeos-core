@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2013
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2013
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Container
  */
@@ -25,7 +25,7 @@ class Zip
 	private $container;
 	private $classname;
 	private $position = 0;
-	private $content = array();
+	private $content = [];
 	private $resourcepath;
 
 
@@ -39,9 +39,9 @@ class Zip
 	 * @param string $format Format of the content objects inside the container
 	 * @param array $options Associative list of key/value pairs for configuration
 	 */
-	public function __construct( $resourcepath, $format, array $options = array() )
+	public function __construct( $resourcepath, $format, array $options = [] )
 	{
-		$this->classname = '\\Aimeos\\MW\\Container\\Content\\' . $format;
+		$this->classname = '\Aimeos\MW\Container\Content\\' . $format;
 
 		if( class_exists( $this->classname ) === false ) {
 			throw new \Aimeos\MW\Container\Exception( sprintf( 'Unknown format "%1$s"', $format ) );
@@ -83,10 +83,12 @@ class Zip
 	 * Adds content data to the container.
 	 *
 	 * @param \Aimeos\MW\Container\Content\Iface $content Content object
+	 * @return \Aimeos\MW\Container\Iface Container instance for method chaining
 	 */
 	public function add( \Aimeos\MW\Container\Content\Iface $content )
 	{
 		$this->content[] = $content;
+		return $this;
 	}
 
 
@@ -105,12 +107,14 @@ class Zip
 		}
 
 		// $this->container->getStream( $name ) doesn't work correctly because the stream can't be rewinded
-		return new $this->classname( 'zip://' . $this->resourcepath . '#' . $name, $name );
+		return new $this->classname( 'zip://' . $this->resourcepath . '#' . $name, $name, $this->getOptions() );
 	}
 
 
 	/**
 	 * Cleans up and saves the container.
+	 *
+	 * @return \Aimeos\MW\Container\Iface Container instance for method chaining
 	 */
 	public function close()
 	{
@@ -121,7 +125,7 @@ class Zip
 			if( $this->container->addFile( $content->getResource(), $content->getName() ) === false )
 			{
 				$msg = 'Unable to add content in "%1$s" to file "%2$s"';
-				throw new \Aimeos\MW\Content\Exception( sprinf( $msg, $content->getResource(), $this->container->filename ) );
+				throw new \Aimeos\MW\Container\Exception( sprintf( $msg, $content->getResource(), $this->container->filename ) );
 			}
 		}
 
@@ -132,6 +136,8 @@ class Zip
 		foreach( $this->content as $content ) {
 			unlink( $content->getResource() );
 		}
+
+		return $this;
 	}
 
 
@@ -140,7 +146,7 @@ class Zip
 	 *
 	 * @return \Aimeos\MW\Container\Content\Iface Current content object
 	 */
-	function current()
+	public function current()
 	{
 		if( ( $name = $this->container->getNameIndex( $this->position ) ) === false )
 		{
@@ -149,7 +155,7 @@ class Zip
 		}
 
 		// $this->container->getStream( $name ) doesn't work correctly because the stream can't be rewinded
-		return new $this->classname( 'zip://' . $this->resourcepath . '#' . $name, $name );
+		return new $this->classname( 'zip://' . $this->resourcepath . '#' . $name, $name, $this->getOptions() );
 	}
 
 
@@ -158,7 +164,7 @@ class Zip
 	 *
 	 * @return integer Position within the CSV file
 	 */
-	function key()
+	public function key()
 	{
 		return $this->position;
 	}
@@ -167,7 +173,7 @@ class Zip
 	/**
 	 * Moves forward to next element.
 	 */
-	function next()
+	public function next()
 	{
 		$this->position++;
 	}
@@ -176,7 +182,7 @@ class Zip
 	/**
 	 * Rewinds the file pointer to the beginning.
 	 */
-	function rewind()
+	public function rewind()
 	{
 		$this->position = 0;
 	}
@@ -187,7 +193,7 @@ class Zip
 	 *
 	 * @return boolean True on success or false on failure
 	 */
-	function valid()
+	public function valid()
 	{
 		return $this->position < $this->container->numFiles;
 	}

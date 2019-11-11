@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2014
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2014
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 
@@ -71,7 +71,7 @@ class CouponMigrateConfigKeys extends \Aimeos\MW\Setup\Task\Base
 	/**
 	 * Executes the task for MySQL databases.
 	 */
-	protected function mysql()
+	public function migrate()
 	{
 		$this->process( $this->mysql );
 	}
@@ -95,6 +95,5 @@ class CouponMigrateConfigKeys extends \Aimeos\MW\Setup\Task\Base
 		{
 			$this->status( 'OK' );
 		}
-
 	}
 }

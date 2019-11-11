@@ -3,7 +3,7 @@
 /**
  * @copyright Metaways Infosystems GmbH, 2013
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 
@@ -13,7 +13,7 @@ namespace Aimeos\Controller\Jobs\Common\Decorator;
 /**
  * Test class for \Aimeos\Controller\Jobs\Common\Decorator\BaseTest.
  */
-class BaseTest extends \PHPUnit_Framework_TestCase
+class BaseTest extends \PHPUnit\Framework\TestCase
 {
 	private $stub;
 	private $object;
@@ -27,14 +27,14 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 	 */
 	protected function setUp()
 	{
-		$context = \TestHelper::getContext();
-		$aimeos = \TestHelper::getAimeos();
+		$context = \TestHelperJobs::getContext();
+		$aimeos = \TestHelperJobs::getAimeos();
 
-		$this->stub = $this->getMockBuilder( '\\Aimeos\\Controller\\Jobs\\Admin\\Job\\Standard' )
+		$this->stub = $this->getMockBuilder( \Aimeos\Controller\Jobs\Iface::class )
 			->setConstructorArgs( array( $context, $aimeos ) )
 			->getMock();
 
-		$this->object = new TestBase( $context, $aimeos, $this->stub );
+		$this->object = new TestBase( $this->stub, $context, $aimeos );
 	}
 
 
@@ -44,41 +44,15 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 	}
 
 
-	public function testGetName()
-	{
-		$this->stub->expects( $this->once() )
-			->method( 'getName' )
-			->will( $this->returnValue( 'test name' ) );
-
-		$this->assertEquals( 'test name', $this->object->getName() );
-	}
-
-
-	public function testGetDescription()
-	{
-		$this->stub->expects( $this->once() )
-			->method( 'getDescription' )
-			->will( $this->returnValue( 'test description' ) );
-
-		$this->assertEquals( 'test description', $this->object->getDescription() );
-	}
-
-
-	public function testRun()
-	{
-		$this->object->run();
-	}
-
-
 	public function testGetContext()
 	{
-		$this->assertInstanceOf( '\\Aimeos\\MShop\\Context\\Item\\Iface', $this->object->getContextPublic() );
+		$this->assertInstanceOf( \Aimeos\MShop\Context\Item\Iface::class, $this->object->getContextPublic() );
 	}
 
 
 	public function testGetAimeos()
 	{
-		$this->assertInstanceOf( '\Aimeos\Bootstrap', $this->object->getAimeosPublic() );
+		$this->assertInstanceOf( \Aimeos\Bootstrap::class, $this->object->getAimeosPublic() );
 	}
 
 

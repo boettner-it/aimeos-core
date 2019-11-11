@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Order
  */
@@ -22,19 +22,37 @@ class Standard
 	extends \Aimeos\MShop\Common\Item\Base
 	implements \Aimeos\MShop\Order\Item\Base\Service\Attribute\Iface
 {
-	private $values;
-
-
 	/**
 	 * Initializes the order item base service attribute item.
 	 *
 	 * @param array $values Associative array of key/value pairs.
 	 */
-	public function __construct( array $values = array( ) )
+	public function __construct( array $values = [] )
 	{
 		parent::__construct( 'order.base.service.attribute.', $values );
+	}
 
-		$this->values = $values;
+
+	/**
+	 * Returns the ID of the site the item is stored
+	 *
+	 * @return string|null Site ID (or null if not available)
+	 */
+	public function getSiteId()
+	{
+		return $this->get( 'order.base.service.attribute.siteid' );
+	}
+
+
+	/**
+	 * Sets the site ID of the item.
+	 *
+	 * @param integer $value Unique site ID of the item
+	 * @return \Aimeos\MShop\Order\Item\Base\Product\Attribute\Iface Order base service attribute item for chaining method calls
+	 */
+	public function setSiteId( $value )
+	{
+		return $this->set( 'order.base.service.attribute.siteid', (string) $value );
 	}
 
 
@@ -45,7 +63,7 @@ class Standard
 	 */
 	public function getAttributeId()
 	{
-		return ( isset( $this->values['attrid'] ) ? (string) $this->values['attrid'] : '' );
+		return (string) $this->get( 'order.base.service.attribute.attributeid', '' );
 	}
 
 
@@ -53,38 +71,34 @@ class Standard
 	 * Sets the original attribute ID of the service attribute item.
 	 *
 	 * @param string $id Attribute ID of the service attribute item
+	 * @return \Aimeos\MShop\Order\Item\Base\Service\Attribute\Iface Order base service attribute item for chaining method calls
 	 */
 	public function setAttributeId( $id )
 	{
-		if( $id == $this->getAttributeId() ) { return; }
-
-		$this->values['attrid'] = (string) $id;
-		$this->setModified();
+		return $this->set( 'order.base.service.attribute.attributeid', (string) $id );
 	}
 
 
 	/**
-	 * Returns the order service id of the order service attribute if available.
+	 * Returns the ID of the ordered service item as parent
 	 *
-	 * @return integer|null Returns the order service id of the order service attribute if available.
+	 * @return string|null ID of the ordered service item
 	 */
-	public function getServiceId()
+	public function getParentId()
 	{
-		return ( isset( $this->values['ordservid'] ) ? (int) $this->values['ordservid'] : null );
+		return $this->get( 'order.base.service.attribute.parentid' );
 	}
 
 
 	/**
-	 * Sets the order service id.
+	 * Sets the ID of the ordered service item as parent
 	 *
-	 * @param integer $id Order service id for the order service attribute item.
+	 * @param string $id ID of the ordered service item
+	 * @return \Aimeos\MShop\Order\Item\Base\Service\Attribute\Iface Order base service attribute item for chaining method calls
 	 */
-	public function setServiceId( $id )
+	public function setParentId( $id )
 	{
-		if( $id == $this->getServiceId() ) { return; }
-
-		$this->values['ordservid'] = (int) $id;
-		$this->setModified();
+		return $this->set( 'order.base.service.attribute.parentid', (string) $id );
 	}
 
 
@@ -95,7 +109,7 @@ class Standard
 	 */
 	public function getType()
 	{
-		return ( isset( $this->values['type'] ) ? (string) $this->values['type'] : '' );
+		return (string) $this->get( 'order.base.service.attribute.type', '' );
 	}
 
 
@@ -103,36 +117,11 @@ class Standard
 	 * Sets a new type for the service attribute item.
 	 *
 	 * @param string $type Type of the service attribute
+	 * @return \Aimeos\MShop\Order\Item\Base\Service\Attribute\Iface Order base service attribute item for chaining method calls
 	 */
 	public function setType( $type )
 	{
-		if( $type == $this->getType() ) { return; }
-
-		$this->values['type'] = (string) $type;
-		$this->setModified();
-	}
-
-
-	/**
-	 * Returns the name of the service attribute item.
-	 *
-	 * @return string Name of the service attribute item
-	 */
-	public function getName()
-	{
-		return ( isset( $this->values['name'] ) ? (string) $this->values['name'] : '' );
-	}
-
-
-	/**
-	 * Sets a new name for the service attribute item.
-	 *
-	 * @param string $name Name as defined by the service provider
-	 */
-	public function setName( $name )
-	{
-		$this->values['name'] = (string) $name;
-		$this->setModified();
+		return $this->set( 'order.base.service.attribute.type', $this->checkCode( $type ) );
 	}
 
 
@@ -143,7 +132,7 @@ class Standard
 	 */
 	public function getCode()
 	{
-		return ( isset( $this->values['code'] ) ? (string) $this->values['code'] : '' );
+		return (string) $this->get( 'order.base.service.attribute.code', '' );
 	}
 
 
@@ -151,15 +140,34 @@ class Standard
 	 * Sets a new code for the service attribute item.
 	 *
 	 * @param string $code Code as defined by the service provider
+	 * @return \Aimeos\MShop\Order\Item\Base\Service\Attribute\Iface Order base service attribute item for chaining method calls
 	 */
 	public function setCode( $code )
 	{
-		$this->checkCode( $code );
+		return $this->set( 'order.base.service.attribute.code', $this->checkCode( $code, 255 ) );
+	}
 
-		if( $code == $this->getCode() ) { return; }
 
-		$this->values['code'] = (string) $code;
-		$this->setModified();
+	/**
+	 * Returns the name of the service attribute item.
+	 *
+	 * @return string Name of the service attribute item
+	 */
+	public function getName()
+	{
+		return (string) $this->get( 'order.base.service.attribute.name', '' );
+	}
+
+
+	/**
+	 * Sets a new name for the service attribute item.
+	 *
+	 * @param string $name Name as defined by the service provider
+	 * @return \Aimeos\MShop\Order\Item\Base\Service\Attribute\Iface Order base service attribute item for chaining method calls
+	 */
+	public function setName( $name )
+	{
+		return $this->set( 'order.base.service.attribute.name', (string) $name );
 	}
 
 
@@ -170,7 +178,7 @@ class Standard
 	 */
 	public function getValue()
 	{
-		return ( isset( $this->values['value'] ) ? $this->values['value'] : '' );
+		return (string) $this->get( 'order.base.service.attribute.value', '' );
 	}
 
 
@@ -178,13 +186,45 @@ class Standard
 	 * Sets a new value for the service item.
 	 *
 	 * @param string|array $value service attribute item value
+	 * @return \Aimeos\MShop\Order\Item\Base\Service\Attribute\Iface Order base service attribute item for chaining method calls
 	 */
 	public function setValue( $value )
 	{
-		if( $value == $this->getValue() ) { return; }
+		return $this->set( 'order.base.service.attribute.value', $value );
+	}
 
-		$this->values['value'] = $value;
-		$this->setModified();
+
+	/**
+	 * Returns the quantity of the service attribute.
+	 *
+	 * @return integer Quantity of the service attribute
+	 */
+	public function getQuantity()
+	{
+		return (int) $this->get( 'order.base.service.attribute.quantity', 1 );
+	}
+
+
+	/**
+	 * Sets the quantity of the service attribute.
+	 *
+	 * @param integer $value Quantity of the service attribute
+	 * @return \Aimeos\MShop\Order\Item\Base\Product\Attribute\Iface Order base service attribute item for chaining method calls
+	 */
+	public function setQuantity( $value )
+	{
+		return $this->set( 'order.base.service.attribute.quantity', (int) $value );
+	}
+
+
+	/**
+	 * Returns the item type
+	 *
+	 * @return string Item type, subtypes are separated by slashes
+	 */
+	public function getResourceType()
+	{
+		return 'order/base/service/attribute';
 	}
 
 
@@ -192,62 +232,76 @@ class Standard
 	 * Copys all data from a given attribute item.
 	 *
 	 * @param \Aimeos\MShop\Attribute\Item\Iface $item Attribute item to copy from
+	 * @return \Aimeos\MShop\Order\Item\Base\Service\Attribute\Iface Order base service attribute item for chaining method calls
 	 */
 	public function copyFrom( \Aimeos\MShop\Attribute\Item\Iface $item )
 	{
+		$this->setSiteId( $item->getSiteId() );
 		$this->setAttributeId( $item->getId() );
 		$this->setName( $item->getName() );
 		$this->setCode( $item->getType() );
 		$this->setValue( $item->getCode() );
 
 		$this->setModified();
+
+		return $this;
 	}
 
 
-	/**
-	 * Sets the item values from the given array.
+	/*
+	 * Sets the item values from the given array and removes that entries from the list
 	 *
-	 * @param array $list Associative list of item keys and their values
-	 * @return array Associative list of keys and their values that are unknown
+	 * @param array &$list Associative list of item keys and their values
+	 * @param boolean True to set private properties too, false for public only
+	 * @return \Aimeos\MShop\Order\Item\Base\Service\Attribute\Iface Order service attribute item for chaining method calls
 	 */
-	public function fromArray( array $list )
+	public function fromArray( array &$list, $private = false )
 	{
-		$unknown = array();
-		$list = parent::fromArray( $list );
+		$item = parent::fromArray( $list, $private );
 
 		foreach( $list as $key => $value )
 		{
 			switch( $key )
 			{
-				case 'order.base.service.attribute.attrid': $this->setAttributeId( $value ); break;
-				case 'order.base.service.attribute.serviceid': $this->setServiceId( $value ); break;
-				case 'order.base.service.attribute.type': $this->setType( $value ); break;
-				case 'order.base.service.attribute.name': $this->setName( $value ); break;
-				case 'order.base.service.attribute.code': $this->setCode( $value ); break;
-				case 'order.base.service.attribute.value': $this->setValue( $value ); break;
-				default: $unknown[$key] = $value;
+				case 'order.base.service.attribute.siteid': !$private ?: $item = $item->setSiteId( $value ); break;
+				case 'order.base.service.attribute.attrid': !$private ?: $item = $item->setAttributeId( $value ); break;
+				case 'order.base.service.attribute.parentid': !$private ?: $item = $item->setParentId( $value ); break;
+				case 'order.base.service.attribute.type': $item = $item->setType( $value ); break;
+				case 'order.base.service.attribute.name': $item = $item->setName( $value ); break;
+				case 'order.base.service.attribute.code': $item = $item->setCode( $value ); break;
+				case 'order.base.service.attribute.value': $item = $item->setValue( $value ); break;
+				case 'order.base.service.attribute.quantity': $item = $item->setQuantity( $value ); break;
+				default: continue 2;
 			}
+
+			unset( $list[$key] );
 		}
 
-		return $unknown;
+		return $item;
 	}
 
 
 	/**
 	 * Returns the item values as array.
 	 *
-	 * @return Associative list of item properties and their values
+	 * @param boolean True to return private properties, false for public only
+	 * @return array Associative list of item properties and their values
 	 */
-	public function toArray()
+	public function toArray( $private = false )
 	{
-		$list = parent::toArray();
+		$list = parent::toArray( $private );
 
-		$list['order.base.service.attribute.attrid'] = $this->getAttributeId();
-		$list['order.base.service.attribute.serviceid'] = $this->getServiceId();
 		$list['order.base.service.attribute.type'] = $this->getType();
 		$list['order.base.service.attribute.name'] = $this->getName();
 		$list['order.base.service.attribute.code'] = $this->getCode();
 		$list['order.base.service.attribute.value'] = $this->getValue();
+		$list['order.base.service.attribute.quantity'] = $this->getQuantity();
+
+		if( $private === true )
+		{
+			$list['order.base.service.attribute.parentid'] = $this->getParentId();
+			$list['order.base.service.attribute.attrid'] = $this->getAttributeId();
+		}
 
 		return $list;
 	}

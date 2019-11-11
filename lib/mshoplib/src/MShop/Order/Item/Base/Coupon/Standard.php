@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2012
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2012
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Order
  */
@@ -22,80 +22,71 @@ class Standard
 	extends \Aimeos\MShop\Common\Item\Base
 	implements \Aimeos\MShop\Order\Item\Base\Coupon\Iface
 {
-	private $values;
-
 	/**
 	 * Initializes the order base coupon item.
 	 *
-	 * @param array $values Values to be set on initialisation.
-	 * Possible keys: 'id', 'baseid', 'ordprodid', 'code', 'mtime'
+	 * @param array $values Associative list of order coupon values
 	 */
-	public function __construct( array $values = array( ) )
+	public function __construct( array $values = [] )
 	{
 		parent::__construct( 'order.base.coupon.', $values );
-
-		$this->values = $values;
 	}
 
 
 	/**
 	 * Returns the base ID of the order.
 	 *
-	 * @return integer Order base Id.
+	 * @return string|null Order base ID
 	 */
 	public function getBaseId()
 	{
-		return ( isset( $this->values['baseid'] ) ? (int) $this->values['baseid'] : null );
+		return $this->get( 'order.base.coupon.baseid' );
 	}
 
 
 	/**
 	 * Sets the Base ID of the order.
 	 *
-	 * @param integer $baseid Order base ID.
+	 * @param string $baseid Order base ID.
+	 * @return \Aimeos\MShop\Order\Item\Base\Coupon\Iface Order base coupon item for chaining method calls
 	 */
 	public function setBaseId( $baseid )
 	{
-		if( $baseid == $this->getBaseId() ) { return; }
-
-		$this->values['baseid'] = (int) $baseid;
-		$this->setModified();
+		return $this->set( 'order.base.coupon.baseid', (string) $baseid );
 	}
 
 
 	/**
-	 * 	Returns the ID of the ordered product.
+	 * Returns the ID of the ordered product.
 	 *
-	 *  @return integer ID of the ordered product.
+	 * @return string|null ID of the ordered product.
 	 */
 	public function getProductId()
 	{
-		return ( isset( $this->values['ordprodid'] ) ? (int) $this->values['ordprodid'] : null );
+		return $this->get( 'order.base.coupon.ordprodid' );
 	}
 
 
 	/**
-	 * 	Sets the ID of the ordered product.
+	 * Sets the ID of the ordered product.
 	 *
-	 * 	@param integer $productid ID of the ordered product
+	 * @param string $productid ID of the ordered product
+	 * @return \Aimeos\MShop\Order\Item\Base\Coupon\Iface Order base coupon item for chaining method calls
 	 */
 	public function setProductId( $productid )
 	{
-		if( $productid == $this->getProductId() ) { return; }
-
-		$this->values['ordprodid'] = (int) $productid;
-		$this->setModified();
+		return $this->set( 'order.base.coupon.ordprodid', (string) $productid );
 	}
 
 
 	/**
 	 * Returns the coupon code.
 	 *
-	 * @return string Coupon code.
+	 * @return string|null Coupon code.
 	 */
 	public function getCode()
 	{
-		return ( isset( $this->values['code'] ) ? (string) $this->values['code'] : null );
+		return $this->get( 'order.base.coupon.code' );
 	}
 
 
@@ -103,56 +94,70 @@ class Standard
 	 * Sets the coupon code.
 	 *
 	 * @param string $code Coupon code
+	 * @return \Aimeos\MShop\Order\Item\Base\Coupon\Iface Order base coupon item for chaining method calls
 	 */
 	public function setCode( $code )
 	{
-		$this->checkCode( $code );
-
-		if( $code == $this->getCode() ) { return; }
-
-		$this->values['code'] = (string) $code;
-		$this->setModified();
+		return $this->set( 'order.base.coupon.code', $this->checkCode( $code ) );
 	}
 
 
 	/**
-	 * Sets the item values from the given array.
+	 * Returns the item type
 	 *
-	 * @param array $list Associative list of item keys and their values
-	 * @return array Associative list of keys and their values that are unknown
+	 * @return string Item type, subtypes are separated by slashes
 	 */
-	public function fromArray( array $list )
+	public function getResourceType()
 	{
-		$unknown = array();
-		$list = parent::fromArray( $list );
+		return 'order/base/coupon';
+	}
+
+
+	/*
+	 * Sets the item values from the given array and removes that entries from the list
+	 *
+	 * @param array &$list Associative list of item keys and their values
+	 * @param boolean True to set private properties too, false for public only
+	 * @return \Aimeos\MShop\Order\Item\Base\Coupon\Iface Order coupon item for chaining method calls
+	 */
+	public function fromArray( array &$list, $private = false )
+	{
+		$item = parent::fromArray( $list, $private );
 
 		foreach( $list as $key => $value )
 		{
 			switch( $key )
 			{
-				case 'order.base.coupon.baseid': $this->setBaseId( $value ); break;
-				case 'order.base.coupon.productid': $this->setProductId( $value ); break;
-				case 'order.base.coupon.code': $this->setCode( $value ); break;
-				default: $unknown[$key] = $value;
+				case 'order.base.coupon.baseid': !$private ?: $item = $item->setBaseId( $value ); break;
+				case 'order.base.coupon.productid': !$private ?: $item = $item->setProductId( $value ); break;
+				case 'order.base.coupon.code': $item = $item->setCode( $value ); break;
+				default: continue 2;
 			}
+
+			unset( $list[$key] );
 		}
 
-		return $unknown;
+		return $item;
 	}
 
 
 	/**
 	 * Returns the item values as array.
 	 *
-	 * @return Associative list of item properties and their values
+	 * @param boolean True to return private properties, false for public only
+	 * @return array Associative list of item properties and their values
 	 */
-	public function toArray()
+	public function toArray( $private = false )
 	{
-		$list = parent::toArray();
+		$list = parent::toArray( $private );
 
-		$list['order.base.coupon.baseid'] = $this->getBaseId();
-		$list['order.base.coupon.productid'] = $this->getProductId();
 		$list['order.base.coupon.code'] = $this->getCode();
+
+		if( $private === true )
+		{
+			$list['order.base.coupon.baseid'] = $this->getBaseId();
+			$list['order.base.coupon.productid'] = $this->getProductId();
+		}
 
 		return $list;
 	}

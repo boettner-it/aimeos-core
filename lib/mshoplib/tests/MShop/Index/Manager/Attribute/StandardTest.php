@@ -1,109 +1,80 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2012
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2012
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 
 namespace Aimeos\MShop\Index\Manager\Attribute;
 
 
-/**
- * Test class for \Aimeos\MShop\Index\Manager\Attribute\Standard.
- */
-class StandardTest extends \PHPUnit_Framework_TestCase
+class StandardTest extends \PHPUnit\Framework\TestCase
 {
+	private $context;
 	private $object;
 
 
-	/**
-	 * Sets up the fixture.
-	 * This method is called before a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function setUp()
 	{
-		$this->object = new \Aimeos\MShop\Index\Manager\Attribute\Standard( \TestHelper::getContext() );
+		$this->context = \TestHelperMShop::getContext();
+		$this->object = new \Aimeos\MShop\Index\Manager\Attribute\Standard( $this->context );
 	}
 
 
-	/**
-	 * Tears down the fixture, for example, closes a network connection.
-	 * This method is called after a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function tearDown()
 	{
 		unset( $this->object );
 	}
 
 
-	public function testCleanup()
+	public function testClear()
 	{
-		$this->object->cleanup( array( -1 ) );
+		$this->object->clear( array( -1 ) );
 	}
 
 
 	public function testAggregate()
 	{
-		$manager = \Aimeos\MShop\Factory::createManager( \TestHelper::getContext(), 'attribute' );
-
-		$search = $manager->createSearch();
-		$expr = array(
-			$search->compare( '==', 'attribute.code', 'white' ),
-			$search->compare( '==', 'attribute.type.code', 'color' ),
-		);
-		$search->setConditions( $search->combine( '&&', $expr ) );
-
-		$items = $manager->searchItems( $search );
-
-		if( ( $item = reset( $items ) ) === false ) {
-			throw new \Exception( 'No attribute item found' );
-		}
-
+		$item = \Aimeos\MShop::create( $this->context, 'attribute' )->findItem( 'white', [], 'product', 'color' );
 
 		$search = $this->object->createSearch( true );
 		$result = $this->object->aggregate( $search, 'index.attribute.id' );
 
-		$this->assertEquals( 12, count( $result ) );
+		$this->assertEquals( 14, count( $result ) );
 		$this->assertArrayHasKey( $item->getId(), $result );
-		$this->assertEquals( 4, $result[$item->getId()] );
+		$this->assertEquals( 3, $result[$item->getId()] );
+	}
+
+
+	public function testGetResourceType()
+	{
+		$result = $this->object->getResourceType();
+
+		$this->assertContains( 'index/attribute', $result );
 	}
 
 
 	public function testGetSearchAttributes()
 	{
 		foreach( $this->object->getSearchAttributes() as $attribute ) {
-			$this->assertInstanceOf( '\\Aimeos\\MW\\Criteria\\Attribute\\Iface', $attribute );
+			$this->assertInstanceOf( \Aimeos\MW\Criteria\Attribute\Iface::class, $attribute );
 		}
 	}
 
 
 	public function testSaveDeleteItem()
 	{
-		$productManager = \Aimeos\MShop\Product\Manager\Factory::createManager( \TestHelper::getContext() );
-		$search = $productManager->createSearch();
-		$search->setConditions( $search->compare( '==', 'product.code', 'CNC' ) );
-
-		$result = $productManager->searchItems( $search, array( 'attribute' ) );
-
-		if( ( $product = reset( $result ) ) === false ) {
-			throw new \Exception( 'No product item with code CNE found!' );
-		}
+		$productManager = \Aimeos\MShop\Product\Manager\Factory::create( $this->context );
+		$product = $productManager->findItem( 'CNC', ['attribute'] );
 
 		$attributes = $product->getRefItems( 'attribute' );
 		if( ( $attrItem = reset( $attributes ) ) === false ) {
-			throw new \Exception( 'Product doesnt have any attribute item' );
+			throw new \RuntimeException( 'Product doesnt have any attribute item' );
 		}
 
-		$product->setId( null );
-		$product->setCode( 'ModifiedCNC' );
-		$productManager->saveItem( $product );
-		$this->object->saveItem( $product );
+		$product = $this->object->saveItem( $product->setId( null )->setCode( 'ModifiedCNC' ) );
 
 
 		$search = $this->object->createSearch();
@@ -127,87 +98,81 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testGetSubManager()
 	{
-		$this->setExpectedException( '\\Aimeos\\MShop\\Exception' );
+		$this->setExpectedException( \Aimeos\MShop\Exception::class );
 		$this->object->getSubManager( 'unknown' );
 	}
 
 
 	public function testSearchItems()
 	{
-		$context = \TestHelper::getContext();
-		$attributeManager = \Aimeos\MShop\Attribute\Manager\Factory::createManager( $context );
-		$search = $attributeManager->createSearch();
-
-		$expr = array(
-			$search->compare( '==', 'attribute.code', '30' ),
-			$search->compare( '==', 'attribute.editor', $context->getEditor() ),
-			$search->compare( '==', 'attribute.type.domain', 'product' ),
-			$search->compare( '==', 'attribute.type.code', 'length' ),
-		);
-		$search->setConditions( $search->combine( '&&', $expr ) );
-		$result = $attributeManager->searchItems( $search );
-
-		if( ( $attrLengthItem = reset( $result ) ) === false ) {
-			throw new \Exception( 'No attribute item found' );
-		}
-
-		$expr = array(
-			$search->compare( '==', 'attribute.code', '29' ),
-			$search->compare( '==', 'attribute.editor', $context->getEditor() ),
-			$search->compare( '==', 'attribute.type.domain', 'product' ),
-			$search->compare( '==', 'attribute.type.code', 'width' ),
-		);
-		$search->setConditions( $search->combine( '&&', $expr ) );
-		$result = $attributeManager->searchItems( $search );
-
-		if( ( $attrWidthItem = reset( $result ) ) === false ) {
-			throw new \Exception( 'No attribute item found' );
-		}
-
+		$attributeManager = \Aimeos\MShop\Attribute\Manager\Factory::create( $this->context );
+		$id = $attributeManager->findItem( '30', [], 'product', 'length' )->getId();
 
 		$search = $this->object->createSearch();
-		$search->setConditions( $search->compare( '==', 'index.attribute.id', $attrWidthItem->getId() ) );
-
-		$result = $this->object->searchItems( $search, array() );
-		$this->assertGreaterThanOrEqual( 1, count( $result ) );
-
-
-		$search = $this->object->createSearch();
-		$search->setConditions( $search->compare( '==', 'index.attribute.id', $attrLengthItem->getId() ) );
-
-		$result = $this->object->searchItems( $search, array() );
-		$this->assertEquals( 3, count( $result ) );
-
-		$search->setConditions( $search->compare( '!=', 'index.attribute.id', null ) );
-
-		$result = $this->object->searchItems( $search, array() );
-		$this->assertGreaterThanOrEqual( 2, count( $result ) );
-
-
-		$attrIds = array( (int) $attrLengthItem->getId(), (int) $attrWidthItem->getId() );
-		$func = $search->createFunction( 'index.attributecount', array( 'variant', $attrIds ) );
-		$search->setConditions( $search->compare( '==', $func, 2 ) ); // count attributes
-		$result = $this->object->searchItems( $search, array() );
-
-		if( ( $product = reset( $result ) ) === false ) {
-			throw new \Exception( 'No product found' );
-		}
+		$search->setConditions( $search->compare( '==', 'index.attribute.id', $id ) );
+		$result = $this->object->searchItems( $search, [] );
 
 		$this->assertEquals( 2, count( $result ) );
-		$this->assertEquals( 'CNE', $product->getCode() );
-
-
-		$func = $search->createFunction( 'index.attribute.code', array( 'default', 'size' ) );
-		$search->setConditions( $search->compare( '~=', $func, 'x' ) );
-
-		$result = $this->object->searchItems( $search, array() );
-		$this->assertEquals( 4, count( $result ) );
 	}
 
 
-	public function testCleanupIndex()
+	public function testSearchItemsNoId()
 	{
-		$this->object->cleanupIndex( '0000-00-00 00:00:00' );
+		$search = $this->object->createSearch();
+		$search->setConditions( $search->compare( '!=', 'index.attribute.id', null ) );
+		$result = $this->object->searchItems( $search, [] );
+
+		$this->assertGreaterThanOrEqual( 2, count( $result ) );
+	}
+
+
+	public function testSearchItemsAllof()
+	{
+		$manager = \Aimeos\MShop\Attribute\Manager\Factory::create( $this->context );
+
+		$attrIds = [
+			$manager->findItem( '30', [], 'product', 'length' )->getId(),
+			$manager->findItem( '29', [], 'product', 'width' )->getId()
+		];
+
+		$search = $this->object->createSearch();
+
+		$func = $search->createFunction( 'index.attribute:allof', [$attrIds] );
+		$search->setConditions( $search->compare( '!=', $func, null ) );
+		$search->setSortations( array( $search->sort( '+', 'product.code' ) ) );
+
+		$result = $this->object->searchItems( $search, [] );
+
+		$this->assertEquals( 1, count( $result ) );
+		$this->assertEquals( 'CNE', reset( $result )->getCode() );
+	}
+
+
+	public function testSearchItemsOneof()
+	{
+		$manager = \Aimeos\MShop\Attribute\Manager\Factory::create( $this->context );
+
+		$attrIds = [
+			$manager->findItem( '30', [], 'product', 'length' )->getId(),
+			$manager->findItem( '30', [], 'product', 'width' )->getId()
+		];
+
+		$search = $this->object->createSearch();
+
+		$func = $search->createFunction( 'index.attribute:oneof', [$attrIds] );
+		$search->setConditions( $search->compare( '!=', $func, null ) );
+		$search->setSortations( array( $search->sort( '+', 'product.code' ) ) );
+
+		$result = $this->object->searchItems( $search, [] );
+
+		$this->assertEquals( 2, count( $result ) );
+		$this->assertEquals( 'CNE', reset( $result )->getCode() );
+	}
+
+
+	public function testCleanup()
+	{
+		$this->object->cleanup( '1970-01-01 00:00:00' );
 	}
 
 }

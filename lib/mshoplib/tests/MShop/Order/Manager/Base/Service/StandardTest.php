@@ -1,19 +1,16 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 
 namespace Aimeos\MShop\Order\Manager\Base\Service;
 
 
-/**
- * Test class for \Aimeos\MShop\Order\Manager\Base\Service\Standard.
- */
-class StandardTest extends \PHPUnit_Framework_TestCase
+class StandardTest extends \PHPUnit\Framework\TestCase
 {
 	private $context;
 	private $object;
@@ -22,8 +19,8 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	protected function setUp()
 	{
-		$this->editor = \TestHelper::getContext()->getEditor();
-		$this->context = \TestHelper::getContext();
+		$this->editor = \TestHelperMShop::getContext()->getEditor();
+		$this->context = \TestHelperMShop::getContext();
 		$this->object = new \Aimeos\MShop\Order\Manager\Base\Service\Standard( $this->context );
 	}
 
@@ -37,7 +34,7 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	public function testAggregate()
 	{
 		$search = $this->object->createSearch();
-		$search->setConditions( $search->compare( '==', 'order.base.service.editor', 'core:unittest' ) );
+		$search->setConditions( $search->compare( '==', 'order.base.service.editor', 'core:lib/mshoplib' ) );
 		$result = $this->object->aggregate( $search, 'order.base.service.code' );
 
 		$this->assertEquals( 4, count( $result ) );
@@ -46,9 +43,48 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	}
 
 
-	public function testCleanup()
+	public function testAggregateAvg()
 	{
-		$this->object->cleanup( array( -1 ) );
+		$search = $this->object->createSearch();
+		$search->setConditions( $search->compare( '==', 'order.base.service.editor', 'core:lib/mshoplib' ) );
+		$result = $this->object->aggregate( $search, 'order.base.service.type', 'order.base.service.costs', 'avg' );
+
+		$this->assertEquals( 2, count( $result ) );
+		$this->assertArrayHasKey( 'delivery', $result );
+		$this->assertEquals( '5.00', round( $result['delivery'], 2 ) );
+	}
+
+
+	public function testAggregateSum()
+	{
+		$search = $this->object->createSearch();
+		$search->setConditions( $search->compare( '==', 'order.base.service.editor', 'core:lib/mshoplib' ) );
+		$result = $this->object->aggregate( $search, 'order.base.service.type', 'order.base.service.costs', 'sum' );
+
+		$this->assertEquals( 2, count( $result ) );
+		$this->assertArrayHasKey( 'delivery', $result );
+		$this->assertEquals( '20.00', $result['delivery'] );
+	}
+
+
+	public function testClear()
+	{
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Manager\Iface::class, $this->object->clear( [-1] ) );
+	}
+
+
+	public function testDeleteItems()
+	{
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Manager\Iface::class, $this->object->deleteItems( [-1] ) );
+	}
+
+
+	public function testGetResourceType()
+	{
+		$result = $this->object->getResourceType();
+
+		$this->assertContains( 'order/base/service', $result );
+		$this->assertContains( 'order/base/service/attribute', $result );
 	}
 
 
@@ -56,7 +92,7 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	{
 		foreach( $this->object->getSearchAttributes() as $attribute )
 		{
-			$this->assertInstanceOf( '\\Aimeos\\MW\\Criteria\\Attribute\\Iface', $attribute );
+			$this->assertInstanceOf( \Aimeos\MW\Criteria\Attribute\Iface::class, $attribute );
 		}
 	}
 
@@ -64,14 +100,14 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	public function testCreateItem()
 	{
 		$actual = $this->object->createItem();
-		$this->assertInstanceOf( '\\Aimeos\\MShop\\Order\\Item\\Base\\Service\\Iface', $actual );
+		$this->assertInstanceOf( \Aimeos\MShop\Order\Item\Base\Service\Iface::class, $actual );
 	}
 
 
 	public function testCreateSearch()
 	{
-		$this->assertInstanceOf( '\\Aimeos\\MW\\Criteria\\Iface', $this->object->createSearch() );
-		$this->assertInstanceOf( '\\Aimeos\\MW\\Criteria\\Iface', $this->object->createSearch( true ) );
+		$this->assertInstanceOf( \Aimeos\MW\Criteria\Iface::class, $this->object->createSearch() );
+		$this->assertInstanceOf( \Aimeos\MW\Criteria\Iface::class, $this->object->createSearch( true ) );
 	}
 
 
@@ -82,7 +118,7 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$total = 0;
 		$search = $this->object->createSearch();
 
-		$expr = array();
+		$expr = [];
 		$expr[] = $search->compare( '!=', 'order.base.service.id', null );
 		$expr[] = $search->compare( '==', 'order.base.service.siteid', $siteid );
 		$expr[] = $search->compare( '!=', 'order.base.service.baseid', null );
@@ -94,22 +130,26 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$expr[] = $search->compare( '==', 'order.base.service.price', '0.00' );
 		$expr[] = $search->compare( '==', 'order.base.service.costs', '0.00' );
 		$expr[] = $search->compare( '==', 'order.base.service.rebate', '0.00' );
-		$expr[] = $search->compare( '==', 'order.base.service.taxrate', '0.00' );
+		$expr[] = $search->compare( '=~', 'order.base.service.taxrates', '{' );
+		$expr[] = $search->compare( '==', 'order.base.service.taxflag', 1 );
+		$expr[] = $search->compare( '==', 'order.base.service.taxvalue', '0.00' );
+		$expr[] = $search->compare( '==', 'order.base.service.position', 0 );
 		$expr[] = $search->compare( '>=', 'order.base.service.mtime', '1970-01-01 00:00:00' );
 		$expr[] = $search->compare( '>=', 'order.base.service.ctime', '1970-01-01 00:00:00' );
 		$expr[] = $search->compare( '==', 'order.base.service.editor', $this->editor );
 
 		$expr[] = $search->compare( '!=', 'order.base.service.attribute.id', null );
 		$expr[] = $search->compare( '==', 'order.base.service.attribute.siteid', $siteid );
-		$expr[] = $search->compare( '!=', 'order.base.service.attribute.serviceid', null );
+		$expr[] = $search->compare( '!=', 'order.base.service.attribute.parentid', null );
 		$expr[] = $search->compare( '==', 'order.base.service.attribute.code', 'NAME' );
 		$expr[] = $search->compare( '==', 'order.base.service.attribute.value', '"CreditCard"' );
+		$expr[] = $search->compare( '==', 'order.base.service.attribute.quantity', 1 );
 		$expr[] = $search->compare( '>=', 'order.base.service.attribute.mtime', '1970-01-01 00:00:00' );
 		$expr[] = $search->compare( '>=', 'order.base.service.attribute.ctime', '1970-01-01 00:00:00' );
 		$expr[] = $search->compare( '==', 'order.base.service.attribute.editor', $this->editor );
 
 		$search->setConditions( $search->combine( '&&', $expr ) );
-		$result = $this->object->searchItems( $search, array(), $total );
+		$result = $this->object->searchItems( $search, [], $total );
 
 		$this->assertEquals( 1, count( $result ) );
 		$this->assertEquals( 1, $total );
@@ -122,7 +162,7 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		);
 		$search->setConditions( $search->combine( '&&', $conditions ) );
 		$search->setSlice( 0, 1 );
-		$results = $this->object->searchItems( $search, array(), $total );
+		$results = $this->object->searchItems( $search, [], $total );
 
 		$this->assertEquals( 1, count( $results ) );
 		$this->assertEquals( 2, $total );
@@ -135,38 +175,38 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testGetSubManager()
 	{
-		$this->assertInstanceOf( '\\Aimeos\\MShop\\Common\\Manager\\Iface', $this->object->getSubManager( 'attribute' ) );
-		$this->assertInstanceOf( '\\Aimeos\\MShop\\Common\\Manager\\Iface', $this->object->getSubManager( 'attribute', 'Standard' ) );
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Manager\Iface::class, $this->object->getSubManager( 'attribute' ) );
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Manager\Iface::class, $this->object->getSubManager( 'attribute', 'Standard' ) );
 
-		$this->setExpectedException( '\\Aimeos\\MShop\\Exception' );
+		$this->setExpectedException( \Aimeos\MShop\Exception::class );
 		$this->object->getSubManager( 'unknown' );
 	}
 
 
 	public function testGetSubManagerInvalidName()
 	{
-		$this->setExpectedException( '\\Aimeos\\MShop\\Exception' );
+		$this->setExpectedException( \Aimeos\MShop\Exception::class );
 		$this->object->getSubManager( 'attribute', 'unknown' );
 	}
 
 
 	public function testGetSubManagerInvalidType()
 	{
-		$this->setExpectedException( '\\Aimeos\\MShop\\Exception' );
+		$this->setExpectedException( \Aimeos\MShop\Exception::class );
 		$this->object->getSubManager( '$$$' );
 	}
 
 
 	public function testGetSubManagerInvalidDefaultName()
 	{
-		$this->setExpectedException( '\\Aimeos\\MShop\\Exception' );
+		$this->setExpectedException( \Aimeos\MShop\Exception::class );
 		$this->object->getSubManager( 'attribute', '$$$' );
 	}
 
 
 	public function testGetItem()
 	{
-		$search = $this->object->createSearch();
+		$search = $this->object->createSearch()->setSlice( 0, 1 );
 		$conditions = array(
 			$search->compare( '==', 'order.base.service.code', 'OGONE' ),
 			$search->compare( '==', 'order.base.service.editor', $this->editor ),
@@ -175,7 +215,7 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$results = $this->object->searchItems( $search );
 
 		if( !( $item = reset( $results ) ) ) {
-			throw new \Exception( 'empty results' );
+			throw new \RuntimeException( 'empty results' );
 		}
 
 		$actual = $this->object->getItem( $item->getId() );
@@ -189,30 +229,31 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$conditions = array(
 			$search->compare( '==', 'order.base.service.code', 'OGONE' ),
 			$search->compare( '==', 'order.base.service.editor', $this->editor ),
+			$search->compare( '==', 'order.base.service.attribute.code', 'NAME' ),
 		);
 		$search->setConditions( $search->combine( '&&', $conditions ) );
 		$orderItems = $this->object->searchItems( $search );
 
 		if( !( $item = reset( $orderItems ) ) ) {
-			throw new \Exception( 'empty search result' );
+			throw new \RuntimeException( 'empty search result' );
 		}
 
 		$item->setId( null );
 		$item->setCode( 'unittest1' );
-		$this->object->saveItem( $item );
+		$resultSaved = $this->object->saveItem( $item );
 		$itemSaved = $this->object->getItem( $item->getId() );
 
 
 		$itemExp = clone $itemSaved;
 		$itemExp->setCode( 'unittest1' );
-		$this->object->saveItem( $itemExp );
+		$resultUpd = $this->object->saveItem( $itemExp );
 		$itemUpd = $this->object->getItem( $itemExp->getId() );
 
 		$this->object->deleteItem( $itemSaved->getId() );
 
 
 		$this->assertTrue( $item->getId() !== null );
-		$this->assertNotEquals( array( ), $item->getAttributes() );
+		$this->assertNotEquals( [], $item->getAttributeItems() );
 		$this->assertEquals( $item->getId(), $itemSaved->getId() );
 		$this->assertEquals( $item->getSiteId(), $itemSaved->getSiteId() );
 		$this->assertEquals( $item->getBaseId(), $itemSaved->getBaseId() );
@@ -222,7 +263,6 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals( $item->getName(), $itemSaved->getName() );
 		$this->assertEquals( $item->getMediaUrl(), $itemSaved->getMediaUrl() );
 		$this->assertEquals( $item->getPrice(), $itemSaved->getPrice() );
-
 
 		$this->assertEquals( $this->editor, $itemSaved->getEditor() );
 		$this->assertRegExp( '/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/', $itemSaved->getTimeCreated() );
@@ -237,14 +277,16 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals( $itemExp->getName(), $itemUpd->getName() );
 		$this->assertEquals( $itemExp->getMediaUrl(), $itemUpd->getMediaUrl() );
 		$this->assertEquals( $itemExp->getPrice(), $itemUpd->getPrice() );
-		$this->assertEquals( array( ), $itemUpd->getAttributes() );
-
+		$this->assertEquals( [], $itemUpd->getAttributeItems() );
 
 		$this->assertEquals( $this->editor, $itemUpd->getEditor() );
 		$this->assertEquals( $itemExp->getTimeCreated(), $itemUpd->getTimeCreated() );
 		$this->assertRegExp( '/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/', $itemUpd->getTimeModified() );
 
-		$this->setExpectedException( '\\Aimeos\\MShop\\Exception' );
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Item\Iface::class, $resultSaved );
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Item\Iface::class, $resultUpd );
+
+		$this->setExpectedException( \Aimeos\MShop\Exception::class );
 		$this->object->getItem( $itemSaved->getId() );
 	}
 }

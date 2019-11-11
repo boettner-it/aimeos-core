@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2013
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2013
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Plugin
  */
@@ -22,6 +22,7 @@ abstract class Base
 {
 	private $item;
 	private $context;
+	private $object;
 
 
 	/**
@@ -34,6 +35,91 @@ abstract class Base
 	{
 		$this->item = $item;
 		$this->context = $context;
+	}
+
+
+	/**
+	 * Checks the backend configuration attributes for validity.
+	 *
+	 * @param array $attributes Attributes added by the shop owner in the administraton interface
+	 * @return array An array with the attribute keys as key and an error message as values for all attributes that are
+	 * 	known by the provider but aren't valid resp. null for attributes whose values are OK
+	 */
+	public function checkConfigBE( array $attributes )
+	{
+		return [];
+	}
+
+
+	/**
+	 * Returns the configuration attribute definitions of the provider to generate a list of available fields and
+	 * rules for the value of each field in the administration interface.
+	 *
+	 * @return array List of attribute definitions implementing \Aimeos\MW\Common\Critera\Attribute\Iface
+	 */
+	public function getConfigBE()
+	{
+		return [];
+	}
+
+
+	/**
+	 * Injects the outer object into the decorator stack
+	 *
+	 * @param \Aimeos\MShop\Plugin\Provider\Iface $object First object of the decorator stack
+	 * @return \Aimeos\MShop\Plugin\Provider\Iface Plugin object for chaining method calls
+	 */
+	public function setObject( \Aimeos\MShop\Plugin\Provider\Iface $object )
+	{
+		$this->object = $object;
+		return $this;
+	}
+
+
+	/**
+	 * Checks required fields and the types of the given data map
+	 *
+	 * @param array $criteria Multi-dimensional associative list of criteria configuration
+	 * @param array $map Values to check agains the criteria
+	 * @return array An array with the attribute keys as key and an error message as values for all attributes that are
+	 * 	known by the provider but aren't valid resp. null for attributes whose values are OK
+	 */
+	protected function checkConfig( array $criteria, array $map )
+	{
+		$helper = new \Aimeos\MShop\Common\Helper\Config\Standard( $this->getConfigItems( $criteria ) );
+		return $helper->check( $map );
+	}
+
+
+	/**
+	 * Returns the criteria attribute items for the backend configuration
+	 *
+	 * @return \Aimeos\MW\Criteria\Attribute\Iface[] List of criteria attribute items
+	 */
+	protected function getConfigItems( array $configList )
+	{
+		$list = [];
+
+		foreach( $configList as $key => $config ) {
+			$list[$key] = new \Aimeos\MW\Criteria\Attribute\Standard( $config );
+		}
+
+		return $list;
+	}
+
+
+	/**
+	 * Returns the first object of the decorator stack
+	 *
+	 * @return \Aimeos\MShop\Plugin\Provider\Iface First object of the decorator stack
+	 */
+	protected function getObject()
+	{
+		if( $this->object !== null ) {
+			return $this->object;
+		}
+
+		return $this;
 	}
 
 

@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Common
  */
@@ -20,7 +20,6 @@ namespace Aimeos\MShop\Common\Manager\Address;
  */
 abstract class Base
 	extends \Aimeos\MShop\Common\Manager\Base
-	implements \Aimeos\MShop\Common\Manager\Address\Iface
 {
 	private $prefix;
 	private $searchConfig;
@@ -54,43 +53,46 @@ abstract class Base
 
 
 	/**
-	 * Instantiates a new common address item object.
+	 * Creates a new empty item instance
 	 *
-	 * @return \Aimeos\MShop\Common\Item\Address\Iface
+	 * @param array $values Values the item should be initialized with
+	 * @return \Aimeos\MShop\Common\Item\Address\Iface New address item object
 	 */
-	public function createItem()
+	public function createItem( array $values = [] )
 	{
-		$values = array( 'siteid' => $this->getContext()->getLocale()->getSiteId() );
+		$values[$this->prefix . 'siteid'] = $this->getContext()->getLocale()->getSiteId();
 		return $this->createItemBase( $values );
 	}
 
 
 	/**
-	 * Removes multiple items specified by ids in the array.
+	 * Removes multiple items.
 	 *
-	 * @param array $ids List of IDs
+	 * @param \Aimeos\MShop\Common\Item\Iface[]|string[] $itemIds List of item objects or IDs of the items
+	 * @return \Aimeos\MShop\Common\Manager\Address\Iface Manager object for chaining method calls
 	 */
-	public function deleteItems( array $ids )
+	public function deleteItems( array $itemIds )
 	{
-		$this->deleteItemsBase( $ids, $this->getConfigPath() . 'delete' );
+		$this->deleteItemsBase( $itemIds, $this->getConfigPath() . 'delete' );
 	}
 
 
 	/**
 	 * Returns the common address item object specificed by its ID.
 	 *
-	 * @param integer $id Unique common address ID referencing an existing address
-	 * @param array $ref List of domains to fetch list items and referenced items for
+	 * @param string $id Unique common address ID referencing an existing address
+	 * @param string[] $ref List of domains to fetch list items and referenced items for
+	 * @param boolean $default Add default criteria
 	 * @return \Aimeos\MShop\Common\Item\Address\Iface Returns the address item of the given id
 	 * @throws \Aimeos\MShop\Exception If address search configuration isn't available
 	 */
-	public function getItem( $id, array $ref = array() )
+	public function getItem( $id, array $ref = [], $default = false )
 	{
 		if( ( $conf = reset( $this->searchConfig ) ) === false ) {
 			throw new \Aimeos\MShop\Exception( sprintf( 'Address search configuration not available' ) );
 		}
 
-		return $this->getItemBase( $conf['code'], $id, $ref );
+		return $this->getItemBase( $conf['code'], $id, $ref, $default );
 	}
 
 
@@ -99,12 +101,12 @@ abstract class Base
 	 *
 	 * @param \Aimeos\MShop\Common\Item\Address\Iface $item common address item object
 	 * @param boolean $fetch True if the new ID should be returned in the item
+	 * @return \Aimeos\MShop\Common\Item\Address\Iface $item Updated item including the generated ID
 	 */
-	public function saveItem( \Aimeos\MShop\Common\Item\Iface $item, $fetch = true )
+	public function saveItem( \Aimeos\MShop\Common\Item\Address\Iface $item, $fetch = true )
 	{
-		$iface = '\\Aimeos\\MShop\\Common\\Item\\Address\\Iface';
-		if( !( $item instanceof $iface ) ) {
-			throw new \Aimeos\MShop\Exception( sprintf( 'Object is not of required type "%1$s"', $iface ) );
+		if( !$item->isModified() ) {
+			return $item;
 		}
 
 		$context = $this->getContext();
@@ -117,53 +119,59 @@ abstract class Base
 		{
 			$id = $item->getId();
 			$date = date( 'Y-m-d H:i:s' );
+			$path = $this->getConfigPath();
+			$columns = $this->getObject()->getSaveAttributes();
 
 			if( $id === null ) {
-				$type = 'insert';
+				$sql = $this->addSqlColumns( array_keys( $columns ), $this->getSqlConfig( $path .= 'insert' ) );
 			} else {
-				$type = 'update';
+				$sql = $this->addSqlColumns( array_keys( $columns ), $this->getSqlConfig( $path .= 'update' ), false );
 			}
 
-			$stmt = $this->getCachedStatement( $conn, $this->getConfigPath() . $type );
+			$idx = 1;
+			$stmt = $this->getCachedStatement( $conn, $path, $sql );
 
-			$stmt->bind( 1, $context->getLocale()->getSiteId(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 2, $item->getRefId() );
-			$stmt->bind( 3, $item->getCompany() );
-			$stmt->bind( 4, $item->getVatId() );
-			$stmt->bind( 5, $item->getSalutation() );
-			$stmt->bind( 6, $item->getTitle() );
-			$stmt->bind( 7, $item->getFirstname() );
-			$stmt->bind( 8, $item->getLastname() );
-			$stmt->bind( 9, $item->getAddress1() );
-			$stmt->bind( 10, $item->getAddress2());
-			$stmt->bind( 11, $item->getAddress3() );
-			$stmt->bind( 12, $item->getPostal() );
-			$stmt->bind( 13, $item->getCity() );
-			$stmt->bind( 14, $item->getState() );
-			$stmt->bind( 15, $item->getCountryId() );
-			$stmt->bind( 16, $item->getLanguageId() );
-			$stmt->bind( 17, $item->getTelephone() );
-			$stmt->bind( 18, $item->getEmail() );
-			$stmt->bind( 19, $item->getTelefax() );
-			$stmt->bind( 20, $item->getWebsite() );
-			$stmt->bind( 21, $item->getFlag(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 22, $item->getPosition(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 23, $date ); //mtime
-			$stmt->bind( 24, $context->getEditor() );
+			foreach( $columns as $name => $entry ) {
+				$stmt->bind( $idx++, $item->get( $name ), $entry->getInternalType() );
+			}
+
+			$stmt->bind( $idx++, $item->getParentId(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmt->bind( $idx++, $item->getCompany() );
+			$stmt->bind( $idx++, $item->getVatId() );
+			$stmt->bind( $idx++, $item->getSalutation() );
+			$stmt->bind( $idx++, $item->getTitle() );
+			$stmt->bind( $idx++, $item->getFirstname() );
+			$stmt->bind( $idx++, $item->getLastname() );
+			$stmt->bind( $idx++, $item->getAddress1() );
+			$stmt->bind( $idx++, $item->getAddress2() );
+			$stmt->bind( $idx++, $item->getAddress3() );
+			$stmt->bind( $idx++, $item->getPostal() );
+			$stmt->bind( $idx++, $item->getCity() );
+			$stmt->bind( $idx++, $item->getState() );
+			$stmt->bind( $idx++, $item->getCountryId() );
+			$stmt->bind( $idx++, $item->getLanguageId() );
+			$stmt->bind( $idx++, $item->getTelephone() );
+			$stmt->bind( $idx++, $item->getEmail() );
+			$stmt->bind( $idx++, $item->getTelefax() );
+			$stmt->bind( $idx++, $item->getWebsite() );
+			$stmt->bind( $idx++, $item->getLongitude(), \Aimeos\MW\DB\Statement\Base::PARAM_FLOAT );
+			$stmt->bind( $idx++, $item->getLatitude(), \Aimeos\MW\DB\Statement\Base::PARAM_FLOAT );
+			$stmt->bind( $idx++, $item->getPosition(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmt->bind( $idx++, $date ); //mtime
+			$stmt->bind( $idx++, $context->getEditor() );
+			$stmt->bind( $idx++, $context->getLocale()->getSiteId(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 
 			if( $id !== null ) {
-				$stmt->bind( 25, $id, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+				$stmt->bind( $idx++, $id, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 				$item->setId( $id ); //is not modified anymore
 			} else {
-				$stmt->bind( 25, $date ); // ctime
+				$stmt->bind( $idx++, $date ); // ctime
 			}
 
 			$stmt->execute()->finish();
 
-			if( $id === null && $fetch === true )
-			{
-				$path = $this->getConfigPath() . 'newid';
-				$item->setId( $this->newId( $conn, $path ) );
+			if( $id === null && $fetch === true ) {
+				$item->setId( $this->newId( $conn, $this->getConfigPath() . 'newid' ) );
 			}
 
 			$dbm->release( $conn, $dbname );
@@ -173,6 +181,8 @@ abstract class Base
 			$dbm->release( $conn, $dbname );
 			throw $e;
 		}
+
+		return $item;
 	}
 
 
@@ -180,26 +190,20 @@ abstract class Base
 	 * Returns the item objects matched by the given search criteria.
 	 *
 	 * @param \Aimeos\MW\Criteria\Iface $search Search criteria object
-	 * @param integer &$total Number of items that are available in total
+	 * @param string[] $ref List of domains to fetch list items and referenced items for
+	 * @param integer|null &$total Number of items that are available in total
 	 * @return array List of items implementing \Aimeos\MShop\Common\Item\Address\Iface
-	 * @throws \Aimeos\MShop\Common\Exception If creating items failed
 	 */
-	public function searchItems( \Aimeos\MW\Criteria\Iface $search, array $ref = array(), &$total = null )
+	public function searchItems( \Aimeos\MW\Criteria\Iface $search, array $ref = [], &$total = null )
 	{
 		$dbm = $this->getContext()->getDatabaseManager();
 		$dbname = $this->getResourceName();
 		$conn = $dbm->acquire( $dbname );
-		$items = array();
+		$items = [];
 
 		try
 		{
-			$domain = explode( '.', $this->prefix );
-
-			if( ( $topdomain = array_shift( $domain ) ) === null ) {
-				throw new \Aimeos\MShop\Exception( 'No configuration available.' );
-			}
-
-			$required = array( trim( $this->prefix, '.' ) );
+			$required = [trim( $this->prefix, '.' )];
 			$level = \Aimeos\MShop\Locale\Manager\Base::SITE_ALL;
 			$cfgPathSearch = $this->getConfigPath() . 'search';
 			$cfgPathCount = $this->getConfigPath() . 'count';
@@ -207,7 +211,7 @@ abstract class Base
 			$results = $this->searchItemsBase( $conn, $search, $cfgPathSearch, $cfgPathCount, $required, $total, $level );
 
 			while( ( $row = $results->fetch() ) !== false ) {
-				$items[$row['id']] = $this->createItemBase( $row );
+				$items[(string) $row[$this->prefix . 'id']] = $this->createItemBase( $row );
 			}
 
 			$dbm->release( $conn, $dbname );
@@ -268,7 +272,7 @@ abstract class Base
 	 * @param array $values List of attributes for address item
 	 * @return \Aimeos\MShop\Common\Item\Address\Iface New address item
 	 */
-	protected function createItemBase( array $values = array( ) )
+	protected function createItemBase( array $values = [] )
 	{
 		return new \Aimeos\MShop\Common\Item\Address\Standard( $this->prefix, $values );
 	}

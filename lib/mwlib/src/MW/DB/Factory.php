@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage DB
  */
@@ -28,9 +28,9 @@ class Factory
 	 * @return \Aimeos\MW\DB\Manager\Iface Instance of a database manager
 	 * @throws \Aimeos\MW\DB\Exception if database manager class isn't found
 	 */
-	static public function createManager( \Aimeos\MW\Config\Iface $config, $type = 'PDO' )
+	public static function create( \Aimeos\MW\Config\Iface $config, $type = 'PDO' )
 	{
-		$classname = '\\Aimeos\\MW\\DB\\Manager\\' . $type;
+		$classname = '\Aimeos\MW\DB\Manager\\' . $type;
 		$filename = 'MW/DB/Manager/' . $type . '.php';
 
 		$paths = explode( PATH_SEPARATOR, get_include_path() );
@@ -38,7 +38,7 @@ class Factory
 		foreach( $paths as $path )
 		{
 			$file = $path . DIRECTORY_SEPARATOR . $filename;
-			if( file_exists( $file ) === true  && ( include_once $file ) !== false && class_exists($classname)) {
+			if( file_exists( $file ) === true && ( include_once $file ) !== false && class_exists( $classname ) ) {
 				return new $classname( $config );
 			}
 		}

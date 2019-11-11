@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Session
  */
@@ -20,6 +20,14 @@ namespace Aimeos\MW\Session;
  */
 interface Iface
 {
+	/**
+	 * Sets a list of key/value pairs.
+	 *
+	 * @param array $values Associative list of key/value pairs
+	 * @return \Aimeos\MW\Session\Iface Session instance for method chaining
+	 */
+	public function apply( array $values );
+
 	/**
 	 * Returns the value of the requested session key.
 	 *
@@ -40,7 +48,7 @@ interface Iface
 	 *
 	 * @param string $name Key to the value which should be stored in the session
 	 * @param mixed $value Value that should be associated with the given key
-	 * @return void
+	 * @return \Aimeos\MW\Session\Iface Session instance for method chaining
 	 */
 	public function set( $name, $value );
 }

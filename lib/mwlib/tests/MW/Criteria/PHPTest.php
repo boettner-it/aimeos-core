@@ -1,41 +1,26 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 
 namespace Aimeos\MW\Criteria;
 
 
-/**
- * Test class for \Aimeos\MW\Criteria\PHP.
- */
-class PHPTest extends \PHPUnit_Framework_TestCase
+class PHPTest extends \PHPUnit\Framework\TestCase
 {
 	private $object;
 
 
-	/**
-	 * Sets up the fixture, for example, opens a network connection.
-	 * This method is called before a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function setUp()
 	{
 		$this->object = new \Aimeos\MW\Criteria\PHP();
 	}
 
 
-	/**
-	 * Tears down the fixture, for example, closes a network connection.
-	 * This method is called after a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function tearDown()
 	{
 		$this->object = null;
@@ -44,19 +29,19 @@ class PHPTest extends \PHPUnit_Framework_TestCase
 
 	public function testCombine()
 	{
-		$this->assertInstanceOf( '\\Aimeos\\MW\\Criteria\\Expression\\Combine\\PHP', $this->object->combine( '||', array() ) );
+		$this->assertInstanceOf( \Aimeos\MW\Criteria\Expression\Combine\PHP::class, $this->object->combine( '||', [] ) );
 	}
 
 
 	public function testCompare()
 	{
-		$this->assertInstanceOf( '\\Aimeos\\MW\\Criteria\\Expression\\Compare\\PHP', $this->object->compare( '!=', 'name', 'value' ) );
+		$this->assertInstanceOf( \Aimeos\MW\Criteria\Expression\Compare\PHP::class, $this->object->compare( '!=', 'name', 'value' ) );
 	}
 
 
 	public function testSort()
 	{
-		$this->assertInstanceOf( '\\Aimeos\\MW\\Criteria\\Expression\\Sort\\PHP', $this->object->sort( '+', 'name' ) );
+		$this->assertInstanceOf( \Aimeos\MW\Criteria\Expression\Sort\PHP::class, $this->object->sort( '+', 'name' ) );
 	}
 
 
@@ -64,7 +49,7 @@ class PHPTest extends \PHPUnit_Framework_TestCase
 	{
 		$expected = array(
 			'combine' => array( '&&', '||', '!' ),
-			'compare' => array( '==', '!=', '>=', '<=', '>', '<' ),
+			'compare' => array( '>', '>=', '<', '<=', '==', '!=' ),
 			'sort' => array( '+', '-' ),
 		);
 		$actual = $this->object->getOperators();
@@ -72,7 +57,17 @@ class PHPTest extends \PHPUnit_Framework_TestCase
 	}
 
 
-	public function testGetConditionString()
+	public function testTranslate()
+	{
+		$translations = array( 'int_value' => '$intval', 'str_value' => '$strval' );
+
+		$this->assertEquals( ["\$strval"], $this->object->translate( array( $this->object->sort( '+', 'str_value' ) ), $translations ) );
+		$this->assertEquals( ["\$strval"], $this->object->translate( array( $this->object->compare( '==', 'str_value', 1 ) ), $translations ) );
+		$this->assertEquals( [], $this->object->translate( array( $this->object->combine( '&&', [] ) ), $translations ) );
+	}
+
+
+	public function testGetConditionSource()
 	{
 		$intval = 1;
 		$strval = 'test';
@@ -81,85 +76,73 @@ class PHPTest extends \PHPUnit_Framework_TestCase
 		$translations = array( 'int_value' => '$intval', 'str_value' => '$strval' );
 		$plugins = array( 'int_value' => new TestPlugin() );
 
-		$result = $this->object->getConditionString( $types, $translations );
+		$result = $this->object->getConditionSource( $types, $translations );
 		$this->assertEquals( "1 == 1", $result );
 		$this->assertEquals( true, eval( 'return ' . $result . ';' ) );
 
 		$expr = array( $this->object->compare( '==', 'int_value', 'a' ), $this->object->compare( '==', 'str_value', 'test' ) );
 		$this->object->setConditions( $this->object->combine( '&&', $expr ) );
-		$result = $this->object->getConditionString( $types, $translations, $plugins );
+		$result = $this->object->getConditionSource( $types, $translations, $plugins );
 		$this->assertEquals( "( \$intval == 10 && \$strval == 'test' )", $result );
 		$this->assertEquals( false, eval( 'return ' . $result . ';' ) );
 
 		$expr = array( $this->object->compare( '==', 'int_value', array( 1, 2, 4, 8 ) ), $this->object->compare( '==', 'str_value', 'test' ) );
 		$this->object->setConditions( $this->object->combine( '&&', $expr ) );
-		$result = $this->object->getConditionString( $types, $translations );
+		$result = $this->object->getConditionSource( $types, $translations );
 		$this->assertEquals( "( ( \$intval == 1 || \$intval == 2 || \$intval == 4 || \$intval == 8 ) && \$strval == 'test' )", $result );
 		$this->assertEquals( true, eval( 'return ' . $result . ';' ) );
 
 		$expr = array( $this->object->compare( '==', 'int_value', 1 ), $this->object->compare( '!=', 'int_value', 2 ) );
 		$this->object->setConditions( $this->object->combine( '!', array( $this->object->combine( '&&', $expr ) ) ) );
-		$result = $this->object->getConditionString( $types, $translations );
+		$result = $this->object->getConditionSource( $types, $translations );
 		$this->assertEquals( " ! ( \$intval == 1 && \$intval != 2 )", $result );
 		$this->assertEquals( false, eval( 'return ' . $result . ';' ) );
 
 		$expr = array( $this->object->compare( '==', 'int_value', null ), $this->object->compare( '!=', 'str_value', null ) );
 		$this->object->setConditions( $this->object->combine( '&&', $expr ) );
-		$result = $this->object->getConditionString( $types, $translations );
+		$result = $this->object->getConditionSource( $types, $translations );
 		$this->assertEquals( "( \$intval === null && \$strval !== null )", $result );
 		$this->assertEquals( false, eval( 'return ' . $result . ';' ) );
 
 		$expr = array( $this->object->compare( '==', 'int_value', 1 ) );
 		$this->object->setConditions( $this->object->combine( '&&', $expr ) );
-		$result = $this->object->getConditionString( $types, $translations );
+		$result = $this->object->getConditionSource( $types, $translations );
 		$this->assertEquals( "( \$intval == 1 )", $result );
 		$this->assertEquals( true, eval( 'return ' . $result . ';' ) );
 
 		$expr = array( $this->object->compare( '==', 'str_value', 'test' ) );
 		$expr = array( $this->object->compare( '==', 'int_value', 1 ), $this->object->combine( '&&', $expr ) );
 		$this->object->setConditions( $this->object->combine( '&&', $expr ) );
-		$result = $this->object->getConditionString( $types, $translations );
+		$result = $this->object->getConditionSource( $types, $translations );
 		$this->assertEquals( "( \$intval == 1 && ( \$strval == 'test' ) )", $result );
 		$this->assertEquals( true, eval( 'return ' . $result . ';' ) );
 
 		$types = array( 'column' => 'bool' );
 		$this->object->setConditions( $this->object->compare( '==', 'column', 1 ) );
-		$this->assertEquals( "column == 1", $this->object->getConditionString( $types ) );
+		$this->assertEquals( "column == 1", $this->object->getConditionSource( $types ) );
 	}
 
 
-	public function testGetConditionStringInvalidOperatorForNull()
-	{
-		// test exception in _createTerm:  'NULL value not allowed for operator'
-		$types = array( 'str_value' => 'string' );
-
-		$this->object->setConditions( $this->object->compare( '>', 'str_value', null ) );
-
-		$this->setExpectedException('\\Aimeos\\MW\\Common\\Exception');
-		$this->object->getConditionString( $types );
-	}
-
-
-	public function testGetConditionStringInvalidName()
+	public function testGetConditionSourceInvalidName()
 	{
 		$types = array( 'int_value' => \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 
 		$this->object->setConditions( $this->object->compare( '==', 'ival', 10 ) );
-		$this->setExpectedException('\\Aimeos\\MW\\Common\\Exception');
-		$this->object->getConditionString( $types );
+		$this->setExpectedException( \Aimeos\MW\Common\Exception::class );
+		$this->object->getConditionSource( $types );
 	}
 
 
-	public function testGetConditionStringInvalidOperator()
+	public function testGetConditionSourceInvalidOperator()
 	{
-		$this->setExpectedException('\\Aimeos\\MW\\Common\\Exception');
+		$this->setExpectedException( \Aimeos\MW\Common\Exception::class );
 		$this->object->setConditions( $this->object->compare( '?', 'int_value', 10 ) );
 	}
 
 
 	public function testGetConditions()
 	{
-		$this->assertInstanceOf( '\\Aimeos\\MW\\Criteria\\Expression\\Compare\\PHP', $this->object->getConditions() );
+		$this->assertInstanceOf( \Aimeos\MW\Criteria\Expression\Compare\PHP::class, $this->object->getConditions() );
 
 		$conditions = $this->object->compare( '==', 'int_value', 10 );
 		$this->object->setConditions( $conditions );
@@ -167,7 +150,7 @@ class PHPTest extends \PHPUnit_Framework_TestCase
 	}
 
 
-	public function testGetSortationString()
+	public function testGetSortationSource()
 	{
 		$ascIntList = array( 1, 9, 5 );
 		$descStrList = array( 'abc', 'xyz', 'mno' );
@@ -175,32 +158,32 @@ class PHPTest extends \PHPUnit_Framework_TestCase
 		$types = array( 'asc_array' => 'int', 'desc_array' => 'string' );
 		$translations = array( 'asc_array' => '$ascIntList', 'desc_array' => '$descStrList' );
 
-		$sortations = array();
+		$sortations = [];
 		$sortations[] = $this->object->sort( '+', 'asc_array' );
 		$sortations[] = $this->object->sort( '-', 'desc_array' );
 		$this->object->setSortations( $sortations );
 
-		$result = $this->object->getSortationString( $types, $translations );
+		$result = $this->object->getSortationSource( $types, $translations );
 		$this->assertEquals( 'asort($ascIntList); arsort($descStrList);', $result );
 		$this->assertEquals( array( 0 => 1, 2 => 5, 1 => 9 ), $ascIntList );
 		$this->assertEquals( array( 1 => 'xyz', 2 => 'mno', 0 => 'abc' ), $descStrList );
 	}
 
 
-	public function testGetSortationStringInvalidName()
+	public function testGetSortationSourceInvalidName()
 	{
 		$types = array( 'asc_array' => 'int' );
 		$translations = array( 'asc_array' => 'asc_int_list' );
 
 		$this->object->setSortations( array( $this->object->sort( '+', 'asc_col' ) ) );
-		$this->setExpectedException('\\Aimeos\\MW\\Common\\Exception');
-		$this->object->getSortationString( $types, $translations );
+		$this->setExpectedException( \Aimeos\MW\Common\Exception::class );
+		$this->object->getSortationSource( $types, $translations );
 	}
 
 
-	public function testGetSortationStringInvalidDirection()
+	public function testGetSortationSourceInvalidDirection()
 	{
-		$this->setExpectedException('\\Aimeos\\MW\\Common\\Exception');
+		$this->setExpectedException( \Aimeos\MW\Common\Exception::class );
 		$this->object->setSortations( array( $this->object->sort( '/', 'asc_array' ) ) );
 	}
 
@@ -212,15 +195,15 @@ class PHPTest extends \PHPUnit_Framework_TestCase
 		$types = array( 'asc_array' => 'int', 'desc_array' => 'string' );
 		$translations = array( 'asc_array' => '$ascIntList', 'desc_array' => '$descStrList' );
 
-		$result = $this->object->getSortationString( $types, $translations );
-		$this->assertEquals('asort($ascIntList);', $result);
+		$result = $this->object->getSortationSource( $types, $translations );
+		$this->assertEquals( 'asort($ascIntList);', $result );
 		$this->assertEquals( array( 0 => 1, 2 => 5, 1 => 9 ), $ascIntList );
 	}
 
 
 	public function testGetSortations()
 	{
-		$this->assertEquals( array(), $this->object->getSortations() );
+		$this->assertEquals( [], $this->object->getSortations() );
 
 		$sortations = array( $this->object->sort( '+', 'asc_array' ) );
 		$this->object->setSortations( $sortations );

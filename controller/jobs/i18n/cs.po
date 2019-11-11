@@ -1,294 +1,422 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-#
+# 
 # Translators:
+# Martin Vyšohlíd <vysohlidm@gmail.com>, 2016
 msgid ""
 msgstr ""
 "Project-Id-Version: aimeos-core\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-10-14 19:56+0200\n"
-"PO-Revision-Date: 2015-09-29 12:32+0000\n"
-"Last-Translator: Aimeos <aimeos@aimeos.org>\n"
+"POT-Creation-Date: 2019-10-03 10:00+0200\n"
+"PO-Revision-Date: 2019-10-03 08:06+0000\n"
+"Last-Translator: Martin Vyšohlíd <vysohlidm@gmail.com>\n"
 "Language-Team: Czech (http://www.transifex.com/aimeos/aimeos-core/language/cs/)\n"
-"Language: cs\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
+"Language: cs\n"
+"Plural-Forms: nplurals=4; plural=(n == 1 && n % 1 == 0) ? 0 : (n >= 2 && n <= 4 && n % 1 == 0) ? 1: (n % 1 != 0 ) ? 2 : 3;\n"
 
-#: src/Controller/Jobs/Admin/Job/Standard.php:32
-msgid "Admin interface jobs"
+msgid "Attribute import XML"
 msgstr ""
 
-#: src/Controller/Jobs/Order/Service/Payment/Standard.php:43
-msgid "Authorized payments of orders will be captured after dispatching or after a configurable amount of time"
-msgstr ""
+msgid ""
+"Authorized payments of orders will be captured after dispatching or after a "
+"configurable amount of time"
+msgstr "Potvrzené platby objednávek budou získány po odeslání nebo nastavitelném časovém intervalu"
 
-#: src/Controller/Jobs/Order/Service/Async/Standard.php:32
 msgid "Batch update of payment/delivery status"
-msgstr ""
+msgstr "Dávková aktualizace plateb/objednávek"
 
-#: src/Controller/Jobs/Admin/Cache/Standard.php:32
 msgid "Cache cleanup"
-msgstr ""
+msgstr "Vymazat mezipaměť"
 
-#: src/Controller/Jobs/Order/Service/Payment/Standard.php:32
 msgid "Capture authorized payments"
+msgstr "Načíst autorizované platby"
+
+msgid "Catalog import CSV"
 msgstr ""
 
-#: src/Controller/Jobs/Index/Optimize/Standard.php:32
+msgid "Catalog import XML"
+msgstr ""
+
 msgid "Catalog index optimization"
-msgstr ""
+msgstr "Optimalizace indexu katalogu"
 
-#: src/Controller/Jobs/Index/Rebuild/Standard.php:32
 msgid "Catalog index rebuild"
+msgstr "Znovu sestavit index katalogu"
+
+msgid "Catalog site map"
 msgstr ""
 
-#: src/Controller/Jobs/Common/Factory/Base.php:71
-#: src/Controller/Jobs/Common/Factory/Base.php:168
 #, php-format
 msgid "Class \"%1$s\" does not implement interface \"%2$s\""
-msgstr ""
+msgstr "Třída \"%1$s\" neimplementuje rozhraní \"%2$s\""
 
-#: src/Controller/Jobs/Common/Factory/Base.php:65
-#: src/Controller/Jobs/Common/Factory/Base.php:162
-#: src/Controller/Jobs/Admin/Job/Standard.php:86
-#, php-format
-msgid "Class \"%1$s\" not available"
-msgstr ""
-
-#: src/Controller/Jobs/Factory.php:62
 #, php-format
 msgid "Class \"%1$s\" not found"
+msgstr "Třída \"%1$s\" nenalezena"
+
+msgid "Coupon code import CSV"
 msgstr ""
 
-#: src/Controller/Jobs/Factory.php:45
-#, php-format
-msgid "Controller path is empty"
+msgid "Creates a catalog site map for search engines"
 msgstr ""
 
-#: src/Controller/Jobs/Product/Export/Sitemap/Standard.php:42
 msgid "Creates a product site map for search engines"
 msgstr ""
 
-#: src/Controller/Jobs/Product/Bought/Standard.php:43
 msgid "Creates bought together product suggestions"
 msgstr ""
 
-#: src/Controller/Jobs/Order/Cleanup/Unfinished/Standard.php:43
-msgid "Deletes unfinished orders an makes their products and coupon codes available again"
+msgid "Customer import XML"
 msgstr ""
 
-#: src/Controller/Jobs/Order/Cleanup/Unpaid/Standard.php:43
+msgid ""
+"Deletes unfinished orders an makes their products and coupon codes available"
+" again"
+msgstr ""
+
 msgid "Deletes unpaid orders to keep the database clean"
 msgstr ""
 
-#: src/Controller/Jobs/Order/Service/Async/Standard.php:43
 msgid "Executes payment or delivery service providers that uses batch updates"
 msgstr ""
 
-#: src/Controller/Jobs/Admin/Job/Standard.php:43
-msgid "Executes the jobs created by the admin interface, e.g. the text exports"
+#, php-format
+msgid "Expanding \"%1$s\" node failed"
 msgstr ""
 
-#: src/Controller/Jobs/Product/Export/Standard.php:42
 msgid "Exports all available products"
 msgstr ""
 
-#: src/Controller/Jobs/Product/Import/Csv/Standard.php:42
+msgid "Exports orders to CSV file"
+msgstr ""
+
+msgid "Exports subscriptions to CSV file"
+msgstr ""
+
+#, php-format
+msgid "File or directory \"%1$s\" doesn't exist"
+msgstr ""
+
+#, php-format
+msgid "Finished attribute import from \"%1$s\""
+msgstr ""
+
+#, php-format
+msgid "Finished attribute import from file \"%1$s\""
+msgstr ""
+
+#, php-format
+msgid "Finished catalog import from \"%1$s\""
+msgstr ""
+
+#, php-format
+msgid "Finished catalog import from file \"%1$s\""
+msgstr ""
+
+#, php-format
+msgid "Finished customer import from \"%1$s\""
+msgstr ""
+
+#, php-format
+msgid "Finished customer import from file \"%1$s\""
+msgstr ""
+
+#, php-format
+msgid "Finished product import from \"%1$s\""
+msgstr ""
+
+#, php-format
+msgid "Finished product import from file \"%1$s\""
+msgstr ""
+
+#, php-format
+msgid "Finished stock import from \"%1$s\""
+msgstr ""
+
+#, php-format
+msgid "Finished stock import from file \"%1$s\""
+msgstr ""
+
+msgid "Imports new and updates existing attributes from XML files"
+msgstr ""
+
+msgid "Imports new and updates existing categories from CSV files"
+msgstr ""
+
+msgid "Imports new and updates existing categories from XML files"
+msgstr ""
+
+msgid "Imports new and updates existing coupon code from CSV files"
+msgstr ""
+
+msgid "Imports new and updates existing customers from XML files"
+msgstr ""
+
 msgid "Imports new and updates existing products from CSV files"
 msgstr ""
 
-#: src/Controller/Jobs/Order/Email/Delivery/Factory.php:75
-#: src/Controller/Jobs/Order/Email/Payment/Factory.php:75
-#: src/Controller/Jobs/Order/Service/Delivery/Factory.php:75
-#: src/Controller/Jobs/Order/Service/Async/Factory.php:75
-#: src/Controller/Jobs/Order/Service/Payment/Factory.php:75
-#: src/Controller/Jobs/Order/Cleanup/Unpaid/Factory.php:75
-#: src/Controller/Jobs/Order/Cleanup/Unfinished/Factory.php:75
-#: src/Controller/Jobs/Customer/Email/Watch/Factory.php:75
-#: src/Controller/Jobs/Product/Bought/Factory.php:75
-#: src/Controller/Jobs/Product/Import/Csv/Factory.php:74
-#: src/Controller/Jobs/Product/Export/Sitemap/Factory.php:74
-#: src/Controller/Jobs/Product/Export/Factory.php:74
-#: src/Controller/Jobs/Common/Factory/Base.php:59
-#: src/Controller/Jobs/Admin/Cache/Factory.php:75
-#: src/Controller/Jobs/Admin/Job/Factory.php:75
-#: src/Controller/Jobs/Admin/Log/Factory.php:75
-#: src/Controller/Jobs/Index/Optimize/Factory.php:75
-#: src/Controller/Jobs/Index/Rebuild/Factory.php:75
+msgid "Imports new and updates existing products from XML files"
+msgstr ""
+
+msgid "Imports new and updates existing stocks from CSV files"
+msgstr ""
+
+msgid "Imports new and updates existing suppliers from XML files"
+msgstr ""
+
+msgid "Index optimization"
+msgstr ""
+
+msgid "Index rebuild"
+msgstr ""
+
+#, php-format
+msgid "Invalid catalog lines in \"%1$s\": %2$d/%3$d"
+msgstr ""
+
 #, php-format
 msgid "Invalid characters in class name \"%1$s\""
-msgstr ""
+msgstr "Zakázané znaky ve jméně třídy \"%1$s\""
 
-#: src/Controller/Jobs/Admin/Job/Standard.php:72
 #, php-format
-msgid "Invalid characters in job name \"%1$s\""
+msgid "Invalid message: %1$s"
 msgstr ""
 
-#: src/Controller/Jobs/Factory.php:53
 #, php-format
-msgid "Invalid controller \"%1$s\" in \"%2$s\""
+msgid "Invalid order type \"%1$s\""
 msgstr ""
 
-#: src/Controller/Jobs/Common/Factory/Base.php:92
-#, php-format
-msgid "Invalid domain \"%1$s\""
-msgstr ""
-
-#: src/Controller/Jobs/Factory.php:68
-#, php-format
-msgid "Invalid factory \"%1$s\""
-msgstr ""
-
-#: src/Controller/Jobs/Admin/Job/Standard.php:78
-#, php-format
-msgid "Invalid job method \"%1$s\""
-msgstr ""
-
-#: src/Controller/Jobs/Product/Import/Csv/Standard.php:367
 #, php-format
 msgid "Invalid product lines in \"%1$s\": %2$d/%3$d"
 msgstr ""
 
-#: src/Controller/Jobs/Customer/Email/Watch/Standard.php:299
 #, php-format
-msgid "List type for domain \"%1$s\" and code \"%2$s\" not found"
+msgid "Invalid product type \"%1$s\""
 msgstr ""
 
-#: src/Controller/Jobs/Admin/Log/Standard.php:32
 msgid "Log cleanup"
 msgstr ""
 
-#: src/Controller/Jobs/Admin/Job/Standard.php:96
 #, php-format
-msgid "Method \"%1$s\" not available"
+msgid "No \"catalog.code\" column in CSV mapping found"
 msgstr ""
 
-#: src/Controller/Jobs/Base.php:124
 #, php-format
-msgid "No type item for \"%1$s/%2$s\" in \"%3$s\" found"
+msgid "No \"coupon.code.code\" column in CSV mapping found"
 msgstr ""
 
-#: src/Controller/Jobs/Customer/Email/Watch/Standard.php:327
 #, php-format
-msgid "No warehouse \"%1$s\" found"
+msgid "No \"product.code\" column in CSV mapping found"
 msgstr ""
 
-#: src/Controller/Jobs/Index/Optimize/Standard.php:43
+#, php-format
+msgid "No XML file \"%1$s\" found"
+msgstr ""
+
 msgid "Optimizes the catalog index for searching products"
 msgstr ""
 
-#: src/Controller/Jobs/Order/Email/Delivery/Standard.php:32
-msgid "Order delivery related e-mails"
+msgid "Optimizes the index for searching products faster"
 msgstr ""
 
-#: src/Controller/Jobs/Order/Email/Payment/Standard.php:32
-msgid "Order payment related e-mails"
+msgid "Order export CSV"
 msgstr ""
 
-#: src/Controller/Jobs/Order/Service/Delivery/Standard.php:32
+msgid "Order status import CSV"
+msgstr ""
+
+#, php-format
+msgid "Parent node for code \"%1$s\" not found"
+msgstr ""
+
 msgid "Process order delivery services"
 msgstr ""
 
-#: src/Controller/Jobs/Product/Export/Standard.php:31
+msgid "Process subscriptions initially"
+msgstr ""
+
 msgid "Product export"
 msgstr ""
 
-#: src/Controller/Jobs/Product/Import/Csv/Standard.php:31
 msgid "Product import CSV"
 msgstr ""
 
-#: src/Controller/Jobs/Customer/Email/Watch/Standard.php:36
-msgid "Product notification e-mails"
+msgid "Product import XML"
 msgstr ""
 
-#: src/Controller/Jobs/Product/Export/Sitemap/Standard.php:31
 msgid "Product site map"
 msgstr ""
 
-#: src/Controller/Jobs/Product/Bought/Standard.php:32
 msgid "Products bought together"
 msgstr ""
 
-#: src/Controller/Jobs/Index/Rebuild/Standard.php:43
 msgid "Rebuilds the catalog index for searching products"
 msgstr ""
 
-#: src/Controller/Jobs/Admin/Cache/Standard.php:43
+msgid "Rebuilds the index for searching products"
+msgstr ""
+
 msgid "Removes the expired entries from the cache"
 msgstr ""
 
-#: src/Controller/Jobs/Admin/Log/Standard.php:43
-msgid "Removes the old log entries from the database and archives them (optional)"
+msgid ""
+"Removes the old log entries from the database and archives them (optional)"
 msgstr ""
 
-#: src/Controller/Jobs/Order/Cleanup/Unfinished/Standard.php:32
 msgid "Removes unfinished orders"
 msgstr ""
 
-#: src/Controller/Jobs/Order/Cleanup/Unpaid/Standard.php:32
 msgid "Removes unpaid orders"
 msgstr ""
 
-#: src/Controller/Jobs/Product/Import/Csv/Standard.php:311
+msgid "Renews subscriptions at next date"
+msgstr ""
+
+#, php-format
+msgid "Required column \"%1$s\" not found for code \"%2$s\""
+msgstr ""
+
+#, php-format
+msgid "Required configuration for \"%1$s\" is missing"
+msgstr ""
+
 #, php-format
 msgid "Required mapping key \"%1$s\" is missing or contains no array"
 msgstr ""
 
-#: src/Controller/Jobs/Customer/Email/Watch/Standard.php:47
-msgid "Sends e-mails for watched products"
+msgid "Rescale product images"
 msgstr ""
 
-#: src/Controller/Jobs/Order/Email/Payment/Standard.php:43
-msgid "Sends order confirmation or payment status update e-mails"
+msgid "Rescales product images to the new sizes"
 msgstr ""
 
-#: src/Controller/Jobs/Order/Email/Delivery/Standard.php:43
-msgid "Sends order delivery status update e-mails"
+#, php-format
+msgid "Scaling media item \"%1$s\" failed: %2$s"
 msgstr ""
 
-#: src/Controller/Jobs/Order/Service/Delivery/Standard.php:43
 msgid "Sends paid orders to the ERP system or logistic partner"
 msgstr ""
 
-#: src/Controller/Jobs/Product/Import/Csv/Standard.php:325
+#, php-format
+msgid "Started attribute import from \"%1$s\""
+msgstr ""
+
+#, php-format
+msgid "Started attribute import from file \"%1$s\""
+msgstr ""
+
+#, php-format
+msgid "Started catalog import from \"%1$s\""
+msgstr ""
+
+#, php-format
+msgid "Started catalog import from \"%1$s\" (%2$s)"
+msgstr ""
+
+#, php-format
+msgid "Started catalog import from file \"%1$s\""
+msgstr ""
+
+#, php-format
+msgid "Started coupon import from \"%1$s\" (%2$s)"
+msgstr ""
+
+#, php-format
+msgid "Started customer import from \"%1$s\""
+msgstr ""
+
+#, php-format
+msgid "Started customer import from file \"%1$s\""
+msgstr ""
+
+#, php-format
+msgid "Started order status import from \"%1$s\" (%2$s)"
+msgstr ""
+
+#, php-format
+msgid "Started product import from \"%1$s\""
+msgstr ""
+
 #, php-format
 msgid "Started product import from \"%1$s\" (%2$s)"
 msgstr ""
 
-#: src/Controller/Jobs/Base.php:96
 #, php-format
-msgid "Template \"%1$s\" not available"
+msgid "Started product import from file \"%1$s\""
 msgstr ""
 
-#: src/Controller/Jobs/Admin/Job/Standard.php:92
 #, php-format
-msgid "Unable to call factory method \"%1$s\""
+msgid "Started stock import from \"%1$s\""
 msgstr ""
 
-#: src/Controller/Jobs/Common/Decorator/Base.php:55
 #, php-format
-msgid "Unable to call method \"%1$s\""
+msgid "Started stock import from file \"%1$s\""
 msgstr ""
 
-#: src/Controller/Jobs/Product/Import/Csv/Standard.php:524
+#, php-format
+msgid "Started supplier import from \"%1$s\" (%2$s)"
+msgstr ""
+
+msgid "Stock import CSV"
+msgstr ""
+
+msgid "Subscription export CSV"
+msgstr ""
+
+msgid "Subscription process end"
+msgstr ""
+
+msgid "Subscription process renew"
+msgstr ""
+
+msgid "Subscription process start"
+msgstr ""
+
+msgid "Supplier import XML"
+msgstr ""
+
+msgid "Terminates expired subscriptions"
+msgstr ""
+
+#, php-format
+msgid "Unable to import catalog with code \"%1$s\": %2$s"
+msgstr ""
+
+#, php-format
+msgid "Unable to import coupon with code \"%1$s\": %2$s"
+msgstr ""
+
+#, php-format
+msgid "Unable to import order with code \"%1$s\": %2$s"
+msgstr ""
+
 #, php-format
 msgid "Unable to import product with code \"%1$s\": %2$s"
 msgstr ""
 
-#: src/Controller/Jobs/Product/Import/Csv/Standard.php:372
 #, php-format
 msgid "Unable to move imported file"
 msgstr ""
 
-#: src/Controller/Jobs/Product/Export/Standard.php:412
+#, php-format
+msgid "Unable to move imported file \"%1$s\" to \"%2$s\""
+msgstr ""
+
+msgid "Updates order status from CSV files"
+msgstr ""
+
+#, php-format
+msgid "aimeos-catalog-sitemap-%d.xml"
+msgstr ""
+
 #, php-format
 msgid "aimeos-products-%d.xml"
 msgstr ""
 
-#: src/Controller/Jobs/Product/Export/Sitemap/Standard.php:406
 #, php-format
 msgid "aimeos-sitemap-%d.xml"
 msgstr ""

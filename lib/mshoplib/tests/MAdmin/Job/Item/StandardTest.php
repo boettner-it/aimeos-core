@@ -1,50 +1,40 @@
 <?php
 
+/**
+ * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
+ */
+
+
 namespace Aimeos\MAdmin\Job\Item;
 
 
-/**
- * @copyright Metaways Infosystems GmbH, 2011
- * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
- */
-class StandardTest extends \PHPUnit_Framework_TestCase
+class StandardTest extends \PHPUnit\Framework\TestCase
 {
 	private $object;
 	private $values;
 
 
-	/**
-	 * Sets up the fixture, for example, opens a network connection.
-	 * This method is called before a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function setUp()
 	{
 		$this->values = array(
-			'id' => 1,
-			'siteid' => 2,
-			'label' => 'unittest job',
-			'method' => 'Product_Import_Text.importFile',
-			'parameter' => array( 'items' => 'testfile.ext' ),
-			'result' => array( 'items' => 'testfile2.ext' ),
-			'status' => 1,
-			'editor' => 'unittest',
-			'mtime' => '2010-01-01 00:00:00',
-			'ctime' => '2000-01-01 00:00:00',
+			'job.id' => 1,
+			'job.siteid' => 2,
+			'job.label' => 'unittest job',
+			'job.method' => 'Product_Import_Text.importFile',
+			'job.parameter' => array( 'items' => 'testfile.ext' ),
+			'job.result' => array( 'items' => 'testfile2.ext' ),
+			'job.status' => 1,
+			'job.editor' => 'unittest',
+			'job.mtime' => '2010-01-01 00:00:00',
+			'job.ctime' => '2000-01-01 00:00:00',
 		);
 
 		$this->object = new \Aimeos\MAdmin\Job\Item\Standard( $this->values );
 	}
 
 
-	/**
-	 * Tears down the fixture, for example, closes a network connection.
-	 * This method is called after a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function tearDown()
 	{
 		$this->object = null;
@@ -160,13 +150,18 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	}
 
 
+	public function testGetResourceType()
+	{
+		$this->assertEquals( 'job', $this->object->getResourceType() );
+	}
+
+
 	public function testFromArray()
 	{
 		$item = new \Aimeos\MAdmin\Job\Item\Standard();
 
-		$list = array(
+		$list = $entries = array(
 			'job.id' => 1,
-			'job.siteid' => 2,
 			'job.label' => 'unittest job',
 			'job.method' => 'Product_Import_Text.importFile',
 			'job.parameter' => array( 'items' => 'testfile.ext' ),
@@ -174,10 +169,9 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 			'job.status' => 1,
 		);
 
-		$unknown = $item->fromArray( $list );
+		$item = $item->fromArray( $entries, true );
 
-		$this->assertEquals( array(), $unknown );
-
+		$this->assertEquals( [], $entries );
 		$this->assertEquals( $list['job.id'], $item->getId() );
 		$this->assertEquals( $list['job.label'], $item->getLabel() );
 		$this->assertEquals( $list['job.method'], $item->getMethod() );
@@ -190,7 +184,7 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testToArray()
 	{
-		$list = $this->object->toArray();
+		$list = $this->object->toArray( true );
 
 		$this->assertEquals( count( $this->values ), count( $list ) );
 

@@ -1,37 +1,25 @@
 <?php
 
+/**
+ * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
+ */
+
+
 namespace Aimeos\MW\Setup\DBSchema\Column;
 
 
-/**
- * Test class for \Aimeos\MW\Tree\Node\Standard.
- *
- * @copyright Metaways Infosystems GmbH, 2011
- * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
- */
-class ItemTest extends \PHPUnit_Framework_TestCase
+class ItemTest extends \PHPUnit\Framework\TestCase
 {
 	private $object;
 
 
-	/**
-	 * Sets up the fixture, for example, opens a network connection.
-	 * This method is called before a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function setUp()
 	{
-		$this->object = new \Aimeos\MW\Setup\DBSchema\Column\Item( 'testtable', 'testcol', 'varchar', '255', 'default', 'YES', 'utf8_bin' );
+		$this->object = new \Aimeos\MW\Setup\DBSchema\Column\Item( 'testtable', 'testcol', 'varchar', '255', 'default', 'YES', 'utf8', 'utf8_general_ci' );
 	}
 
-	/**
-	 * Tears down the fixture, for example, closes a network connection.
-	 * This method is called after a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function tearDown()
 	{
 		unset( $this->object );
@@ -62,19 +50,24 @@ class ItemTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals( 'testtable', $this->object->getTableName() );
 	}
 
+	public function testGetCharset()
+	{
+		$this->assertEquals( 'utf8', $this->object->getCharset() );
+	}
+
 	public function testGetCollationType()
 	{
-		$this->assertEquals( 'utf8_bin', $this->object->getCollationType() );
+		$this->assertEquals( 'utf8_general_ci', $this->object->getCollationType() );
 	}
 
 	public function testIsNullable()
 	{
 		$this->assertTrue( $this->object->isNullable() );
 
-		$item = new \Aimeos\MW\Setup\DBSchema\Column\Item( '', '', '', 0, '', 'NO', '' );
+		$item = new \Aimeos\MW\Setup\DBSchema\Column\Item( '', '', '', 0, '', 'NO', '', '' );
 		$this->assertFalse( $item->isNullable() );
 
-		$this->setExpectedException('\\Aimeos\\MW\\Setup\\Exception');
-		new \Aimeos\MW\Setup\DBSchema\Column\Item( '', '', '', 0, '', '', '' );
+		$this->setExpectedException( \Aimeos\MW\Setup\Exception::class );
+		new \Aimeos\MW\Setup\DBSchema\Column\Item( '', '', '', 0, '', '', '', '' );
 	}
 }

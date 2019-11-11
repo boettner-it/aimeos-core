@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2012
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2012
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage View
  */
@@ -20,10 +20,11 @@ namespace Aimeos\MW\View\Helper\Number;
  */
 class Standard
 	extends \Aimeos\MW\View\Helper\Base
-	implements \Aimeos\MW\View\Helper\Iface
+	implements \Aimeos\MW\View\Helper\Number\Iface
 {
 	private $dsep;
 	private $tsep;
+	private $decimals;
 
 
 	/**
@@ -33,24 +34,29 @@ class Standard
 	 * @param string $decimalSeparator Character for the decimal point
 	 * @param string $thousandsSeperator Character separating groups of thousands
 	 */
-	public function __construct( $view, $decimalSeparator = '.', $thousandsSeperator = '' )
+	public function __construct( $view, $decimalSeparator = '.', $thousandsSeperator = '', $decimals = 2 )
 	{
 		parent::__construct( $view );
 
 		$this->dsep = $decimalSeparator;
 		$this->tsep = $thousandsSeperator;
+		$this->decimals = $decimals;
 	}
 
 
 	/**
 	 * Returns the formatted number.
 	 *
-	 * @param int|float|decimal $number Number to format
-	 * @param integer $decimals Number of decimals behind the decimal point
+	 * @param integer|double|string $number Number to format
+	 * @param integer|null $decimals Number of decimals behind the decimal point or null for default value
 	 * @return string Formatted number
 	 */
-	public function transform( $number, $decimals = 2 )
+	public function transform( $number, $decimals = null )
 	{
-		return number_format( $number, $decimals, $this->dsep, $this->tsep );
+		if( $decimals === null ) {
+			$decimals = $this->decimals;
+		}
+
+		return number_format( (double) $number, $decimals, $this->dsep, $this->tsep );
 	}
 }

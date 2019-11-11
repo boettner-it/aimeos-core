@@ -1,95 +1,100 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 
 namespace Aimeos\MShop\Supplier\Item;
 
 
-/**
- * Test class for \Aimeos\MShop\Supplier\Item\Standard.
- */
-class StandardTest extends \PHPUnit_Framework_TestCase
+class StandardTest extends \PHPUnit\Framework\TestCase
 {
 	private $object;
+	private $values;
 
 
-	/**
-	 * Sets up the fixture, for example, opens a network connection.
-	 * This method is called before a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function setUp()
 	{
-		$values = array(
-			'id' => 541,
-			'siteid'=>99,
-			'label' => 'unitObject',
-			'code' => 'unitCode',
-			'status' => 4,
-			'mtime' => '2011-01-01 00:00:02',
-			'ctime' => '2011-01-01 00:00:01',
-			'editor' => 'unitTestUser'
+		$this->values = array(
+			'supplier.id' => 541,
+			'supplier.siteid' => 99,
+			'supplier.label' => 'unitObject',
+			'supplier.code' => 'unitCode',
+			'supplier.status' => 4,
+			'supplier.mtime' => '2011-01-01 00:00:02',
+			'supplier.ctime' => '2011-01-01 00:00:01',
+			'supplier.editor' => 'unitTestUser'
 		);
 
-		$this->object = new \Aimeos\MShop\Supplier\Item\Standard( $values );
+		$addresses = array(
+			new \Aimeos\MShop\Supplier\Item\Address\Standard( 'supplier.address.', ['supplier.address.position' => 0] ),
+			new \Aimeos\MShop\Supplier\Item\Address\Standard( 'supplier.address.', ['supplier.address.position' => 1] ),
+		);
+
+		$this->object = new \Aimeos\MShop\Supplier\Item\Standard( $this->values, [], [], $addresses );
 	}
 
-	/**
-	 * Tears down the fixture, for example, closes a network connection.
-	 * This method is called after a test is executed.
-	 *
-	 * @access protected
-	 */
+
 	protected function tearDown()
 	{
 		$this->object = null;
 	}
+
 
 	public function testGetId()
 	{
 		$this->assertEquals( 541, $this->object->getId() );
 	}
 
+
 	public function testSetId()
 	{
-		$this->object->setId( null );
-		$this->assertTrue( $this->object->isModified() );
+		$return = $this->object->setId( null );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Supplier\Item\Iface::class, $return );
 		$this->assertNull( $this->object->getId() );
+		$this->assertTrue( $this->object->isModified() );
 	}
+
 
 	public function testGetSiteId()
 	{
 		$this->assertEquals( 99, $this->object->getSiteId() );
 	}
 
+
 	public function testGetLabel()
 	{
 		$this->assertEquals( 'unitObject', $this->object->getLabel() );
 	}
 
+
 	public function testSetLabel()
 	{
-		$this->object->setLabel( 'newName' );
-		$this->assertTrue( $this->object->isModified() );
+		$return = $this->object->setLabel( 'newName' );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Supplier\Item\Iface::class, $return );
 		$this->assertEquals( 'newName', $this->object->getLabel() );
+		$this->assertTrue( $this->object->isModified() );
 	}
+
 
 	public function testGetCode()
 	{
 		$this->assertEquals( 'unitCode', $this->object->getCode() );
 	}
 
+
 	public function testSetCode()
 	{
-		$this->object->setCode( 'newCode' );
-		$this->assertTrue( $this->object->isModified() );
+		$return = $this->object->setCode( 'newCode' );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Supplier\Item\Iface::class, $return );
 		$this->assertEquals( 'newCode', $this->object->getCode() );
+		$this->assertTrue( $this->object->isModified() );
 	}
 
 
@@ -99,27 +104,52 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals( 4, $this->object->getStatus() );
 	}
 
+
 	public function testSetStatus()
 	{
-		$this->object->setStatus( 0 );
-		$this->assertTrue( $this->object->isModified() );
+		$return = $this->object->setStatus( 0 );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Supplier\Item\Iface::class, $return );
 		$this->assertEquals( 0, $this->object->getStatus() );
+		$this->assertTrue( $this->object->isModified() );
 	}
+
 
 	public function testGetTimeModified()
 	{
 		$this->assertEquals( '2011-01-01 00:00:02', $this->object->getTimeModified() );
 	}
 
+
 	public function testGetTimeCreated()
 	{
 		$this->assertEquals( '2011-01-01 00:00:01', $this->object->getTimeCreated() );
 	}
 
+
 	public function testGetEditor()
 	{
 		$this->assertEquals( 'unitTestUser', $this->object->getEditor() );
 	}
+
+
+	public function testIsAvailable()
+	{
+		$this->assertTrue( $this->object->isAvailable() );
+		$this->object->setAvailable( false );
+		$this->assertFalse( $this->object->isAvailable() );
+	}
+
+
+	public function testIsAvailableOnStatus()
+	{
+		$this->assertTrue( $this->object->isAvailable() );
+		$this->object->setStatus( 0 );
+		$this->assertFalse( $this->object->isAvailable() );
+		$this->object->setStatus( -1 );
+		$this->assertFalse( $this->object->isAvailable() );
+	}
+
 
 	public function testIsModified()
 	{
@@ -127,21 +157,40 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	}
 
 
+	public function testGetAddressItems()
+	{
+		$i = 0;
+		$list = $this->object->getAddressItems();
+		$this->assertEquals( 2, count( $list ) );
+
+		foreach( $list as $item )
+		{
+			$this->assertEquals( $i++, $item->getPosition() );
+			$this->assertInstanceOf( \Aimeos\MShop\Supplier\Item\Address\Iface::class, $item );
+		}
+	}
+
+
+	public function testGetResourceType()
+	{
+		$this->assertEquals( 'supplier', $this->object->getResourceType() );
+	}
+
+
 	public function testFromArray()
 	{
 		$item = new \Aimeos\MShop\Supplier\Item\Standard();
 
-		$list = array(
+		$list = $entries = array(
 			'supplier.id' => 1,
 			'supplier.code' => 'test',
 			'supplier.label' => 'test item',
 			'supplier.status' => 0,
 		);
 
-		$unknown = $item->fromArray( $list );
+		$item = $item->fromArray( $entries, true );
 
-		$this->assertEquals( array(), $unknown );
-
+		$this->assertEquals( [], $entries );
 		$this->assertEquals( $list['supplier.id'], $item->getId() );
 		$this->assertEquals( $list['supplier.code'], $item->getCode() );
 		$this->assertEquals( $list['supplier.label'], $item->getLabel() );
@@ -151,7 +200,9 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testToArray()
 	{
-		$arrayObject = $this->object->toArray();
+		$arrayObject = $this->object->toArray( true );
+
+		$this->assertEquals( count( $this->values ), count( $arrayObject ) );
 
 		$this->assertEquals( $this->object->getId(), $arrayObject['supplier.id'] );
 		$this->assertEquals( $this->object->getSiteId(), $arrayObject['supplier.siteid'] );

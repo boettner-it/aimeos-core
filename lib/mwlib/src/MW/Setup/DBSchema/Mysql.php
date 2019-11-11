@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Setup
  */
@@ -37,16 +37,61 @@ class Mysql extends \Aimeos\MW\Setup\DBSchema\InformationSchema
 				AND INDEX_NAME = ?
 		";
 
-		$stmt = $this->getConnection()->create( $sql );
+		$conn = $this->acquire();
+
+		$stmt = $conn->create( $sql );
 		$stmt->bind( 1, $this->getDBName() );
 		$stmt->bind( 2, $tablename );
 		$stmt->bind( 3, $indexname );
-		$result = $stmt->execute();
+		$result = $stmt->execute()->fetch();
 
-		if( $result->fetch() !== false ) {
-			return true;
+		$this->release( $conn );
+
+		return $result !== false ? true : false;
+	}
+
+
+	/**
+	 * Checks if the given sequence exists in the database.
+	 *
+	 * @param string $seqname Name of the database sequence
+	 * @return boolean True if the sequence exists, false if not
+	 */
+	public function sequenceExists( $seqname )
+	{
+		return false;
+	}
+
+
+	/**
+	 * Tests if something is supported
+	 *
+	 * @param string $what Type of object
+	 * @return boolean True if supported, false if not
+	 */
+	public function supports( $what )
+	{
+		return false;
+	}
+
+
+	/**
+	 * Creates a new column item using the columns of the information_schema.columns.
+	 *
+	 * @param array $record Associative array with column details
+	 * @return \Aimeos\MW\Setup\DBSchema\Column\Iface Column item
+	 */
+	protected function createColumnItem( array $record = [] )
+	{
+		switch( $record['DATA_TYPE'] )
+		{
+			case 'int': $type = 'integer'; break;
+			default: $type = $record['DATA_TYPE'];
 		}
 
-		return false;
+		$length = ( isset( $record['CHARACTER_MAXIMUM_LENGTH'] ) ? $record['CHARACTER_MAXIMUM_LENGTH'] : $record['NUMERIC_PRECISION'] );
+
+		return new \Aimeos\MW\Setup\DBSchema\Column\Item( $record['TABLE_NAME'], $record['COLUMN_NAME'], $type, $length,
+			$record['COLUMN_DEFAULT'], $record['IS_NULLABLE'], $record['CHARACTER_SET_NAME'], $record['COLLATION_NAME'] );
 	}
 }

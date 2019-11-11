@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Service
  */
@@ -20,96 +20,127 @@ namespace Aimeos\MShop\Service\Manager;
  */
 class Standard
 	extends \Aimeos\MShop\Service\Manager\Base
-	implements \Aimeos\MShop\Service\Manager\Iface
+	implements \Aimeos\MShop\Service\Manager\Iface, \Aimeos\MShop\Common\Manager\Factory\Iface
 {
 	private $searchConfig = array(
 		'service.id' => array(
 			'code' => 'service.id',
 			'internalcode' => 'mser."id"',
-			'label' => 'Service ID',
+			'label' => 'ID',
 			'type' => 'integer',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
+			'public' => false,
 		),
 		'service.siteid' => array(
 			'code' => 'service.siteid',
 			'internalcode' => 'mser."siteid"',
-			'label' => 'Service site ID',
+			'label' => 'Site ID',
 			'type' => 'integer',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 			'public' => false,
 		),
-		'service.typeid' => array(
-			'code' => 'service.typeid',
-			'internalcode' => 'mser."typeid"',
-			'label' => 'Service type ID',
+		'service.type' => array(
+			'code' => 'service.type',
+			'internalcode' => 'mser."type"',
+			'label' => 'Type',
 			'type' => 'string',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
-			'public' => false,
+		),
+		'service.label' => array(
+			'code' => 'service.label',
+			'internalcode' => 'mser."label"',
+			'label' => 'Label',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
 		'service.code' => array(
 			'code' => 'service.code',
 			'internalcode' => 'mser."code"',
-			'label' => 'Service code',
-			'type' => 'string',
-			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
-		),
-		'service.position' => array(
-			'code' => 'service.position',
-			'internalcode' => 'mser."pos"',
-			'label' => 'Service position',
+			'label' => 'Code',
 			'type' => 'string',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
 		'service.provider' => array(
 			'code' => 'service.provider',
 			'internalcode' => 'mser."provider"',
-			'label' => 'Service provider',
+			'label' => 'Provider',
 			'type' => 'string',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
-		'service.config' => array(
-			'code' => 'service.config',
-			'internalcode' => 'mser."config"',
-			'label' => 'Service config',
+		'service.datestart' => array(
+			'code' => 'service.datestart',
+			'internalcode' => 'mser."start"',
+			'label' => 'Start date/time',
+			'type' => 'datetime',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		),
+		'service.dateend' => array(
+			'code' => 'service.dateend',
+			'internalcode' => 'mser."end"',
+			'label' => 'End date/time',
+			'type' => 'datetime',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		),
+		'service.position' => array(
+			'code' => 'service.position',
+			'internalcode' => 'mser."pos"',
+			'label' => 'Position',
 			'type' => 'string',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
 		'service.status' => array(
 			'code' => 'service.status',
 			'internalcode' => 'mser."status"',
-			'label' => 'Service status',
+			'label' => 'Status',
 			'type' => 'integer',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 		),
-		'service.label' => array(
-			'code' => 'service.label',
-			'internalcode' => 'mser."label"',
-			'label' => 'Service label',
+		'service.config' => array(
+			'code' => 'service.config',
+			'internalcode' => 'mser."config"',
+			'label' => 'Config',
 			'type' => 'string',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
-		'service.ctime'=> array(
-			'code'=>'service.ctime',
-			'internalcode'=>'mser."ctime"',
-			'label'=>'Service create date/time',
-			'type'=> 'datetime',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'service.ctime' => array(
+			'code' => 'service.ctime',
+			'internalcode' => 'mser."ctime"',
+			'label' => 'Create date/time',
+			'type' => 'datetime',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
-		'service.mtime'=> array(
-			'code'=>'service.mtime',
-			'internalcode'=>'mser."mtime"',
-			'label'=>'Service modification date/time',
-			'type'=> 'datetime',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'service.mtime' => array(
+			'code' => 'service.mtime',
+			'internalcode' => 'mser."mtime"',
+			'label' => 'Modify date/time',
+			'type' => 'datetime',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
-		'service.editor'=> array(
-			'code'=>'service.editor',
-			'internalcode'=>'mser."editor"',
-			'label'=>'Service editor',
-			'type'=> 'string',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'service.editor' => array(
+			'code' => 'service.editor',
+			'internalcode' => 'mser."editor"',
+			'label' => 'Editor',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
+		),
+		'service:has' => array(
+			'code' => 'service:has()',
+			'internalcode' => '(
+				SELECT mserli_has."id" FROM mshop_service_list AS mserli_has
+				WHERE mser."id" = mserli_has."parentid" AND :site AND :key LIMIT 1
+			)',
+			'label' => 'Service has list item, parameter(<domain>[,<list type>[,<reference ID>)]]',
+			'type' => 'null',
+			'internaltype' => 'null',
+			'public' => false,
 		),
 	);
+
+	private $date;
 
 
 	/**
@@ -121,22 +152,71 @@ class Standard
 	{
 		parent::__construct( $context );
 		$this->setResourceName( 'db-service' );
+
+
+		$level = \Aimeos\MShop\Locale\Manager\Base::SITE_ALL;
+		$level = $context->getConfig()->get( 'mshop/service/manager/sitemode', $level );
+
+		$siteIds = $this->getSiteIds( $level );
+		$this->date = $context->getDateTime();
+		$self = $this;
+
+
+		$this->searchConfig['service:has']['function'] = function( &$source, array $params ) use ( $self, $siteIds ) {
+
+			foreach( $params as $key => $param ) {
+				$params[$key] = trim( $param, '\'' );
+			}
+
+			$source = str_replace( ':site', $self->toExpression( 'mserli_has."siteid"', $siteIds ), $source );
+			$str = $self->toExpression( 'mserli_has."key"', join( '|', $params ), isset( $params[2] ) ? '==' : '=~' );
+			$source = str_replace( ':key', $str, $source );
+
+			return $params;
+		};
 	}
 
 
 	/**
 	 * Removes old entries from the storage.
 	 *
-	 * @param integer[] $siteids List of IDs for sites whose entries should be deleted
+	 * @param string[] $siteids List of IDs for sites whose entries should be deleted
+	 * @return \Aimeos\MShop\Service\Manager\Iface Manager object for chaining method calls
 	 */
-	public function cleanup( array $siteids )
+	public function clear( array $siteids )
 	{
 		$path = 'mshop/service/manager/submanagers';
-		foreach( $this->getContext()->getConfig()->get( $path, array( 'type', 'lists' ) ) as $domain ) {
-			$this->getSubManager( $domain )->cleanup( $siteids );
+		foreach( $this->getContext()->getConfig()->get( $path, ['lists', 'type'] ) as $domain ) {
+			$this->getObject()->getSubManager( $domain )->clear( $siteids );
 		}
 
-		$this->cleanupBase( $siteids, 'mshop/service/manager/standard/delete' );
+		return $this->clearBase( $siteids, 'mshop/service/manager/standard/delete' );
+	}
+
+
+	/**
+	 * Creates a new empty item instance
+	 *
+	 * @param array $values Values the item should be initialized with
+	 * @return \Aimeos\MShop\Service\Item\Iface New service item object
+	 */
+	public function createItem( array $values = [] )
+	{
+		$values['service.siteid'] = $this->getContext()->getLocale()->getSiteId();
+		return $this->createItemBase( $values );
+	}
+
+
+	/**
+	 * Returns the available manager types
+	 *
+	 * @param boolean $withsub Return also the resource type of sub-managers if true
+	 * @return string[] Type of the manager and submanagers, subtypes are separated by slashes
+	 */
+	public function getResourceType( $withsub = true )
+	{
+		$path = 'mshop/service/manager/submanagers';
+		return $this->getResourceTypeBase( 'service', $path, ['lists'], $withsub );
 	}
 
 
@@ -144,7 +224,7 @@ class Standard
 	 * Returns the attributes that can be used for searching.
 	 *
 	 * @param boolean $withsub Return also attributes of sub-managers if true
-	 * @return array List of attribute items implementing \Aimeos\MW\Criteria\Attribute\Iface
+	 * @return \Aimeos\MW\Criteria\Attribute\Iface[] List of search attribute items
 	 */
 	public function getSearchAttributes( $withsub = true )
 	{
@@ -167,30 +247,25 @@ class Standard
 		 */
 		$path = 'mshop/service/manager/submanagers';
 
-		return $this->getSearchAttributesBase( $this->searchConfig, $path, array( 'type', 'lists' ), $withsub );
+		return $this->getSearchAttributesBase( $this->searchConfig, $path, [], $withsub );
 	}
 
 
 	/**
-	 * Instanciates a new service item depending on the kind of service manager.
+	 * Removes multiple items.
 	 *
-	 * @return \Aimeos\MShop\Service\Item\Iface Service item
+	 * @param \Aimeos\MShop\Common\Item\Iface[]|string[] $itemIds List of item objects or IDs of the items
+	 * @return \Aimeos\MShop\Service\Manager\Iface Manager object for chaining method calls
 	 */
-	public function createItem()
+	public function deleteItems( array $itemIds )
 	{
-		$values = array( 'siteid' => $this->getContext()->getLocale()->getSiteId() );
-		return $this->createItemBase( $values );
-	}
+		/** mshop/service/manager/standard/delete/mysql
+		 * Deletes the items matched by the given IDs from the database
+		 *
+		 * @see mshop/service/manager/standard/delete/ansi
+		 */
 
-
-	/**
-	 * Removes multiple items specified by ids in the array.
-	 *
-	 * @param array $ids List of IDs
-	 */
-	public function deleteItems( array $ids )
-	{
-		/** mshop/service/manager/standard/delete
+		/** mshop/service/manager/standard/delete/ansi
 		 * Deletes the items matched by the given IDs from the database
 		 *
 		 * Removes the records specified by the given IDs from the service database.
@@ -208,45 +283,61 @@ class Standard
 		 * @param string SQL statement for deleting items
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/service/manager/standard/insert
-		 * @see mshop/service/manager/standard/update
-		 * @see mshop/service/manager/standard/newid
-		 * @see mshop/service/manager/standard/search
-		 * @see mshop/service/manager/standard/count
+		 * @see mshop/service/manager/standard/insert/ansi
+		 * @see mshop/service/manager/standard/update/ansi
+		 * @see mshop/service/manager/standard/newid/ansi
+		 * @see mshop/service/manager/standard/search/ansi
+		 * @see mshop/service/manager/standard/count/ansi
 		 */
 		$path = 'mshop/service/manager/standard/delete';
-		$this->deleteItemsBase( $ids, $path );
+
+		return $this->deleteItemsBase( $itemIds, $path )->deleteRefItems( $itemIds );
 	}
 
 
 	/**
-	 * Returns the service item specified by the given id.
+	 * Returns the item specified by its code and domain/type if necessary
 	 *
-	 * @param int $id Unique ID of the service item
+	 * @param string $code Code of the item
 	 * @param string[] $ref List of domains to fetch list items and referenced items for
+	 * @param string|null $domain Domain of the item if necessary to identify the item uniquely
+	 * @param string|null $type Type code of the item if necessary to identify the item uniquely
+	 * @param boolean $default True to add default criteria
+	 * @return \Aimeos\MShop\Common\Item\Iface Item object
+	 */
+	public function findItem( $code, array $ref = [], $domain = null, $type = null, $default = false )
+	{
+		return $this->findItemBase( ['service.code' => $code], $ref, $default );
+	}
+
+
+	/**
+	 * Returns the service item specified by the given ID.
+	 *
+	 * @param string $id Unique ID of the service item
+	 * @param string[] $ref List of domains to fetch list items and referenced items for
+	 * @param boolean $default Add default criteria
 	 * @return \Aimeos\MShop\Service\Item\Iface Returns the service item of the given id
 	 * @throws \Aimeos\MShop\Exception If item couldn't be found
 	 */
-	public function getItem( $id, array $ref = array() )
+	public function getItem( $id, array $ref = [], $default = false )
 	{
-		return $this->getItemBase( 'service.id', $id, $ref );
+		return $this->getItemBase( 'service.id', $id, $ref, $default );
 	}
 
 
 	/**
 	 * Adds a new or updates an existing service item in the storage.
 	 *
-	 * @param \Aimeos\MShop\Common\Item\Iface $item New or existing service item that should be saved to the storage
+	 * @param \Aimeos\MShop\Service\Item\Iface $item New or existing service item that should be saved to the storage
 	 * @param boolean $fetch True if the new ID should be returned in the item
+	 * @return \Aimeos\MShop\Service\Item\Iface Updated item including the generated ID
 	 */
-	public function saveItem( \Aimeos\MShop\Common\Item\Iface $item, $fetch = true )
+	public function saveItem( \Aimeos\MShop\Service\Item\Iface $item, $fetch = true )
 	{
-		$iface = '\\Aimeos\\MShop\\Service\\Item\\Iface';
-		if( !( $item instanceof $iface ) ) {
-			throw new \Aimeos\MShop\Service\Exception( sprintf( 'Object is not of required type "%1$s"', $iface ) );
+		if( !$item->isModified() ) {
+			return $this->saveListItems( $item, 'service', $fetch );
 		}
-
-		if( !$item->isModified() ) { return; }
 
 		$context = $this->getContext();
 
@@ -258,10 +349,17 @@ class Standard
 		{
 			$id = $item->getId();
 			$date = date( 'Y-m-d H:i:s' );
+			$columns = $this->getObject()->getSaveAttributes();
 
 			if( $id === null )
 			{
-				/** mshop/service/manager/standard/insert
+				/** mshop/service/manager/standard/insert/mysql
+				 * Inserts a new service record into the database table
+				 *
+				 * @see mshop/service/manager/standard/insert/ansi
+				 */
+
+				/** mshop/service/manager/standard/insert/ansi
 				 * Inserts a new service record into the database table
 				 *
 				 * Items with no ID yet (i.e. the ID is NULL) will be created in
@@ -284,17 +382,24 @@ class Standard
 				 * @param string SQL statement for inserting records
 				 * @since 2014.03
 				 * @category Developer
-				 * @see mshop/service/manager/standard/update
-				 * @see mshop/service/manager/standard/newid
-				 * @see mshop/service/manager/standard/delete
-				 * @see mshop/service/manager/standard/search
-				 * @see mshop/service/manager/standard/count
+				 * @see mshop/service/manager/standard/update/ansi
+				 * @see mshop/service/manager/standard/newid/ansi
+				 * @see mshop/service/manager/standard/delete/ansi
+				 * @see mshop/service/manager/standard/search/ansi
+				 * @see mshop/service/manager/standard/count/ansi
 				 */
 				$path = 'mshop/service/manager/standard/insert';
+				$sql = $this->addSqlColumns( array_keys( $columns ), $this->getSqlConfig( $path ) );
 			}
 			else
 			{
-				/** mshop/service/manager/standard/update
+				/** mshop/service/manager/standard/update/mysql
+				 * Updates an existing service record in the database
+				 *
+				 * @see mshop/service/manager/standard/update/ansi
+				 */
+
+				/** mshop/service/manager/standard/update/ansi
 				 * Updates an existing service record in the database
 				 *
 				 * Items which already have an ID (i.e. the ID is not NULL) will
@@ -314,39 +419,54 @@ class Standard
 				 * @param string SQL statement for updating records
 				 * @since 2014.03
 				 * @category Developer
-				 * @see mshop/service/manager/standard/insert
-				 * @see mshop/service/manager/standard/newid
-				 * @see mshop/service/manager/standard/delete
-				 * @see mshop/service/manager/standard/search
-				 * @see mshop/service/manager/standard/count
+				 * @see mshop/service/manager/standard/insert/ansi
+				 * @see mshop/service/manager/standard/newid/ansi
+				 * @see mshop/service/manager/standard/delete/ansi
+				 * @see mshop/service/manager/standard/search/ansi
+				 * @see mshop/service/manager/standard/count/ansi
 				 */
 				$path = 'mshop/service/manager/standard/update';
+				$sql = $this->addSqlColumns( array_keys( $columns ), $this->getSqlConfig( $path ), false );
 			}
 
-			$stmt = $this->getCachedStatement( $conn, $path );
-			$stmt->bind( 1, $context->getLocale()->getSiteId(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 2, $item->getPosition(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 3, $item->getTypeId() );
-			$stmt->bind( 4, $item->getCode() );
-			$stmt->bind( 5, $item->getLabel() );
-			$stmt->bind( 6, $item->getProvider() );
-			$stmt->bind( 7, json_encode( $item->getConfig() ) );
-			$stmt->bind( 8, $item->getStatus(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 9, $date ); // mtime
-			$stmt->bind( 10, $context->getEditor() );
+			$idx = 1;
+			$stmt = $this->getCachedStatement( $conn, $path, $sql );
+
+			foreach( $columns as $name => $entry ) {
+				$stmt->bind( $idx++, $item->get( $name ), $entry->getInternalType() );
+			}
+
+			$stmt->bind( $idx++, $item->getPosition(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmt->bind( $idx++, $item->getType() );
+			$stmt->bind( $idx++, $item->getCode() );
+			$stmt->bind( $idx++, $item->getLabel() );
+			$stmt->bind( $idx++, $item->getProvider() );
+			$stmt->bind( $idx++, $item->getDateStart() );
+			$stmt->bind( $idx++, $item->getDateEnd() );
+			$stmt->bind( $idx++, json_encode( $item->getConfig() ) );
+			$stmt->bind( $idx++, $item->getStatus(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmt->bind( $idx++, $date ); // mtime
+			$stmt->bind( $idx++, $context->getEditor() );
+			$stmt->bind( $idx++, $context->getLocale()->getSiteId(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 
 			if( $id !== null ) {
-				$stmt->bind( 11, $id, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+				$stmt->bind( $idx++, $id, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 				$item->setId( $id );
 			} else {
-				$stmt->bind( 11, $date ); // ctime
+				$stmt->bind( $idx++, $date ); // ctime
 			}
 
 			$stmt->execute()->finish();
 
-			if( $id === null && $fetch === true )
+			if( $id === null )
 			{
-				/** mshop/service/manager/standard/newid
+				/** mshop/service/manager/standard/newid/mysql
+				 * Retrieves the ID generated by the database when inserting a new record
+				 *
+				 * @see mshop/service/manager/standard/newid/ansi
+				 */
+
+				/** mshop/service/manager/standard/newid/ansi
 				 * Retrieves the ID generated by the database when inserting a new record
 				 *
 				 * As soon as a new record is inserted into the database table,
@@ -370,11 +490,11 @@ class Standard
 				 * @param string SQL statement for retrieving the last inserted record ID
 				 * @since 2014.03
 				 * @category Developer
-				 * @see mshop/service/manager/standard/insert
-				 * @see mshop/service/manager/standard/update
-				 * @see mshop/service/manager/standard/delete
-				 * @see mshop/service/manager/standard/search
-				 * @see mshop/service/manager/standard/count
+				 * @see mshop/service/manager/standard/insert/ansi
+				 * @see mshop/service/manager/standard/update/ansi
+				 * @see mshop/service/manager/standard/delete/ansi
+				 * @see mshop/service/manager/standard/search/ansi
+				 * @see mshop/service/manager/standard/count/ansi
 				 */
 				$path = 'mshop/service/manager/standard/newid';
 				$item->setId( $this->newId( $conn, $path ) );
@@ -387,6 +507,8 @@ class Standard
 			$dbm->release( $conn, $dbname );
 			throw $e;
 		}
+
+		return $this->saveListItems( $item, 'service', $fetch );
 	}
 
 
@@ -394,17 +516,13 @@ class Standard
 	 * Searches for service items based on the given criteria.
 	 *
 	 * @param \Aimeos\MW\Criteria\Iface $search Search criteria object
-	 * @param array $ref List of domains to fetch list items and referenced items for
-	 * @param integer &$total Number of items that are available in total
-	 * @return array List of service items implementing \Aimeos\MShop\Service\Item\Iface
-	 *
-	 * @throws \Aimeos\MShop\Service\Exception if creating items failed
-	 * @throws \Aimeos\MW\Common\Exception If a failure in the search object occurred
-	 * @throws \Aimeos\MW\DB\Exception If errors regarding database access occured
+	 * @param string[] $ref List of domains to fetch list items and referenced items for
+	 * @param integer|null &$total Number of items that are available in total
+	 * @return \Aimeos\MShop\Service\Item\Iface[] List of service items
 	 */
-	public function searchItems( \Aimeos\MW\Criteria\Iface $search, array $ref = array(), &$total = null )
+	public function searchItems( \Aimeos\MW\Criteria\Iface $search, array $ref = [], &$total = null )
 	{
-		$map = $typeIds = array();
+		$map = [];
 		$context = $this->getContext();
 
 		$dbm = $context->getDatabaseManager();
@@ -414,9 +532,46 @@ class Standard
 		try
 		{
 			$required = array( 'service' );
-			$level = \Aimeos\MShop\Locale\Manager\Base::SITE_PATH;
 
-			/** mshop/service/manager/standard/search
+			/** mshop/service/manager/sitemode
+			 * Mode how items from levels below or above in the site tree are handled
+			 *
+			 * By default, only items from the current site are fetched from the
+			 * storage. If the ai-sites extension is installed, you can create a
+			 * tree of sites. Then, this setting allows you to define for the
+			 * whole service domain if items from parent sites are inherited,
+			 * sites from child sites are aggregated or both.
+			 *
+			 * Available constants for the site mode are:
+			 * * 0 = only items from the current site
+			 * * 1 = inherit items from parent sites
+			 * * 2 = aggregate items from child sites
+			 * * 3 = inherit and aggregate items at the same time
+			 *
+			 * You also need to set the mode in the locale manager
+			 * (mshop/locale/manager/standard/sitelevel) to one of the constants.
+			 * If you set it to the same value, it will work as described but you
+			 * can also use different modes. For example, if inheritance and
+			 * aggregation is configured the locale manager but only inheritance
+			 * in the domain manager because aggregating items makes no sense in
+			 * this domain, then items wil be only inherited. Thus, you have full
+			 * control over inheritance and aggregation in each domain.
+			 *
+			 * @param integer Constant from Aimeos\MShop\Locale\Manager\Base class
+			 * @category Developer
+			 * @since 2018.01
+			 * @see mshop/locale/manager/standard/sitelevel
+			 */
+			$level = \Aimeos\MShop\Locale\Manager\Base::SITE_PATH;
+			$level = $context->getConfig()->get( 'mshop/service/manager/sitemode', $level );
+
+			/** mshop/service/manager/standard/search/mysql
+			 * Retrieves the records matched by the given criteria in the database
+			 *
+			 * @see mshop/service/manager/standard/search/ansi
+			 */
+
+			/** mshop/service/manager/standard/search/ansi
 			 * Retrieves the records matched by the given criteria in the database
 			 *
 			 * Fetches the records matched by the given criteria from the service
@@ -461,15 +616,21 @@ class Standard
 			 * @param string SQL statement for searching items
 			 * @since 2014.03
 			 * @category Developer
-			 * @see mshop/service/manager/standard/insert
-			 * @see mshop/service/manager/standard/update
-			 * @see mshop/service/manager/standard/newid
-			 * @see mshop/service/manager/standard/delete
-			 * @see mshop/service/manager/standard/count
+			 * @see mshop/service/manager/standard/insert/ansi
+			 * @see mshop/service/manager/standard/update/ansi
+			 * @see mshop/service/manager/standard/newid/ansi
+			 * @see mshop/service/manager/standard/delete/ansi
+			 * @see mshop/service/manager/standard/count/ansi
 			 */
 			$cfgPathSearch = 'mshop/service/manager/standard/search';
 
-			/** mshop/service/manager/standard/count
+			/** mshop/service/manager/standard/count/mysql
+			 * Counts the number of records matched by the given criteria in the database
+			 *
+			 * @see mshop/service/manager/standard/count/ansi
+			 */
+
+			/** mshop/service/manager/standard/count/ansi
 			 * Counts the number of records matched by the given criteria in the database
 			 *
 			 * Counts all records matched by the given criteria from the service
@@ -508,11 +669,11 @@ class Standard
 			 * @param string SQL statement for counting items
 			 * @since 2014.03
 			 * @category Developer
-			 * @see mshop/service/manager/standard/insert
-			 * @see mshop/service/manager/standard/update
-			 * @see mshop/service/manager/standard/newid
-			 * @see mshop/service/manager/standard/delete
-			 * @see mshop/service/manager/standard/search
+			 * @see mshop/service/manager/standard/insert/ansi
+			 * @see mshop/service/manager/standard/update/ansi
+			 * @see mshop/service/manager/standard/newid/ansi
+			 * @see mshop/service/manager/standard/delete/ansi
+			 * @see mshop/service/manager/standard/search/ansi
 			 */
 			$cfgPathCount = 'mshop/service/manager/standard/count';
 
@@ -520,16 +681,13 @@ class Standard
 
 			while( ( $row = $results->fetch() ) !== false )
 			{
-				$config = $row['config'];
-
-				if( $config && ( $row['config'] = json_decode( $config, true ) ) === null )
+				if( ( $row['service.config'] = json_decode( $config = $row['service.config'], true ) ) === null )
 				{
-					$msg = sprintf( 'Invalid JSON as result of search for ID "%2$s" in "%1$s": %3$s', 'mshop_service.config', $row['id'], $config );
+					$msg = sprintf( 'Invalid JSON as result of search for ID "%2$s" in "%1$s": %3$s', 'mshop_service.config', $row['service.id'], $config );
 					$this->getContext()->getLogger()->log( $msg, \Aimeos\MW\Logger\Base::WARN );
 				}
 
-				$map[$row['id']] = $row;
-				$typeIds[$row['typeid']] = null;
+				$map[(string) $row['service.id']] = $row;
 			}
 
 			$dbm->release( $conn, $dbname );
@@ -540,116 +698,7 @@ class Standard
 			throw $e;
 		}
 
-		if( !empty( $typeIds ) )
-		{
-			$typeManager = $this->getSubManager( 'type' );
-			$typeSearch = $typeManager->createSearch();
-			$typeSearch->setConditions( $typeSearch->compare( '==', 'service.type.id', array_keys( $typeIds ) ) );
-			$typeSearch->setSlice( 0, $search->getSliceSize() );
-			$typeItems = $typeManager->searchItems( $typeSearch );
-
-			foreach( $map as $id => $row )
-			{
-				if( isset( $typeItems[$row['typeid']] ) ) {
-					$map[$id]['type'] = $typeItems[$row['typeid']]->getCode();
-				}
-			}
-		}
-
 		return $this->buildItems( $map, $ref, 'service' );
-	}
-
-
-	/**
-	 * Returns the service provider which is responsible for the service item.
-	 *
-	 * @param \Aimeos\MShop\Service\Item\Iface $item Delivery or payment service item object
-	 * @return \Aimeos\MShop\Service\Provider\Iface Returns a service provider implementing \Aimeos\MShop\Service\Provider\Iface
-	 * @throws \Aimeos\MShop\Service\Exception If provider couldn't be found
-	 */
-	public function getProvider( \Aimeos\MShop\Service\Item\Iface $item )
-	{
-		$type = ucwords( $item->getType() );
-		$names = explode( ',', $item->getProvider() );
-
-		if( ctype_alnum( $type ) === false ) {
-			throw new \Aimeos\MShop\Service\Exception( sprintf( 'Invalid characters in type name "%1$s"', $type ) );
-		}
-
-		if( ( $provider = array_shift( $names ) ) === null ) {
-			throw new \Aimeos\MShop\Service\Exception( sprintf( 'Provider in "%1$s" not available', $item->getProvider() ) );
-		}
-
-		if( ctype_alnum( $provider ) === false ) {
-			throw new \Aimeos\MShop\Service\Exception( sprintf( 'Invalid characters in provider name "%1$s"', $provider ) );
-		}
-
-		$interface = '\\Aimeos\\MShop\\Service\\Provider\\Factory\\Iface';
-		$classname = '\\Aimeos\\MShop\\Service\\Provider\\' . $type . '\\' . $provider;
-
-		if( class_exists( $classname ) === false ) {
-			throw new \Aimeos\MShop\Service\Exception( sprintf( 'Class "%1$s" not available', $classname ) );
-		}
-
-		$context = $this->getContext();
-		$config = $context->getConfig();
-		$provider = new $classname( $context, $item );
-
-		if( ( $provider instanceof $interface ) === false )
-		{
-			$msg = sprintf( 'Class "%1$s" does not implement interface "%2$s"', $classname, $interface );
-			throw new \Aimeos\MShop\Service\Exception( $msg );
-		}
-
-		/** mshop/service/provider/delivery/decorators
-		 * Adds a list of decorators to all delivery provider objects automatcally
-		 *
-		 * Decorators extend the functionality of a class by adding new aspects
-		 * (e.g. log what is currently done), executing the methods of the underlying
-		 * class only in certain conditions (e.g. only for logged in users) or
-		 * modify what is returned to the caller.
-		 *
-		 * This option allows you to wrap decorators
-		 * ("\Aimeos\MShop\Service\Provider\Decorator\*") around the delivery provider.
-		 *
-		 *  mshop/service/provider/delivery/decorators = array( 'decorator1' )
-		 *
-		 * This would add the decorator named "decorator1" defined by
-		 * "\Aimeos\MShop\Service\Provider\Decorator\Decorator1" to all delivery provider
-		 * objects.
-		 *
-		 * @param array List of decorator names
-		 * @since 2014.03
-		 * @category Developer
-		 * @see mshop/service/provider/payment/decorators
-		 */
-
-		/** mshop/service/provider/payment/decorators
-		 * Adds a list of decorators to all payment provider objects automatcally
-		 *
-		 * Decorators extend the functionality of a class by adding new aspects
-		 * (e.g. log what is currently done), executing the methods of the underlying
-		 * class only in certain conditions (e.g. only for logged in users) or
-		 * modify what is returned to the caller.
-		 *
-		 * This option allows you to wrap decorators
-		 * ("\Aimeos\MShop\Service\Provider\Decorator\*") around the payment provider.
-		 *
-		 *  mshop/service/provider/payment/decorators = array( 'decorator1' )
-		 *
-		 * This would add the decorator named "decorator1" defined by
-		 * "\Aimeos\MShop\Service\Provider\Decorator\Decorator1" to all payment provider
-		 * objects.
-		 *
-		 * @param array List of decorator names
-		 * @since 2014.03
-		 * @category Developer
-		 * @see mshop/service/provider/delivery/decorators
-		 */
-		$decorators = $config->get( 'mshop/service/provider/' . $item->getType() . '/decorators', array() );
-
-		$provider = $this->addServiceDecorators( $item, $provider, $names );
-		return $this->addServiceDecorators( $item, $provider, $decorators );
 	}
 
 
@@ -667,15 +716,34 @@ class Standard
 
 
 	/**
-	 * creates a search object and sets base criteria
+	 * Creates a search critera object
 	 *
-	 * @param boolean $default Prepopulate object with default criterias
-	 * @return \Aimeos\MW\Criteria\Iface
+	 * @param boolean $default Add default criteria (optional)
+	 * @return \Aimeos\MW\Criteria\Iface New search criteria object
 	 */
 	public function createSearch( $default = false )
 	{
-		if( $default === true ) {
-			return $this->createSearchBase( 'service' );
+		if( $default === true )
+		{
+			$object = $this->createSearchBase( 'service' );
+
+			$expr = array( $object->getConditions() );
+
+			$temp = array(
+				$object->compare( '==', 'service.datestart', null ),
+				$object->compare( '<=', 'service.datestart', $this->date ),
+			);
+			$expr[] = $object->combine( '||', $temp );
+
+			$temp = array(
+				$object->compare( '==', 'service.dateend', null ),
+				$object->compare( '>=', 'service.dateend', $this->date ),
+			);
+			$expr[] = $object->combine( '||', $temp );
+
+			$object->setConditions( $object->combine( '&&', $expr ) );
+
+			return $object;
 		}
 
 		return parent::createSearch();
@@ -686,12 +754,14 @@ class Standard
 	 * Creates a new service item initialized with the given values.
 	 *
 	 * @param array $values Associative list of key/value pairs
-	 * @param array $listitems List of items implementing \Aimeos\MShop\Common\Item\Lists\Iface
-	 * @param array $textItems List of items implementing \Aimeos\MShop\Text\Item\Iface
+	 * @param \Aimeos\MShop\Common\Item\Lists\Iface[] $listitems List of list items
+	 * @param \Aimeos\MShop\Text\Item\Iface[] $refItems List of referenced items
 	 * @return \Aimeos\MShop\Service\Item\Iface New service item
 	 */
-	protected function createItemBase( array $values = array( ), array $listitems = array( ), array $textItems = array( ) )
+	protected function createItemBase( array $values = [], array $listitems = [], array $refItems = [] )
 	{
-		return new \Aimeos\MShop\Service\Item\Standard( $values, $listitems, $textItems );
+		$values['.date'] = $this->date;
+
+		return new \Aimeos\MShop\Service\Item\Standard( $values, $listitems, $refItems );
 	}
 }

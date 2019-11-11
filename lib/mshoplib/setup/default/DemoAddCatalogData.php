@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2014
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2014
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 
@@ -38,29 +38,29 @@ class DemoAddCatalogData extends \Aimeos\MW\Setup\Task\MShopAddDataAbstract
 
 
 	/**
-	 * Executes the task for MySQL databases.
-	 */
-	protected function mysql()
-	{
-		$this->process();
-	}
-
-
-	/**
 	 * Insert catalog nodes and relations.
 	 */
-	protected function process()
+	public function migrate()
 	{
 		$this->msg( 'Processing catalog demo data', 0 );
 
-		$item = null;
 		$context = $this->getContext();
-		$manager = \Aimeos\MShop\Factory::createManager( $context, 'catalog' );
+		$value = $context->getConfig()->get( 'setup/default/demo', '' );
+
+		if( $value === '' )
+		{
+			$this->status( 'OK' );
+			return;
+		}
+
+
+		$item = null;
+		$manager = \Aimeos\MShop::create( $context, 'catalog' );
 
 		try
 		{
 			// Don't delete the catalog node because users are likely use it for production
-			$item = $manager->getTree( null, array(), \Aimeos\MW\Tree\Manager\Base::LEVEL_ONE );
+			$item = $manager->getTree( null, [], \Aimeos\MW\Tree\Manager\Base::LEVEL_ONE );
 
 			$this->removeItems( $item->getId(), 'catalog/lists', 'catalog', 'media' );
 			$this->removeItems( $item->getId(), 'catalog/lists', 'catalog', 'text' );
@@ -69,7 +69,7 @@ class DemoAddCatalogData extends \Aimeos\MW\Setup\Task\MShopAddDataAbstract
 		catch( \Exception $e ) {; } // If no root node was already inserted into the database
 
 
-		if( $context->getConfig()->get( 'setup/default/demo', false ) == true )
+		if( $value === '1' )
 		{
 			$ds = DIRECTORY_SEPARATOR;
 			$path = __DIR__ . $ds . 'data' . $ds . 'demo-catalog.php';

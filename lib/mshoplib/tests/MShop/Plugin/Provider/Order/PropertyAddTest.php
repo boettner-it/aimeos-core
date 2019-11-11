@@ -1,84 +1,38 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2013
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2013
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 namespace Aimeos\MShop\Plugin\Provider\Order;
 
 
-/**
- * Test class for \Aimeos\MShop\Plugin\Provider\Order\PropertyAdd.
- */
-class PropertyAddTest extends \PHPUnit_Framework_TestCase
+class PropertyAddTest extends \PHPUnit\Framework\TestCase
 {
 	private $object;
 	private $plugin;
 	private $order;
-	private $products;
+	private $product;
 
 
-	/**
-	 * Sets up the fixture, for example, opens a network connection.
-	 * This method is called before a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function setUp()
 	{
-		$pluginManager = \Aimeos\MShop\Plugin\Manager\Factory::createManager( \TestHelper::getContext() );
-		$this->plugin = $pluginManager->createItem();
-		$this->plugin->setProvider( 'PropertyAdd' );
-		$this->plugin->setStatus( '1' );
+		$context = \TestHelperMShop::getContext();
+		$this->plugin = \Aimeos\MShop::create( $context, 'plugin' )->createItem();
+		$this->order = \Aimeos\MShop::create( $context, 'order/base' )->createItem()->off(); // remove event listeners
 
-		$this->plugin->setConfig( array( 'product.stock.productid' => array(
-			'product.stock.warehouseid',
-			'product.stock.editor',
-			'product.stock.stocklevel',
-			'product.stock.dateback'
-		) ) );
+		$product = \Aimeos\MShop::create( $context, 'product' )->findItem( 'CNC' );
+		$this->product = \Aimeos\MShop::create( $context, 'order/base/product' )->createItem()->copyFrom( $product );
 
-		$orderManager = \Aimeos\MShop\Order\Manager\Factory::createManager( \TestHelper::getContext() );
-		$orderBaseManager = $orderManager->getSubManager( 'base' );
-		$orderBaseProductManager = $orderBaseManager->getSubManager( 'product' );
-
-		$manager = \Aimeos\MShop\Product\Manager\Factory::createManager( \TestHelper::getContext() );
-		$search = $manager->createSearch();
-		$search->setConditions( $search->compare( '==', 'product.code', array( 'CNE', 'CNC' ) ) );
-
-		$products = $manager->searchItems( $search );
-
-		if( count( $products ) !== 2 ) {
-			throw new \Exception( 'Wrong number of products' );
-		}
-
-		$this->products = array();
-
-		foreach( $products as $product )
-		{
-			$item = $orderBaseProductManager->createItem();
-			$item->copyFrom( $product );
-
-			$this->products[$product->getCode()] = $item;
-		}
-
-		$this->order = $orderBaseManager->createItem();
-
-		$this->object = new \Aimeos\MShop\Plugin\Provider\Order\PropertyAdd( \TestHelper::getContext(), $this->plugin );
+		$this->object = new \Aimeos\MShop\Plugin\Provider\Order\PropertyAdd( $context, $this->plugin );
 	}
 
 
-	/**
-	 * Tears down the fixture, for example, closes a network connection.
-	 * This method is called after a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function tearDown()
 	{
-		unset( $this->object, $this->order, $this->plugin, $this->products );
+		unset( $this->object, $this->order, $this->plugin, $this->product );
 	}
 
 
@@ -88,68 +42,27 @@ class PropertyAddTest extends \PHPUnit_Framework_TestCase
 	}
 
 
-	public function testUpdateOk()
+	public function testUpdate()
 	{
-		$this->assertTrue( $this->object->update( $this->order, 'addProduct.before', $this->products['CNC'] ) );
-		$this->assertEquals( 4, count( $this->products['CNC']->getAttributes() ) );
+		$product = $this->product;
+		$this->plugin->setConfig( ['types' => ['package-width']] );
 
-		$this->products['CNE']->setAttributes( array() );
-		$this->plugin->setConfig( array(
-			'product.lists.parentid' => array(
-				'product.lists.domain',
-			),
-			'product.stock.productid' => array(
-				'product.stock.stocklevel'
-			)
-		) );
+		$this->assertEquals( $product, $this->object->update( $this->order, 'addProduct.before', $product ) );
+		$this->assertEquals( [$product], $this->object->update( $this->order, 'addProduct.before', [$product] ) );
 
-		$this->object->update( $this->order, 'addProduct.before', $this->products['CNE'] );
-
-		$this->assertEquals( 2, count( $this->products['CNE']->getAttributes() ) );
+		$attributes = $this->product->getAttributeItems();
+		$this->assertEquals( 1, count( $attributes ) );
+		$this->assertEquals( 'product/property', reset( $attributes )->getType() );
+		$this->assertEquals( 'package-width', reset( $attributes )->getCode() );
+		$this->assertEquals( '15.0', reset( $attributes )->getValue() );
 	}
 
 
-	public function testUpdateAttributeExists()
+	public function testUpdateNone()
 	{
-		$attributeManager = \Aimeos\MShop\Order\Manager\Factory::createManager( \TestHelper::getContext() )->getSubmanager( 'base' )->getSubmanager( 'product' )->getSubmanager( 'attribute' );
+		$this->plugin->setConfig( ['types' => ['unknown']] );
 
-		$attribute = $attributeManager->createItem();
-
-		$attribute->setCode( 'product.stock.stocklevel' );
-		$attribute->setName( 'product.stock.stocklevel' );
-		$attribute->setValue( '1200' );
-		$attribute->setType( 'property' );
-
-		$this->products['CNC']->setAttributes( array( $attribute ) );
-		$this->assertEquals( 1, count( $this->products['CNC']->getAttributes() ) );
-
-		$this->assertTrue( $this->object->update( $this->order, 'addProduct.before', $this->products['CNC'] ) );
-		$this->assertEquals( 4, count( $this->products['CNC']->getAttributes() ) );
-	}
-
-
-	public function testUpdateConfigError()
-	{
-		// Non-existent property:
-
-		$this->plugin->setConfig( array( 'product.stock.productid' => array(
-			'product.stock.quatsch',
-			'product.stock.editor',
-			'product.stock.stocklevel',
-			'product.stock.dateback'
-		) ) );
-
-		$this->assertTrue( $this->object->update( $this->order, 'addProduct.before', $this->products['CNC'] ) );
-		$this->assertEquals( 3, count( $this->products['CNC']->getAttributes() ) );
-
-
-		// Incorrect key:
-
-		$this->plugin->setConfig( array( 'stock.productid' => array(
-			'stock.warehouseid',
-		) ) );
-
-		$this->setExpectedException( '\\Aimeos\\MShop\\Plugin\\Exception' );
-		$this->object->update( $this->order, 'addProduct.before', $this->products['CNC'] );
+		$this->assertEquals( $this->product, $this->object->update( $this->order, 'addProduct.before', $this->product ) );
+		$this->assertEquals( 0, count( $this->product->getAttributeItems() ) );
 	}
 }

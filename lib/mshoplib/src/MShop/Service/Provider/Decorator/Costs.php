@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2013
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2013
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Service
  */
@@ -19,17 +19,18 @@ namespace Aimeos\MShop\Service\Provider\Decorator;
  * @subpackage Service
  */
 class Costs
-extends \Aimeos\MShop\Service\Provider\Decorator\Base
+	extends \Aimeos\MShop\Service\Provider\Decorator\Base
+	implements \Aimeos\MShop\Service\Provider\Decorator\Iface
 {
 	private $beConfig = array(
 		'costs.percent' => array(
 			'code' => 'costs.percent',
-			'internalcode'=> 'costs.percent',
-			'label'=> 'Costs: Decimal percent value',
-			'type'=> 'number',
-			'internaltype'=> 'number',
-			'default'=> 0,
-			'required'=> true,
+			'internalcode' => 'costs.percent',
+			'label' => 'Costs: Decimal percent value',
+			'type' => 'number',
+			'internaltype' => 'float',
+			'default' => 0,
+			'required' => true,
 		),
 	);
 
@@ -58,13 +59,7 @@ extends \Aimeos\MShop\Service\Provider\Decorator\Base
 	 */
 	public function getConfigBE()
 	{
-		$list = $this->getProvider()->getConfigBE();
-
-		foreach( $this->beConfig as $key => $config ) {
-			$list[$key] = new \Aimeos\MW\Criteria\Attribute\Standard( $config );
-		}
-
-		return $list;
+		return array_merge( $this->getProvider()->getConfigBE(), $this->getConfigItems( $this->beConfig ) );
 	}
 
 
@@ -81,7 +76,7 @@ extends \Aimeos\MShop\Service\Provider\Decorator\Base
 		$config = $this->getServiceItem()->getConfig();
 
 		if( !isset( $config['costs.percent'] ) ) {
-			throw new \Aimeos\MShop\Service\Provider\Exception( sprintf( 'Missing configuration "%1$s"', 'costs.percent' ) );
+			throw new \Aimeos\MShop\Service\Exception( sprintf( 'Missing configuration "%1$s"', 'costs.percent' ) );
 		}
 
 		$value = $basket->getPrice()->getValue() * $config['costs.percent'] / 100;

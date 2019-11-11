@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Attribute
  */
@@ -19,24 +19,54 @@ namespace Aimeos\MShop\Attribute\Item;
  * @subpackage Attribute
  */
 class Standard
-	extends \Aimeos\MShop\Common\Item\ListRef\Base
+	extends \Aimeos\MShop\Common\Item\Base
 	implements \Aimeos\MShop\Attribute\Item\Iface
 {
-	private $values;
+	use \Aimeos\MShop\Common\Item\ListRef\Traits {
+		__clone as __cloneList;
+	}
+	use \Aimeos\MShop\Common\Item\PropertyRef\Traits {
+		__clone as __cloneProperty;
+	}
 
 
 	/**
 	 * Initializes the attribute item.
 	 *
 	 * @param array $values Associative array with id, domain, code, and status to initialize the item properties; Optional
-	 * @param \Aimeos\MShop\Common\Lists\Item\Iface[] $listItems List of list items
+	 * @param \Aimeos\MShop\Common\Item\Lists\Iface[] $listItems List of list items
 	 * @param \Aimeos\MShop\Common\Item\Iface[] $refItems List of referenced items
+	 * @param \Aimeos\MShop\Common\Item\Property\Iface[] $propItems List of property items
 	 */
-	public function __construct( array $values = array(), array $listItems = array(), array $refItems = array() )
+	public function __construct( array $values = [], array $listItems = [],
+		array $refItems = [], array $propItems = [] )
 	{
-		parent::__construct( 'attribute.', $values, $listItems, $refItems );
+		parent::__construct( 'attribute.', $values );
 
-		$this->values = $values;
+		$this->initListItems( $listItems, $refItems );
+		$this->initPropertyItems( $propItems );
+	}
+
+
+	/**
+	 * Creates a deep clone of all objects
+	 */
+	public function __clone()
+	{
+		parent::__clone();
+		$this->__cloneList();
+		$this->__cloneProperty();
+	}
+
+
+	/**
+	 * Returns the unique key of the attribute item
+	 *
+	 * @return string Unique key consisting of domain/type/code
+	 */
+	public function getKey()
+	{
+		return md5( $this->getDomain() . '|' . $this->getType() . '|' . $this->getCode() );
 	}
 
 
@@ -47,7 +77,7 @@ class Standard
 	 */
 	public function getDomain()
 	{
-		return ( isset( $this->values['domain'] ) ? (string) $this->values['domain'] : '' );
+		return (string) $this->get( 'attribute.domain', '' );
 	}
 
 
@@ -55,38 +85,11 @@ class Standard
 	 * Set the name of the domain for this attribute item.
 	 *
 	 * @param string $domain Name of the domain e.g. text, media, price...
+	 * @return \Aimeos\MShop\Attribute\Item\Iface Attribute item for chaining method calls
 	 */
 	public function setDomain( $domain )
 	{
-		if( $domain == $this->getDomain() ) { return; }
-
-		$this->values['domain'] = (string) $domain;
-		$this->setModified();
-	}
-
-
-	/**
-	 * Returns the type id of the attribute.
-	 *
-	 * @return integer|null Type of the attribute
-	 */
-	public function getTypeId()
-	{
-		return ( isset( $this->values['typeid'] ) ? (int) $this->values['typeid'] : null );
-	}
-
-
-	/**
-	 * Sets the new type of the attribute.
-	 *
-	 * @param integer|null $typeid Type of the attribute
-	 */
-	public function setTypeId( $typeid )
-	{
-		if( $typeid == $this->getTypeId() ) { return; }
-
-		$this->values['typeid'] = (int) $typeid;
-		$this->setModified();
+		return $this->set( 'attribute.domain', (string) $domain );
 	}
 
 
@@ -97,7 +100,19 @@ class Standard
 	 */
 	public function getType()
 	{
-		return ( isset( $this->values['type'] ) ? (string) $this->values['type'] : null );
+		return $this->get( 'attribute.type' );
+	}
+
+
+	/**
+	 * Sets the new type of the attribute.
+	 *
+	 * @param string $type Type of the attribute
+	 * @return \Aimeos\MShop\Attribute\Item\Iface Attribute item for chaining method calls
+	 */
+	public function setType( $type )
+	{
+		return $this->set( 'attribute.type', $this->checkCode( $type ) );
 	}
 
 
@@ -108,7 +123,7 @@ class Standard
 	 */
 	public function getCode()
 	{
-		return ( isset( $this->values['code'] ) ? (string) $this->values['code'] : '' );
+		return (string) $this->get( 'attribute.code', '' );
 	}
 
 
@@ -116,65 +131,11 @@ class Standard
 	 * Sets a unique code for the attribute item.
 	 *
 	 * @param string $code Code of the attribute item
+	 * @return \Aimeos\MShop\Attribute\Item\Iface Attribute item for chaining method calls
 	 */
 	public function setCode( $code )
 	{
-		$this->checkCode( $code );
-
-		if( $code == $this->getCode() ) { return; }
-
-		$this->values['code'] = (string) $code;
-		$this->setModified();
-	}
-
-
-	/**
-	 * Returns the status (enabled/disabled) of the attribute item.
-	 *
-	 * @return integer Returns the status of the item
-	 */
-	public function getStatus()
-	{
-		return ( isset( $this->values['status'] ) ? (int) $this->values['status'] : 0 );
-	}
-
-
-	/**
-	 * Sets the new status of the attribute item.
-	 *
-	 * @param integer $status Status of the item
-	 */
-	public function setStatus( $status )
-	{
-		if( $status == $this->getStatus() ) { return; }
-
-		$this->values['status'] = (int) $status;
-		$this->setModified();
-	}
-
-
-	/**
-	 * Gets the position of the attribute item.
-	 *
-	 * @return integer Position of the attribute item
-	 */
-	public function getPosition()
-	{
-		return ( isset( $this->values['pos'] ) ? (int) $this->values['pos'] : 0 );
-	}
-
-
-	/**
-	 * Sets the position of the attribute item
-	 *
-	 * @param integer $pos Position of the attribute item
-	 */
-	public function setPosition( $pos )
-	{
-		if( $pos == $this->getPosition() ) { return; }
-
-		$this->values['pos'] = (int) $pos;
-		$this->setModified();
+		return $this->set( 'attribute.code', $this->checkCode( $code, 255 ) );
 	}
 
 
@@ -185,7 +146,7 @@ class Standard
 	 */
 	public function getLabel()
 	{
-		return ( isset( $this->values['label'] ) ? (string) $this->values['label'] : '' );
+		return (string) $this->get( 'attribute.label', '' );
 	}
 
 
@@ -193,61 +154,133 @@ class Standard
 	 * Sets the new label of the attribute item.
 	 *
 	 * @param string $label Type label of the attribute item
+	 * @return \Aimeos\MShop\Attribute\Item\Iface Attribute item for chaining method calls
 	 */
 	public function setLabel( $label )
 	{
-		if( $label == $this->getLabel() ) { return; }
-
-		$this->values['label'] = (string) $label;
-		$this->setModified();
+		return $this->set( 'attribute.label', (string) $label );
 	}
 
 
 	/**
-	 * Sets the item values from the given array.
+	 * Returns the status (enabled/disabled) of the attribute item.
 	 *
-	 * @param array $list Associative list of item keys and their values
-	 * @return array Associative list of keys and their values that are unknown
+	 * @return integer Returns the status of the item
 	 */
-	public function fromArray( array $list )
+	public function getStatus()
 	{
-		$unknown = array();
-		$list = parent::fromArray( $list );
+		return (int) $this->get( 'attribute.status', 1 );
+	}
+
+
+	/**
+	 * Sets the new status of the attribute item.
+	 *
+	 * @param integer $status Status of the item
+	 * @return \Aimeos\MShop\Attribute\Item\Iface Attribute item for chaining method calls
+	 */
+	public function setStatus( $status )
+	{
+		return $this->set( 'attribute.status', (int) $status );
+	}
+
+
+	/**
+	 * Gets the position of the attribute item.
+	 *
+	 * @return integer Position of the attribute item
+	 */
+	public function getPosition()
+	{
+		return (int) $this->get( 'attribute.position', 0 );
+	}
+
+
+	/**
+	 * Sets the position of the attribute item
+	 *
+	 * @param integer $pos Position of the attribute item
+	 * @return \Aimeos\MShop\Attribute\Item\Iface Attribute item for chaining method calls
+	 */
+	public function setPosition( $pos )
+	{
+		return $this->set( 'attribute.position', (int) $pos );
+	}
+
+
+	/**
+	 * Returns the item type
+	 *
+	 * @return string Item type, subtypes are separated by slashes
+	 */
+	public function getResourceType()
+	{
+		return 'attribute';
+	}
+
+
+	/**
+	 * Tests if the item is available based on status, time, language and currency
+	 *
+	 * @return boolean True if available, false if not
+	 */
+	public function isAvailable()
+	{
+		return parent::isAvailable() && $this->getStatus() > 0;
+	}
+
+
+	/*
+	 * Sets the item values from the given array and removes that entries from the list
+	 *
+	 * @param array &$list Associative list of item keys and their values
+	 * @param boolean True to set private properties too, false for public only
+	 * @return \Aimeos\MShop\Attribute\Item\Iface Attribute item for chaining method calls
+	 */
+	public function fromArray( array &$list, $private = false )
+	{
+		$item = parent::fromArray( $list, $private );
 
 		foreach( $list as $key => $value )
 		{
 			switch( $key )
 			{
-				case 'attribute.domain': $this->setDomain( $value ); break;
-				case 'attribute.code': $this->setCode( $value ); break;
-				case 'attribute.status': $this->setStatus( $value ); break;
-				case 'attribute.typeid': $this->setTypeId( $value ); break;
-				case 'attribute.position': $this->setPosition( $value ); break;
-				case 'attribute.label': $this->setLabel( $value ); break;
-				default: $unknown[$key] = $value;
+				case 'attribute.domain': $item = $item->setDomain( $value ); break;
+				case 'attribute.code': $item = $item->setCode( $value ); break;
+				case 'attribute.status': $item = $item->setStatus( $value ); break;
+				case 'attribute.type': $item = $item->setType( $value ); break;
+				case 'attribute.position': $item = $item->setPosition( $value ); break;
+				case 'attribute.label': $item = $item->setLabel( $value ); break;
+				default: continue 2;
 			}
+
+			unset( $list[$key] );
 		}
 
-		return $unknown;
+		return $item;
 	}
 
 
 	/**
 	 * Returns the item values as array.
 	 *
-	 * @return Associative list of item properties and their values
+	 * @param boolean True to return private properties, false for public only
+	 * @return array Associative list of item properties and their values
 	 */
-	public function toArray()
+	public function toArray( $private = false )
 	{
-		$list = parent::toArray();
+		$list = parent::toArray( $private );
 
 		$list['attribute.domain'] = $this->getDomain();
-		$list['attribute.code'] = $this->getCode();
-		$list['attribute.status'] = $this->getStatus();
-		$list['attribute.typeid'] = $this->getTypeId();
 		$list['attribute.type'] = $this->getType();
-		$list['attribute.position'] = $this->getPosition();
+		$list['attribute.code'] = $this->getCode();
 		$list['attribute.label'] = $this->getLabel();
+		$list['attribute.status'] = $this->getStatus();
+		$list['attribute.position'] = $this->getPosition();
+
+		if( $private === true ) {
+			$list['attribute.key'] = $this->getKey();
+		}
 
 		return $list;
 	}

@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Locale
  */
@@ -25,7 +25,6 @@ class Standard
 	private $site;
 	private $sitePath;
 	private $siteSubTree;
-	private $values;
 
 
 	/**
@@ -33,15 +32,14 @@ class Standard
 	 *
 	 * @param array $values Values to be set on initialisation
 	 * @param \Aimeos\MShop\Locale\Item\Site\Iface|null $site Site object
-	 * @param array $sitePath List of site IDs up to the root site item
-	 * @param array $siteSubTree List of site IDs from all sites below the current site
+	 * @param string[] $sitePath List of site IDs up to the root site item
+	 * @param string[] $siteSubTree List of site IDs from all sites below the current site
 	 */
-	public function __construct( array $values = array( ), \Aimeos\MShop\Locale\Item\Site\Iface $site = null,
-		array $sitePath = array(), array $siteSubTree = array() )
+	public function __construct( array $values = [], \Aimeos\MShop\Locale\Item\Site\Iface $site = null,
+		array $sitePath = [], array $siteSubTree = [] )
 	{
 		parent::__construct( 'locale.', $values );
 
-		$this->values = $values;
 		$this->site = $site;
 		$this->sitePath = $sitePath;
 		$this->siteSubTree = $siteSubTree;
@@ -98,30 +96,30 @@ class Standard
 	/**
 	 * Returns the Site ID of the item.
 	 *
-	 * @return integer|null Site ID (or null for global site)
+	 * @return string|null Site ID (or null for global site)
 	 */
 	public function getSiteId()
 	{
-		return ( isset( $this->values['siteid'] ) ? (int) $this->values['siteid'] : null );
+		return $this->get( 'locale.siteid' );
 	}
 
 
 	/**
 	 * Sets the identifier of the shop instance.
 	 *
-	 * @param integer ID of the shop instance.
+	 * @param string $id ID of the shop instance
+	 * @return \Aimeos\MShop\Locale\Item\Iface Locale item for chaining method calls
 	 */
 	public function setSiteId( $id )
 	{
-		if( $id === $this->getSiteId() ) { return; }
+		if( $id !== $this->getSiteId() )
+		{
+			/** @todo: Wrong site item shouldn't be available any more but causes problems in controller */
+			$this->sitePath = array( (string) $id );
+			$this->siteSubTree = array( (string) $id );
+		}
 
-		$this->values['siteid'] = (int) $id;
-		$this->sitePath = array( (int) $id );
-		$this->siteSubTree = array( (int) $id );
-
-		/** @todo: Wrong site item shouldn't be available any more but causes problems in controller */
-
-		$this->setModified();
+		return $this->set( 'locale.siteid', (string) $id );
 	}
 
 
@@ -132,23 +130,20 @@ class Standard
 	 */
 	public function getLanguageId()
 	{
-		return ( isset( $this->values['langid'] ) ? (string) $this->values['langid'] : null );
+		return $this->get( 'locale.languageid' );
 	}
 
 
 	/**
 	 * Sets the ISO language code.
 	 *
-	 * @param string|null $langid ISO language code (e.g. de or de_DE)
+	 * @param string|null $id ISO language code (e.g. de or de_DE)
+	 * @return \Aimeos\MShop\Locale\Item\Iface Locale item for chaining method calls
 	 * @throws \Aimeos\MShop\Exception If the language ID is invalid
 	 */
-	public function setLanguageId( $langid )
+	public function setLanguageId( $id )
 	{
-		if( $langid == $this->getLanguageId() ) { return; }
-
-		$this->checkLanguageId( $langid );
-		$this->values['langid'] = $langid;
-		$this->setModified();
+		return $this->set( 'locale.languageid', $this->checkLanguageId( $id ) );
 	}
 
 
@@ -159,7 +154,7 @@ class Standard
 	 */
 	public function getCurrencyId()
 	{
-		return ( isset( $this->values['currencyid'] ) ? (string) $this->values['currencyid'] : null );
+		return $this->get( 'locale.currencyid' );
 	}
 
 
@@ -167,15 +162,12 @@ class Standard
 	 * Sets the currency ID.
 	 *
 	 * @param string|null $currencyid Three letter ISO currency code (e.g. EUR)
+	 * @return \Aimeos\MShop\Locale\Item\Iface Locale item for chaining method calls
 	 * @throws \Aimeos\MShop\Exception If the currency ID is invalid
 	 */
 	public function setCurrencyId( $currencyid )
 	{
-		if( $currencyid == $this->getCurrencyId() ) { return; }
-
-		$this->checkCurrencyId( $currencyid );
-		$this->values['currencyid'] = $currencyid;
-		$this->setModified();
+		return $this->set( 'locale.currencyid', $this->checkCurrencyId( $currencyid ) );
 	}
 
 
@@ -186,7 +178,7 @@ class Standard
 	 */
 	public function getPosition()
 	{
-		return ( isset( $this->values['pos'] ) ? (int) $this->values['pos'] : 0 );
+		return (int) $this->get( 'locale.position', 0 );
 	}
 
 
@@ -194,13 +186,11 @@ class Standard
 	 * Sets the position of the item.
 	 *
 	 * @param integer $pos Position of the item
+	 * @return \Aimeos\MShop\Locale\Item\Iface Locale item for chaining method calls
 	 */
 	public function setPosition( $pos )
 	{
-		if( $pos == $this->getPosition() ) { return; }
-
-		$this->values['pos'] = (int) $pos;
-		$this->setModified();
+		return $this->set( 'locale.position', (int) $pos );
 	}
 
 
@@ -211,7 +201,7 @@ class Standard
 	 */
 	public function getStatus()
 	{
-		return ( isset( $this->values['status'] ) ? (int) $this->values['status'] : 0 );
+		return (int) $this->get( 'locale.status', 1 );
 	}
 
 
@@ -219,56 +209,75 @@ class Standard
 	 * Sets the status property
 	 *
 	 * @param integer $status The status of the locale item
+	 * @return \Aimeos\MShop\Locale\Item\Iface Locale item for chaining method calls
 	 */
 	public function setStatus( $status )
 	{
-		if( $status == $this->getStatus() ) { return; }
-
-		$this->values['status'] = (int) $status;
-		$this->setModified();
+		return $this->set( 'locale.status', (int) $status );
 	}
 
 
 	/**
-	 * Sets the item values from the given array.
+	 * Returns the item type
 	 *
-	 * @param array $list Associative list of item keys and their values
-	 * @return array Associative list of keys and their values that are unknown
+	 * @return string Item type, subtypes are separated by slashes
 	 */
-	public function fromArray( array $list )
+	public function getResourceType()
 	{
-		$unknown = array();
+		return 'locale';
+	}
 
-		if( isset( $list['locale.siteid'] ) ) {
-			$this->setSiteId( $list['locale.siteid'] );
-		}
 
-		$list = parent::fromArray( $list );
+	/**
+	 * Tests if the item is available based on status, time, language and currency
+	 *
+	 * @return boolean True if available, false if not
+	 */
+	public function isAvailable()
+	{
+		return parent::isAvailable() && $this->getStatus() > 0;
+	}
+
+
+	/*
+	 * Sets the item values from the given array and removes that entries from the list
+	 *
+	 * @param array &$list Associative list of item keys and their values
+	 * @param boolean True to set private properties too, false for public only
+	 * @return \Aimeos\MShop\Locale\Item\Iface Locale item for chaining method calls
+	 */
+	public function fromArray( array &$list, $private = false )
+	{
+		$item = parent::fromArray( $list, $private );
 
 		foreach( $list as $key => $value )
 		{
 			switch( $key )
 			{
-				case 'locale.languageid': $this->setLanguageId( $value ); break;
-				case 'locale.currencyid': $this->setCurrencyId( $value ); break;
-				case 'locale.position': $this->setPosition( $value ); break;
-				case 'locale.status': $this->setStatus( $value ); break;
-				default: $unknown[$key] = $value;
+				case 'locale.siteid': $item = $item->setSiteId( $value ); break;
+				case 'locale.languageid': $item = $item->setLanguageId( $value ); break;
+				case 'locale.currencyid': $item = $item->setCurrencyId( $value ); break;
+				case 'locale.position': $item = $item->setPosition( $value ); break;
+				case 'locale.status': $item = $item->setStatus( $value ); break;
+				default: continue 2;
 			}
+
+			unset( $list[$key] );
 		}
 
-		return $unknown;
+		return $item;
 	}
 
 
 	/**
 	 * Returns the item values as array.
 	 *
-	 * @return Associative list of item properties and their values
+	 * @param boolean True to return private properties, false for public only
+	 * @return array Associative list of item properties and their values
 	 */
-	public function toArray()
+	public function toArray( $private = false )
 	{
-		$list = parent::toArray();
+		$list = parent::toArray( $private );
 
 		$list['locale.siteid'] = $this->getSiteId();
 		$list['locale.languageid'] = $this->getLanguageId();

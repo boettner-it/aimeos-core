@@ -1,10 +1,10 @@
 <?php
 /**
- * @copyright Metaways Infosystems GmbH, 2012
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2012
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
- * @subpackage Catalog
+ * @subpackage Index
  */
 
 
@@ -15,63 +15,66 @@ namespace Aimeos\MShop\Index\Manager\Text;
  * Submanager for text.
  *
  * @package MShop
- * @subpackage Catalog
+ * @subpackage Index
  */
 class Standard
 	extends \Aimeos\MShop\Index\Manager\DBBase
-	implements \Aimeos\MShop\Index\Manager\Text\Iface
+	implements \Aimeos\MShop\Index\Manager\Text\Iface, \Aimeos\MShop\Common\Manager\Factory\Iface
 {
 	private $searchConfig = array(
+		// @deprecated Removed 2019.01
 		'index.text.id' => array(
-			'code'=>'index.text.id',
-			'internalcode'=>'mindte."textid"',
-			'internaldeps'=>array( 'LEFT JOIN "mshop_index_text" AS mindte ON mindte."prodid" = mpro."id"' ),
-			'label'=>'Product index text ID',
-			'type'=> 'string',
+			'code' => 'index.text.id',
+			'internalcode' => 'mindte."prodid"',
+			'internaldeps' => array( 'LEFT JOIN "mshop_index_text" AS mindte ON mindte."prodid" = mpro."id"' ),
+			'label' => 'Product index text ID',
+			'type' => 'string',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 			'public' => false,
 		),
-		'index.text.relevance' => array(
-			'code'=>'index.text.relevance()',
-			'internalcode'=>'( SELECT COUNT(DISTINCT mindte2."prodid")
-				FROM "mshop_index_text" AS mindte2
-				WHERE mpro."id" = mindte2."prodid" AND :site AND mindte2."listtype" = $1
-				AND ( mindte2."langid" = $2 OR mindte2."langid" IS NULL ) AND POSITION( $3 IN mindte2."value" ) > 0 )',
-			'label'=>'Product texts, parameter(<list type code>,<language ID>,<search term>)',
-			'type'=> 'float',
+		'index.text:url' => array(
+			'code' => 'index.text:url()',
+			'internalcode' => ':site AND mindte."langid" = $1 AND mindte."url"',
+			'label' => 'Product URL by language, parameter(<language ID>)',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
+		),
+		'index.text:name' => array(
+			'code' => 'index.text:name()',
+			'internalcode' => ':site AND mindte."langid" = $1 AND mindte."name"',
+			'label' => 'Product name, parameter(<language ID>)',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
+		),
+		'sort:index.text:name' => array(
+			'code' => 'sort:index.text:name()',
+			'internalcode' => 'mindte."name"',
+			'label' => 'Sort by product name, parameter(<language ID>)',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
+		),
+		'index.text:relevance' => array(
+			'code' => 'index.text:relevance()',
+			'internalcode' => ':site AND mindte."langid" = $1 AND POSITION( $2 IN mindte."content" )',
+			'label' => 'Product texts, parameter(<language ID>,<search term>)',
+			'type' => 'float',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_FLOAT,
 			'public' => false,
 		),
-		'sort:index.text.relevance' => array(
-			'code'=>'sort:index.text.relevance()',
-			'internalcode'=>'( SELECT COUNT(DISTINCT mindte2."prodid")
-				FROM "mshop_index_text" AS mindte2
-				WHERE mpro."id" = mindte2."prodid" AND :site AND mindte2."listtype" = $1
-				AND ( mindte2."langid" = $2 OR mindte2."langid" IS NULL ) AND POSITION( $3 IN mindte2."value" ) > 0 )',
-			'label'=>'Product texts, parameter(<list type code>,<language ID>,<search term>)',
-			'type'=> 'float',
+		'sort:index.text:relevance' => array(
+			'code' => 'sort:index.text:relevance()',
+			'internalcode' => 'POSITION( $2 IN mindte."content" )',
+			'label' => 'Product texts, parameter(<language ID>,<search term>)',
+			'type' => 'float',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_FLOAT,
 			'public' => false,
 		),
-		'index.text.value' => array(
-			'code'=>'index.text.value()',
-			'internalcode'=>':site AND mindte."listtype" = $1 AND ( mindte."langid" = $2 OR mindte."langid" IS NULL ) AND mindte."type" = $3 AND mindte."domain" = $4 AND mindte."value"',
-			'label'=>'Product text by type, parameter(<list type code>,<language ID>,<text type code>,<domain>)',
-			'type'=> 'string',
-			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
-			'public' => false,
-		),
-		'sort:index.text.value' => array(
-			'code'=>'sort:index.text.value()',
-			'internalcode'=>'mindte."value"',
-			'label'=>'Sort product text by type, parameter(<list type code>,<language ID>,<text type code>,<domain>)',
-			'type'=> 'string',
-			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
-			'public' => false,
-		)
 	);
 
-	private $langIds;
+	private $languageIds;
 	private $subManagers;
 
 
@@ -84,11 +87,23 @@ class Standard
 	{
 		parent::__construct( $context );
 
-		$site = $context->getLocale()->getSitePath();
+		$level = \Aimeos\MShop\Locale\Manager\Base::SITE_ALL;
+		$level = $context->getConfig()->get( 'mshop/index/manager/sitemode', $level );
 
-		$this->replaceSiteMarker( $this->searchConfig['index.text.value'], 'mindte."siteid"', $site );
-		$this->replaceSiteMarker( $this->searchConfig['index.text.relevance'], 'mindte2."siteid"', $site );
-		$this->replaceSiteMarker( $this->searchConfig['sort:index.text.relevance'], 'mindte2."siteid"', $site );
+		$this->searchConfig['index.text:relevance']['function'] = function( $source, array $params ) {
+
+			if( isset( $params[1] ) ) {
+				$params[1] = strtolower( $params[1] );
+			}
+
+			return $params;
+		};
+
+		foreach( ['index.text:name', 'index.text:url', 'index.text:relevance'] as $key )
+		{
+			$expr = $this->toExpression( 'mindte."siteid"', $this->getSiteIds( $level ) );
+			$this->searchConfig[$key]['internalcode'] = str_replace( ':site', $expr, $this->searchConfig[$key]['internalcode'] );
+		}
 	}
 
 
@@ -97,24 +112,25 @@ class Standard
 	 *
 	 * @param \Aimeos\MW\Criteria\Iface $search Search criteria
 	 * @param string $key Search key (usually the ID) to aggregate products for
-	 * @return array List of ID values as key and the number of counted products as value
+	 * @return integer[] List of ID values as key and the number of counted products as value
 	 */
 	public function aggregate( \Aimeos\MW\Criteria\Iface $search, $key )
 	{
-		return $this->aggregateBase( $search, $key, 'mshop/index/manager/standard/aggregate' );
+		return [];
 	}
 
 
 	/**
 	 * Removes old entries from the storage.
 	 *
-	 * @param integer[] $siteids List of IDs for sites whose entries should be deleted
+	 * @param string[] $siteids List of IDs for sites whose entries should be deleted
+	 * @return \Aimeos\MShop\Index\Manager\Iface Manager object for chaining method calls
 	 */
-	public function cleanup( array $siteids )
+	public function clear( array $siteids )
 	{
-		parent::cleanup( $siteids );
+		parent::clear( $siteids );
 
-		$this->cleanupBase( $siteids, 'mshop/index/manager/text/standard/delete' );
+		return $this->clearBase( $siteids, 'mshop/index/manager/text/standard/delete' );
 	}
 
 
@@ -123,10 +139,17 @@ class Standard
 	 * This can be a long lasting operation.
 	 *
 	 * @param string $timestamp Timestamp in ISO format (YYYY-MM-DD HH:mm:ss)
+	 * @return \Aimeos\MShop\Index\Manager\Iface Manager object for chaining method calls
 	 */
-	public function cleanupIndex( $timestamp )
+	public function cleanup( $timestamp )
 	{
-		/** mshop/index/manager/text/standard/cleanup
+		/** mshop/index/manager/text/standard/cleanup/mysql
+		 * Deletes the index text records that haven't been touched
+		 *
+		 * @see mshop/index/manager/text/standard/cleanup/ansi
+		 */
+
+		/** mshop/index/manager/text/standard/cleanup/ansi
 		 * Deletes the index text records that haven't been touched
 		 *
 		 * During the rebuild process of the product index, the entries of all
@@ -145,24 +168,31 @@ class Standard
 		 * @param string SQL statement for deleting the outdated text index records
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/index/manager/text/standard/count
-		 * @see mshop/index/manager/text/standard/delete
-		 * @see mshop/index/manager/text/standard/insert
-		 * @see mshop/index/manager/text/standard/search
-		 * @see mshop/index/manager/text/standard/text
+		 * @see mshop/index/manager/text/standard/count/ansi
+		 * @see mshop/index/manager/text/standard/delete/ansi
+		 * @see mshop/index/manager/text/standard/insert/ansi
+		 * @see mshop/index/manager/text/standard/search/ansi
+		 * @see mshop/index/manager/text/standard/text/ansi
 		 */
-		$this->cleanupIndexBase( $timestamp, 'mshop/index/manager/text/standard/cleanup' );
+		return $this->cleanupBase( $timestamp, 'mshop/index/manager/text/standard/cleanup' );
 	}
 
 
 	/**
-	 * Removes multiple items from the index.
+	 * Removes multiple items.
 	 *
-	 * @param array $ids list of Product IDs
+	 * @param \Aimeos\MShop\Common\Item\Iface[]|string[] $itemIds List of item objects or IDs of the items
+	 * @return \Aimeos\MShop\Index\Manager\Iface Manager object for chaining method calls
 	 */
-	public function deleteItems( array $ids )
+	public function deleteItems( array $itemIds )
 	{
-		/** mshop/index/manager/text/standard/delete
+		/** mshop/index/manager/text/standard/delete/mysql
+		 * Deletes the items matched by the given IDs from the database
+		 *
+		 * @see mshop/index/manager/text/standard/delete/ansi
+		 */
+
+		/** mshop/index/manager/text/standard/delete/ansi
 		 * Deletes the items matched by the given IDs from the database
 		 *
 		 * Removes the records specified by the given IDs from the index database.
@@ -180,13 +210,26 @@ class Standard
 		 * @param string SQL statement for deleting index text records
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/index/manager/text/standard/count
-		 * @see mshop/index/manager/text/standard/cleanup
-		 * @see mshop/index/manager/text/standard/insert
-		 * @see mshop/index/manager/text/standard/search
-		 * @see mshop/index/manager/text/standard/text
+		 * @see mshop/index/manager/text/standard/count/ansi
+		 * @see mshop/index/manager/text/standard/cleanup/ansi
+		 * @see mshop/index/manager/text/standard/insert/ansi
+		 * @see mshop/index/manager/text/standard/search/ansi
+		 * @see mshop/index/manager/text/standard/text/ansi
 		 */
-		$this->deleteItemsBase( $ids, 'mshop/index/manager/text/standard/delete' );
+		return $this->deleteItemsBase( $itemIds, 'mshop/index/manager/text/standard/delete', true, 'prodid' );
+	}
+
+
+	/**
+	 * Returns the available manager types
+	 *
+	 * @param boolean $withsub Return also the resource type of sub-managers if true
+	 * @return string[] Type of the manager and submanagers, subtypes are separated by slashes
+	 */
+	public function getResourceType( $withsub = true )
+	{
+		$path = 'mshop/index/manager/text/submanagers';
+		return $this->getResourceTypeBase( 'index/text', $path, [], $withsub );
 	}
 
 
@@ -219,9 +262,7 @@ class Standard
 		 */
 		$path = 'mshop/index/manager/text/submanagers';
 
-		$list += $this->getSearchAttributesBase( $this->searchConfig, $path, array(), $withsub );
-
-		return $list;
+		return $list + $this->getSearchAttributesBase( $this->searchConfig, $path, [], $withsub );
 	}
 
 
@@ -303,12 +344,14 @@ class Standard
 		 * modify what is returned to the caller.
 		 *
 		 * This option allows you to wrap global decorators
-		 * ("\Aimeos\MShop\Common\Manager\Decorator\*") around the index text manager.
+		 * ("\Aimeos\MShop\Common\Manager\Decorator\*") around the index text
+		 * manager.
 		 *
 		 *  mshop/index/manager/text/decorators/global = array( 'decorator1' )
 		 *
 		 * This would add the decorator named "decorator1" defined by
-		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator1" only to the catalog controller.
+		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator1" only to the index
+		 * text manager.
 		 *
 		 * @param array List of decorator names
 		 * @since 2014.03
@@ -327,13 +370,14 @@ class Standard
 		 * modify what is returned to the caller.
 		 *
 		 * This option allows you to wrap local decorators
-		 * ("\Aimeos\MShop\Common\Manager\Decorator\*") around the index text manager.
+		 * ("\Aimeos\MShop\Index\Manager\Text\Decorator\*") around the index text
+		 * manager.
 		 *
 		 *  mshop/index/manager/text/decorators/local = array( 'decorator2' )
 		 *
 		 * This would add the decorator named "decorator2" defined by
-		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator2" only to the catalog
-		 * controller.
+		 * "\Aimeos\MShop\Index\Manager\Text\Decorator\Decorator2" only to the index
+		 * text manager.
 		 *
 		 * @param array List of decorator names
 		 * @since 2014.03
@@ -351,10 +395,18 @@ class Standard
 	 * Optimizes the index if necessary.
 	 * Execution of this operation can take a very long time and shouldn't be
 	 * called through a web server enviroment.
+	 *
+	 * @return \Aimeos\MShop\Index\Manager\Iface Manager object for chaining method calls
 	 */
 	public function optimize()
 	{
-		/** mshop/index/manager/text/standard/optimize
+		/** mshop/index/manager/text/standard/optimize/mysql
+		 * Optimizes the stored text data for retrieving the records faster
+		 *
+		 * @see mshop/index/manager/text/standard/optimize/ansi
+		 */
+
+		/** mshop/index/manager/text/standard/optimize/ansi
 		 * Optimizes the stored text data for retrieving the records faster
 		 *
 		 * The SQL statement should reorganize the data in the DBMS storage to
@@ -369,14 +421,14 @@ class Standard
 		 * @param string SQL statement for optimizing the stored text data
 		 * @since 2014.09
 		 * @category Developer
-		 * @see mshop/index/manager/text/standard/aggregate
-		 * @see mshop/index/manager/text/standard/cleanup
-		 * @see mshop/index/manager/text/standard/count
-		 * @see mshop/index/manager/text/standard/insert
-		 * @see mshop/index/manager/text/standard/search
-		 * @see mshop/index/manager/text/standard/text
+		 * @see mshop/index/manager/text/standard/aggregate/ansi
+		 * @see mshop/index/manager/text/standard/cleanup/ansi
+		 * @see mshop/index/manager/text/standard/count/ansi
+		 * @see mshop/index/manager/text/standard/insert/ansi
+		 * @see mshop/index/manager/text/standard/search/ansi
+		 * @see mshop/index/manager/text/standard/text/ansi
 		 */
-		$this->optimizeBase( 'mshop/index/manager/text/standard/optimize' );
+		return $this->optimizeBase( 'mshop/index/manager/text/standard/optimize' );
 	}
 
 
@@ -384,104 +436,65 @@ class Standard
 	 * Rebuilds the index text for searching products or specified list of products.
 	 * This can be a long lasting operation.
 	 *
-	 * @param \Aimeos\MShop\Common\Item\Iface[] $items Associative list of product IDs and items implementing \Aimeos\MShop\Product\Item\Iface
+	 * @param \Aimeos\MShop\Product\Item\Iface[] $items Associative list of product IDs as keys and items as values
+	 * @return \Aimeos\MShop\Index\Manager\Iface Manager object for chaining method calls
 	 */
-	public function rebuildIndex( array $items = array() )
+	public function rebuild( array $items = [] )
 	{
-		if( empty( $items ) ) { return; }
+		if( empty( $items ) ) { return $this; }
 
-		\Aimeos\MW\Common\Base::checkClassList( '\\Aimeos\\MShop\\Product\\Item\\Iface', $items );
+		\Aimeos\MW\Common\Base::checkClassList( \Aimeos\MShop\Product\Item\Iface::class, $items );
 
 		$context = $this->getContext();
-		$sites = $context->getLocale()->getSitePath();
-		$siteid = $context->getLocale()->getSiteId();
-		$langIds = $this->getLanguageIds( $sites );
-		$editor = $context->getEditor();
-		$date = date( 'Y-m-d H:i:s' );
-
-
 		$dbm = $context->getDatabaseManager();
 		$dbname = $this->getResourceName();
 		$conn = $dbm->acquire( $dbname );
 
 		try
 		{
-			foreach( $items as $item )
-			{
-				$parentId = $item->getId(); //  id is not $item->getId() for sub-products
+			/** mshop/index/manager/text/standard/insert/mysql
+			 * Inserts a new text record into the product index database
+			 *
+			 * @see mshop/index/manager/text/standard/insert/ansi
+			 */
 
-				$listTypes = array();
-				foreach( $item->getListItems( 'text' ) as $listItem ) {
-					$listTypes[$listItem->getRefId()][] = $listItem->getType();
-				}
+			/** mshop/index/manager/text/standard/insert/ansi
+			 * Inserts a new text record into the product index database
+			 *
+			 * During the product index rebuild, texts related to a product
+			 * will be stored in the index for this product. All records
+			 * are deleted before the new ones are inserted.
+			 *
+			 * The SQL statement must be a string suitable for being used as
+			 * prepared statement. It must include question marks for binding
+			 * the values from the order item to the statement before they are
+			 * sent to the database server. The number of question marks must
+			 * be the same as the number of columns listed in the INSERT
+			 * statement. The order of the columns must correspond to the
+			 * order in the rebuild() method, so the correct values are
+			 * bound to the columns.
+			 *
+			 * The SQL statement should conform to the ANSI standard to be
+			 * compatible with most relational database systems. This also
+			 * includes using double quotes for table and column names.
+			 *
+			 * @param string SQL statement for inserting records
+			 * @since 2014.03
+			 * @category Developer
+			 * @see mshop/index/manager/text/standard/cleanup/ansi
+			 * @see mshop/index/manager/text/standard/count/ansi
+			 * @see mshop/index/manager/text/standard/delete/ansi
+			 * @see mshop/index/manager/text/standard/insert/ansi
+			 * @see mshop/index/manager/text/standard/search/ansi
+			 * @see mshop/index/manager/text/standard/text/ansi
+			 */
+			$stmt = $this->getCachedStatement( $conn, 'mshop/index/manager/text/standard/insert' );
 
-				/** mshop/index/manager/text/standard/insert
-				 * Inserts a new text record into the product index database
-				 *
-				 * During the product index rebuild, texts related to a product
-				 * will be stored in the index for this product. All records
-				 * are deleted before the new ones are inserted.
-				 *
-				 * The SQL statement must be a string suitable for being used as
-				 * prepared statement. It must include question marks for binding
-				 * the values from the order item to the statement before they are
-				 * sent to the database server. The number of question marks must
-				 * be the same as the number of columns listed in the INSERT
-				 * statement. The order of the columns must correspond to the
-				 * order in the rebuildIndex() method, so the correct values are
-				 * bound to the columns.
-				 *
-				 * The SQL statement should conform to the ANSI standard to be
-				 * compatible with most relational database systems. This also
-				 * includes using double quotes for table and column names.
-				 *
-				 * @param string SQL statement for inserting records
-				 * @since 2014.03
-				 * @category Developer
-				 * @see mshop/index/manager/text/standard/cleanup
-				 * @see mshop/index/manager/text/standard/count
-				 * @see mshop/index/manager/text/standard/delete
-				 * @see mshop/index/manager/text/standard/insert
-				 * @see mshop/index/manager/text/standard/search
-				 * @see mshop/index/manager/text/standard/text
-				 */
-				$stmt = $this->getCachedStatement( $conn, 'mshop/index/manager/text/standard/insert' );
-
-				foreach( $item->getRefItems( 'text' ) as $refId => $refItem )
-				{
-					if( !isset( $listTypes[$refId] ) ) {
-						$msg = sprintf( 'List type for text item with ID "%1$s" not available', $refId );
-						throw new \Aimeos\MShop\Catalog\Exception( $msg );
-					}
-
-					foreach( $listTypes[$refId] as $listType )
-					{
-						$this->saveText(
-							$stmt, $parentId, $siteid, $refId, $refItem->getLanguageId(), $listType,
-							$refItem->getType(), 'product', $refItem->getContent(), $date, $editor
-						);
-					}
-				}
-
-				$nameList = array();
-				foreach( $item->getRefItems( 'text', 'name' ) as $refItem ) {
-					$nameList[$refItem->getLanguageId()] = $refItem;
-				}
-
-				foreach( $langIds as $langId )
-				{
-					if( !isset( $nameList[$langId] ) )
-					{
-						$this->saveText(
-							$stmt, $parentId, $siteid, null, $langId, 'default',
-							'name', 'product', $item->getLabel(), $date, $editor
-						);
-					}
-				}
+			foreach( $items as $item ) {
+				$this->saveTexts( $stmt, $item );
 			}
 
 			$dbm->release( $conn, $dbname );
-
 		}
 		catch( \Exception $e )
 		{
@@ -489,25 +502,31 @@ class Standard
 			throw $e;
 		}
 
-		$this->saveAttributeTexts( $items );
-
 		foreach( $this->getSubManagers() as $submanager ) {
-			$submanager->rebuildIndex( $items );
+			$submanager->rebuild( $items );
 		}
+
+		return $this;
 	}
 
 
 	/**
 	 * Searches for items matching the given criteria.
 	 *
-	 * @param \Aimeos\MW\Criteria\Iface $search Search criteria
-	 * @param array $ref List of domains to fetch list items and referenced items for
-	 * @param integer &$total Total number of items matched by the given criteria
+	 * @param \Aimeos\MW\Criteria\Iface $search Search criteria object
+	 * @param string[] $ref List of domains to fetch list items and referenced items for
+	 * @param integer|null &$total Number of items that are available in total
 	 * @return array List of items implementing \Aimeos\MShop\Product\Item\Iface with ids as keys
 	 */
-	public function searchItems( \Aimeos\MW\Criteria\Iface $search, array $ref = array(), &$total = null )
+	public function searchItems( \Aimeos\MW\Criteria\Iface $search, array $ref = [], &$total = null )
 	{
-		/** mshop/index/manager/text/standard/search
+		/** mshop/index/manager/text/standard/search/mysql
+		 * Retrieves the records matched by the given criteria in the database
+		 *
+		 * @see mshop/index/manager/text/standard/search/ansi
+		 */
+
+		/** mshop/index/manager/text/standard/search/ansi
 		 * Retrieves the records matched by the given criteria in the database
 		 *
 		 * Fetches the records matched by the given criteria from the product index
@@ -552,16 +571,22 @@ class Standard
 		 * @param string SQL statement for searching items
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/index/manager/text/standard/aggregate
-		 * @see mshop/index/manager/text/standard/cleanup
-		 * @see mshop/index/manager/text/standard/count
-		 * @see mshop/index/manager/text/standard/insert
-		 * @see mshop/index/manager/text/standard/optimize
-		 * @see mshop/index/manager/text/standard/text
+		 * @see mshop/index/manager/text/standard/aggregate/ansi
+		 * @see mshop/index/manager/text/standard/cleanup/ansi
+		 * @see mshop/index/manager/text/standard/count/ansi
+		 * @see mshop/index/manager/text/standard/insert/ansi
+		 * @see mshop/index/manager/text/standard/optimize/ansi
+		 * @see mshop/index/manager/text/standard/text/ansi
 		 */
 		$cfgPathSearch = 'mshop/index/manager/text/standard/search';
 
-		/** mshop/index/manager/text/standard/count
+		/** mshop/index/manager/text/standard/count/mysql
+		 * Counts the number of records matched by the given criteria in the database
+		 *
+		 * @see mshop/index/manager/text/standard/count/ansi
+		 */
+
+		/** mshop/index/manager/text/standard/count/ansi
 		 * Counts the number of records matched by the given criteria in the database
 		 *
 		 * Counts all records matched by the given criteria from the product index
@@ -600,12 +625,12 @@ class Standard
 		 * @param string SQL statement for counting items
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/index/manager/text/standard/aggregate
-		 * @see mshop/index/manager/text/standard/cleanup
-		 * @see mshop/index/manager/text/standard/insert
-		 * @see mshop/index/manager/text/standard/optimize
-		 * @see mshop/index/manager/text/standard/search
-		 * @see mshop/index/manager/text/standard/text
+		 * @see mshop/index/manager/text/standard/aggregate/ansi
+		 * @see mshop/index/manager/text/standard/cleanup/ansi
+		 * @see mshop/index/manager/text/standard/insert/ansi
+		 * @see mshop/index/manager/text/standard/optimize/ansi
+		 * @see mshop/index/manager/text/standard/search/ansi
+		 * @see mshop/index/manager/text/standard/text/ansi
 		 */
 		$cfgPathCount = 'mshop/index/manager/text/standard/count';
 
@@ -614,210 +639,118 @@ class Standard
 
 
 	/**
-	 * Returns product IDs and texts that matches the given criteria.
+	 * Returns the language IDs available for the current site
 	 *
-	 * @param \Aimeos\MW\Criteria\Iface $search Search criteria
-	 * @return array Associative list of the product ID as key and the product text as value
+	 * @return string[] List of ISO language codes
 	 */
-	public function searchTexts( \Aimeos\MW\Criteria\Iface $search )
+	protected function getLanguageIds()
 	{
-		$list = array();
-		$context = $this->getContext();
-
-		$dbm = $context->getDatabaseManager();
-		$dbname = $this->getResourceName();
-		$conn = $dbm->acquire( $dbname );
-
-		try
+		if( !isset( $this->languageIds ) )
 		{
-			$required = array( 'product' );
-			$level = \Aimeos\MShop\Locale\Manager\Base::SITE_ALL;
+			$list = [];
+			$manager = \Aimeos\MShop::create( $this->getContext(), 'locale' );
+			$items = $manager->searchItems( $manager->createSearch()->setSlice( 0, 10000 ) );
 
-			/** mshop/index/manager/text/standard/text
-			 * Retrieves the text records matched by the given criteria in the database
-			 *
-			 * Fetches the records matched by the given criteria from the product index
-			 * database. The records must be from one of the sites that are
-			 * configured via the context item. If the current site is part of
-			 * a tree of sites, the SELECT statement can retrieve all records
-			 * from the current site and the complete sub-tree of sites.
-			 *
-			 * To limit the records matched, conditions can be added to the given
-			 * criteria object. It can contain comparisons like column names that
-			 * must match specific values which can be combined by AND, OR or NOT
-			 * operators. The resulting string of SQL conditions replaces the
-			 * ":cond" placeholder before the statement is sent to the database
-			 * server.
-			 *
-			 * If the records that are retrieved should be ordered by one or more
-			 * columns, the generated string of column / sort direction pairs
-			 * replaces the ":order" placeholder. In case no ordering is required,
-			 * the complete ORDER BY part including the "\/*-orderby*\/...\/*orderby-*\/"
-			 * markers is removed to speed up retrieving the records. Columns of
-			 * sub-managers can also be used for ordering the result set but then
-			 * no index can be used.
-			 *
-			 * The number of returned records can be limited and can start at any
-			 * number between the begining and the end of the result set. For that
-			 * the ":size" and ":start" placeholders are replaced by the
-			 * corresponding values from the criteria object. The default values
-			 * are 0 for the start and 100 for the size value.
-			 *
-			 * The SQL statement should conform to the ANSI standard to be
-			 * compatible with most relational database systems. This also
-			 * includes using double quotes for table and column names.
-			 *
-			 * @param string SQL statement for searching items
-			 * @since 2014.03
-			 * @category Developer
-			 * @see mshop/index/manager/text/standard/aggregate
-			 * @see mshop/index/manager/text/standard/cleanup
-			 * @see mshop/index/manager/text/standard/count
-			 * @see mshop/index/manager/text/standard/insert
-			 * @see mshop/index/manager/text/standard/optimize
-			 * @see mshop/index/manager/text/standard/search
-			 */
-			$cfgPathSearch = 'mshop/index/manager/text/standard/text';
-
-			$total = null;
-			$results = $this->searchItemsBase( $conn, $search, $cfgPathSearch, '', $required, $total, $level );
-
-			while( ( $row = $results->fetch() ) !== false ) {
-				$list[$row['prodid']] = $row['value'];
+			foreach( $items as $item ) {
+				$list[$item->getLanguageId()] = null;
 			}
 
-			$dbm->release( $conn, $dbname );
-		}
-		catch( \Exception $e )
-		{
-			$dbm->release( $conn, $dbname );
-			throw $e;
+			$this->languageIds = array_keys( $list );
 		}
 
-		return $list;
+		return $this->languageIds;
 	}
 
 
 	/**
-	 * Saves texts associated with attributes to catalog_index_text.
+	 * Saves the text items referenced indirectly by products
 	 *
-	 * @param \Aimeos\MShop\Common\Item\Iface[] $items Associative list of product IDs and items implementing \Aimeos\MShop\Product\Item\Iface
+	 * @param \Aimeos\MW\DB\Statement\Iface $stmt Prepared SQL statement with place holders
+	 * @param \Aimeos\MShop\Product\Item\Iface $item Product item containing associated text items
 	 */
-	protected function saveAttributeTexts( array $items )
+	protected function saveTexts( \Aimeos\MW\DB\Statement\Iface $stmt, \Aimeos\MShop\Product\Item\Iface $item )
 	{
-		$prodIds = array();
+		$texts = [];
 
-		foreach( $items as $item )
+		foreach( $item->getRefItems( 'text', 'url', 'default' ) as $text ) {
+			$texts[$text->getLanguageId()]['url'] = \Aimeos\MW\Common\Base::sanitize( $text->getContent() );
+		}
+
+		foreach( $item->getRefItems( 'text', 'name', 'default' ) as $text ) {
+			$texts[$text->getLanguageId()]['name'] = $text->getContent();
+		}
+
+		/** mshop/index/manager/text/types
+		 * List of text types that should be added to the product index
+		 *
+		 * By default, all available texts of a product are indexed. This setting
+		 * allows you to name only those text types that should be added. All
+		 * others will be left out so products won't be found if users search
+		 * for words that are part of those skipped texts. This is most useful
+		 * for avoiding product matches due to texts that should be internal only.
+		 *
+		 * @param array|string|null Type name or list of type names, null for all
+		 * @category Developer
+		 * @since 2019.04
+		 */
+		$types = $this->getContext()->getConfig()->get( 'mshop/index/manager/text/types' );
+		$products = ( $item->getType() === 'select' ? $item->getRefItems( 'product', null, 'default' ) : [] );
+		$products[] = $item;
+
+		foreach( $products as $product )
 		{
-			foreach( $item->getRefItems( 'attribute', null, 'default' ) as $attrItem ) {
-				$prodIds[$attrItem->getId()][] = $item->getId();
+			foreach( $this->getLanguageIds() as $langId ) {
+				$texts[$langId]['content'][] = $product->getCode();
+			}
+
+			foreach( $product->getRefItems( 'text', $types ) as $text ) {
+				$texts[$text->getLanguageId()]['content'][] = $text->getContent();
 			}
 		}
 
-		if( empty( $prodIds ) ) { return; }
+		$this->saveTextMap( $stmt, $item, $texts );
+	}
 
 
-		$attrManager = \Aimeos\MShop\Factory::createManager( $this->getContext(), 'attribute' );
-		$search = $attrManager->createSearch( true );
-		$expr = array(
-			$search->compare( '==', 'attribute.id', array_keys( $prodIds ) ),
-			$search->getConditions()
-		);
-		$search->setConditions( $search->combine( '&&', $expr ) );
-		$search->setSlice( 0, 0x7fffffff );
-
-		$attributeItems = $attrManager->searchItems( $search, array( 'text' ) );
-
-
-		$context = $this->getContext();
-		$locale = $context->getLocale();
-		$siteid = $context->getLocale()->getSiteId();
-		$editor = $context->getEditor();
+	/**
+	 * Saves the mapped texts for the given item
+	 *
+	 * @param \Aimeos\MW\DB\Statement\Iface $stmt Prepared SQL statement with place holders
+	 * @param \Aimeos\MShop\Product\Item\Iface $item Product item containing associated text items
+	 * @param array $map Associative list of text types as keys and content as value
+	 */
+	protected function saveTextMap( \Aimeos\MW\DB\Statement\Iface $stmt, \Aimeos\MShop\Product\Item\Iface $item, array $texts )
+	{
 		$date = date( 'Y-m-d H:i:s' );
+		$siteid = $this->getContext()->getLocale()->getSiteId();
 
-
-		$dbm = $context->getDatabaseManager();
-		$dbname = $this->getResourceName();
-		$conn = $dbm->acquire( $dbname );
-
-		try
+		foreach( $texts as $langId => $map )
 		{
-			/** mshop/index/manager/text/standard/insert
-			 * Inserts a new text record into the product index database
-			 *
-			 * During the product index rebuild, texts related to a product
-			 * will be stored in the index for this product. All records
-			 * are deleted before the new ones are inserted.
-			 *
-			 * The SQL statement must be a string suitable for being used as
-			 * prepared statement. It must include question marks for binding
-			 * the values from the order item to the statement before they are
-			 * sent to the database server. The number of question marks must
-			 * be the same as the number of columns listed in the INSERT
-			 * statement. The order of the columns must correspond to the
-			 * order in the rebuildIndex() method, so the correct values are
-			 * bound to the columns.
-			 *
-			 * The SQL statement should conform to the ANSI standard to be
-			 * compatible with most relational database systems. This also
-			 * includes using double quotes for table and column names.
-			 *
-			 * @param string SQL statement for inserting records
-			 * @since 2014.03
-			 * @category Developer
-			 * @see mshop/index/manager/text/standard/aggregate
-			 * @see mshop/index/manager/text/standard/cleanup
-			 * @see mshop/index/manager/text/standard/count
-			 * @see mshop/index/manager/text/standard/insert
-			 * @see mshop/index/manager/text/standard/optimize
-			 * @see mshop/index/manager/text/standard/search
-			 * @see mshop/index/manager/text/standard/text
-			 */
-			$stmt = $this->getCachedStatement( $conn, 'mshop/index/manager/text/standard/insert' );
+			if( $langId == '' ) {
+				continue;
+			}
 
-			foreach( $attributeItems as $id => $item )
+			if( isset( $texts[''] ) ) {
+				$map['content'] = array_merge( $map['content'], $texts['']['content'] );
+			}
+
+			if( !isset( $map['url'] ) )
 			{
-				$listTypes = array();
-				foreach( $item->getListItems( 'text', 'default' ) as $listItem ) {
-					$listTypes[$listItem->getRefId()][] = $listItem->getType();
-				}
+				$url = ( isset( $texts['']['url'] ) ? $texts['']['url'] : $item->getLabel() );
+				$map['url'] = \Aimeos\MW\Common\Base::sanitize( $url );
+			}
 
-				foreach( $item->getRefItems( 'text' ) as $refId => $refItem )
-				{
-					if( !isset( $listTypes[$refId] ) ) {
-						$msg = sprintf( 'List type for text item with ID "%1$s" not available', $refId );
-						throw new \Aimeos\MShop\Catalog\Exception( $msg );
-					}
-
-					foreach( $listTypes[$refId] as $listType )
-					{
-						foreach( $prodIds[$id] as $productId )
-						{
-							$this->saveText(
-								$stmt, $productId, $siteid, $refId, $refItem->getLanguageId(), $listType,
-								$refItem->getType(), 'attribute', $refItem->getContent(), $date, $editor
-							);
-						}
-					}
-				}
-
-				$names = $item->getRefItems( 'text', 'name' );
-
-				if( empty( $names ) )
-				{
-					$this->saveText(
-						$stmt, $prodIds[$id], $siteid, null, $locale->getLanguageId(), 'default',
-						'name', 'attribute', $item->getLabel(), $date, $editor
-					);
+			if( !isset( $map['name'] ) )
+			{
+				if( isset( $texts['']['name'] ) ) {
+					$map['name'] = $texts['']['name'];
+				} else {
+					$map['content'][] = $map['name'] = $item->getLabel();
 				}
 			}
 
-			$dbm->release( $conn, $dbname );
-		}
-		catch( \Exception $e )
-		{
-			$dbm->release( $conn, $dbname );
-			throw $e;
+			$content = join( ' ', $map['content'] );
+			$this->saveText( $stmt, $item->getId(), $siteid, $langId, $map['url'], $map['name'], $content, $date );
 		}
 	}
 
@@ -826,48 +759,41 @@ class Standard
 	 * Saves the text record with given set of parameters.
 	 *
 	 * @param \Aimeos\MW\DB\Statement\Iface $stmt Prepared SQL statement with place holders
-	 * @param integer $id ID of the product item
-	 * @param integer $siteid Site ID
-	 * @param string $refid ID of the text item that contains the text
+	 * @param string $id ID of the product item
+	 * @param string $siteid Site ID
 	 * @param string $lang Two letter ISO language code
-	 * @param string $listtype Type of the referenced text in the list item
-	 * @param string $reftype Type of the referenced text item
-	 * @param string $domain Domain the text is from
+	 * @param string $url Product name in URL
+	 * @param string $name Name of the product
 	 * @param string $content Text content to store
 	 * @param string $date Current timestamp in "YYYY-MM-DD HH:mm:ss" format
-	 * @param string $editor Name of the editor who stored the product
 	 */
-	protected function saveText( \Aimeos\MW\DB\Statement\Iface $stmt, $id, $siteid, $refid, $lang, $listtype,
-		$reftype, $domain, $content, $date, $editor )
+	protected function saveText( \Aimeos\MW\DB\Statement\Iface $stmt, $id, $siteid, $lang,
+		$url, $name, $content, $date )
 	{
 		$stmt->bind( 1, $id, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-		$stmt->bind( 2, $siteid, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-		$stmt->bind( 3, $refid );
-		$stmt->bind( 4, $lang );
-		$stmt->bind( 5, $listtype );
-		$stmt->bind( 6, $reftype );
-		$stmt->bind( 7, $domain );
-		$stmt->bind( 8, $content );
-		$stmt->bind( 9, $date ); //mtime
-		$stmt->bind( 10, $editor );
-		$stmt->bind( 11, $date ); //ctime
+		$stmt->bind( 2, $lang );
+		$stmt->bind( 3, $url );
+		$stmt->bind( 4, $name );
+		$stmt->bind( 5, strtolower( $content ) ); // for case insensitive searches
+		$stmt->bind( 6, $date ); //mtime
+		$stmt->bind( 7, $siteid, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 
 		try {
 			$stmt->execute()->finish();
-		} catch( \Aimeos\MW\DB\Exception $e ) {; } // Ignore duplicates
+		} catch( \Aimeos\MW\DB\Exception $e ) { ; } // Ignore duplicates
 	}
 
 
 	/**
 	 * Returns the list of sub-managers available for the index attribute manager.
 	 *
-	 * @return array Associative list of the sub-domain as key and the manager object as value
+	 * @return \Aimeos\MShop\Index\Manager\Iface Associative list of the sub-domain as key and the manager object as value
 	 */
 	protected function getSubManagers()
 	{
 		if( $this->subManagers === null )
 		{
-			$this->subManagers = array();
+			$this->subManagers = [];
 
 			/** mshop/index/manager/text/submanagers
 			 * A list of sub-manager names used for indexing associated items to texts
@@ -889,40 +815,13 @@ class Standard
 			 */
 			$path = 'mshop/index/manager/text/submanagers';
 
-			foreach( $this->getContext()->getConfig()->get( $path, array() ) as $domain ) {
-				$this->subManagers[$domain] = $this->getSubManager( $domain );
+			foreach( $this->getContext()->getConfig()->get( $path, [] ) as $domain ) {
+				$this->subManagers[$domain] = $this->getObject()->getSubManager( $domain );
 			}
 
 			return $this->subManagers;
 		}
 
 		return $this->subManagers;
-	}
-
-
-	/**
-	 * Returns the configured langauge IDs for the given sites
-	 *
-	 * @param array $siteIds List of site IDs
-	 * @return array List of language IDs
-	 */
-	protected function getLanguageIds( array $siteIds )
-	{
-		if( !isset( $this->langIds ) )
-		{
-			$list = array();
-			$manager = \Aimeos\MShop\Factory::createManager( $this->getContext(), 'locale' );
-
-			$search = $manager->createSearch( true );
-			$search->setConditions( $search->compare( '==', 'locale.siteid', $siteIds ) );
-
-			foreach( $manager->searchItems( $search ) as $item ) {
-				$list[$item->getLanguageId()] = null;
-			}
-
-			$this->langIds = array_keys( $list );
-		}
-
-		return $this->langIds;
 	}
 }

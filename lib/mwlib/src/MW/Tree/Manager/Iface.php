@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Tree
  */
@@ -23,59 +23,62 @@ interface Iface
 	/**
 	 * Returns a list of attributes which can be used in the search method.
 	 *
-	 * @return array List of search attribute objects implementing \Aimeos\MW\Criteria\Attribute\Iface
+	 * @return \Aimeos\MW\Criteria\Attribute\Iface[] List of search attribute items
 	 */
-	public function getSearchAttributes();
+	public function getSearchAttributes() : array;
 
 	/**
 	 * Creates a new search object for storing search criterias.
 	 *
 	 * @return \Aimeos\MW\Criteria\Iface Search object instance
 	 */
-	public function createSearch();
+	public function createSearch() : \Aimeos\MW\Criteria\Iface;
 
 	/**
 	 * Creates a new node object.
 	 *
 	 * @return \Aimeos\MW\Tree\Node\Iface Empty node object
 	 */
-	public function createNode();
+	public function createNode() : \Aimeos\MW\Tree\Node\Iface;
 
 	/**
 	 * Deletes a node and its descendants from the storage.
 	 *
-	 * @param mixed $id Delete the node with the ID and all nodes below
+	 * @param string|null $id Delete the node with the ID and all nodes below
+	 * @return \Aimeos\MW\Tree\Manager\Iface Manager object for method chaining
 	 */
-	public function deleteNode( $id = null );
+	public function deleteNode( string $id = null ) : Iface;
 
 	/**
 	 * Returns a node and its descendants depending on the given resource.
 	 *
-	 * @param integer|null $id Retrieve nodes starting from the given ID
+	 * @param string|null $id Retrieve nodes starting from the given ID
 	 * @param int $level One of the level constants from \Aimeos\MW\Tree\Manager\Base
 	 * @param \Aimeos\MW\Criteria\Iface|null $criteria Optional criteria object with conditions
 	 * @return \Aimeos\MW\Tree\Node\Iface Node, maybe with subnodes
 	 */
-	public function getNode( $id = null, $level = \Aimeos\MW\Tree\Manager\Base::LEVEL_TREE, \Aimeos\MW\Criteria\Iface $criteria = null );
+	public function getNode( string $id = null, int $level = Base::LEVEL_TREE, \Aimeos\MW\Criteria\Iface $criteria = null ) : \Aimeos\MW\Tree\Node\Iface;
 
 	/**
 	 * Inserts a new node before the given reference node to the parent in the storage.
 	 *
 	 * @param \Aimeos\MW\Tree\Node\Iface $node New node that should be inserted
-	 * @param integer|null $parentId ID of the parent node where the new node should be inserted below (null for root node)
-	 * @param integer|null $refId ID of the node where the node node should be inserted before (null to append)
+	 * @param string|null $parentId ID of the parent node where the new node should be inserted below (null for root node)
+	 * @param string|null $refId ID of the node where the node node should be inserted before (null to append)
+	 * @return \Aimeos\MW\Tree\Node\Iface Updated node item
 	 */
-	public function insertNode( \Aimeos\MW\Tree\Node\Iface $node, $parentId = null, $refId = null );
+	public function insertNode( \Aimeos\MW\Tree\Node\Iface $node, string $parentId = null, string $refId = null ) : \Aimeos\MW\Tree\Node\Iface;
 
 	/**
 	 * Moves an existing node to the new parent in the storage.
 	 *
-	 * @param mixed $id ID of the node that should be moved
-	 * @param mixed $oldParentId ID of the old parent node which currently contains the node that should be removed
-	 * @param mixed $newParentId ID of the new parent node where the node should be moved to
-	 * @param mixed $newRefId ID of the node where the node node should be inserted before (null to append)
+	 * @param string $id ID of the node that should be moved
+	 * @param string|null $oldParentId ID of the old parent node which currently contains the node that should be removed
+	 * @param string|null $newParentId ID of the new parent node where the node should be moved to
+	 * @param string|null $newRefId ID of the node where the node node should be inserted before (null to append)
+	 * @return \Aimeos\MW\Tree\Manager\Iface Manager object for method chaining
 	 */
-	public function moveNode( $id, $oldParentId, $newParentId, $newRefId = null );
+	public function moveNode( string $id, string $oldParentId = null, string $newParentId = null, string $newRefId = null ) : Iface;
 
 	/**
 	 * Stores the values of the given node and it's descendants to the storage.
@@ -84,29 +87,30 @@ interface Iface
 	 * the tree layout by adding, moving or deleting nodes.
 	 *
 	 * @param \Aimeos\MW\Tree\Node\Iface $node Node, maybe with subnodes
+	 * @return \Aimeos\MW\Tree\Node\Iface Updated node item
 	 */
-	public function saveNode( \Aimeos\MW\Tree\Node\Iface $node );
+	public function saveNode( \Aimeos\MW\Tree\Node\Iface $node ) : \Aimeos\MW\Tree\Node\Iface;
 
 	/**
 	 * Retrieves a list of nodes from the storage matching the given search criteria.
 	 *
 	 * @param \Aimeos\MW\Criteria\Iface $search Search criteria object
-	 * @return array List of nodes implementing \Aimeos\MW\Tree\Node\Iface
+	 * @return \Aimeos\MW\Tree\Node\Iface[] List of tree nodes
 	 */
-	public function searchNodes( \Aimeos\MW\Criteria\Iface $search );
+	public function searchNodes( \Aimeos\MW\Criteria\Iface $search ) : array;
 
 	/**
 	 * Checks, whether a tree is read only.
 	 *
-	 * @return boolean True if tree is read-only, false if not
+	 * @return bool True if tree is read-only, false if not
 	 */
-	public function isReadOnly();
+	public function isReadOnly() : bool;
 
 	/**
-	 * Returns a list if node ids, that are in the path of given node id
+	 * Returns a list of node IDs that are in the path of given node ID
 	 *
-	 * @param integer $id Id of node to get path
-	 * @return array List of \Aimeos\MW\Tree\Node\Iface in Path with node id as key
+	 * @param string $id Id of node to get path
+	 * @return \Aimeos\MW\Tree\Node\Iface[] List of tree nodes
 	 */
-	public function getPath( $id );
+	public function getPath( string $id ) : array;
 }

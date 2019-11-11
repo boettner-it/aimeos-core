@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2013
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2013
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Product
  */
@@ -14,79 +14,89 @@ namespace Aimeos\MShop\Product\Manager\Type;
 
 /**
  * Default product type manager for creating and handling product type items.
+ *
  * @package MShop
  * @subpackage Product
  */
 class Standard
 	extends \Aimeos\MShop\Common\Manager\Type\Base
-	implements \Aimeos\MShop\Product\Manager\Type\Iface
+	implements \Aimeos\MShop\Product\Manager\Type\Iface, \Aimeos\MShop\Common\Manager\Factory\Iface
 {
 	private $searchConfig = array(
 		'product.type.id' => array(
-			'code'=>'product.type.id',
-			'internalcode'=>'mproty."id"',
-			'internaldeps' => array( 'LEFT JOIN "mshop_product_type" AS mproty ON ( mpro."typeid" = mproty."id" )' ),
-			'label'=>'Product type ID',
-			'type'=> 'integer',
+			'code' => 'product.type.id',
+			'internalcode' => 'mproty."id"',
+			'label' => 'Type ID',
+			'type' => 'integer',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 			'public' => false,
 		),
 		'product.type.siteid' => array(
-			'code'=>'product.type.siteid',
-			'internalcode'=>'mproty."siteid"',
-			'label'=>'Product type site ID',
-			'type'=> 'integer',
+			'code' => 'product.type.siteid',
+			'internalcode' => 'mproty."siteid"',
+			'label' => 'Type site ID',
+			'type' => 'integer',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 			'public' => false,
 		),
+		'product.type.label' => array(
+			'code' => 'product.type.label',
+			'internalcode' => 'mproty."label"',
+			'label' => 'Type label',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		),
 		'product.type.code' => array(
-			'code'=>'product.type.code',
-			'internalcode'=>'mproty."code"',
-			'label'=>'Product type code',
-			'type'=> 'string',
+			'code' => 'product.type.code',
+			'internalcode' => 'mproty."code"',
+			'label' => 'Type code',
+			'type' => 'string',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
 		'product.type.domain' => array(
-			'code'=>'product.type.domain',
-			'internalcode'=>'mproty."domain"',
-			'label'=>'Product type domain',
-			'type'=> 'string',
+			'code' => 'product.type.domain',
+			'internalcode' => 'mproty."domain"',
+			'label' => 'Type domain',
+			'type' => 'string',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
-		'product.type.label' => array(
-			'code'=>'product.type.label',
-			'internalcode'=>'mproty."label"',
-			'label'=>'Product type label',
-			'type'=> 'string',
-			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
-		),
-		'product.type.status' => array(
-			'code'=>'product.type.status',
-			'internalcode'=>'mproty."status"',
-			'label'=>'Product type status',
-			'type'=> 'integer',
+		'product.type.position' => array(
+			'code' => 'product.type.position',
+			'internalcode' => 'mproty."pos"',
+			'label' => 'Type position',
+			'type' => 'integer',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 		),
-		'product.type.ctime'=> array(
-			'code'=>'product.type.ctime',
-			'internalcode'=>'mproty."ctime"',
-			'label'=>'Product type create date/time',
-			'type'=> 'datetime',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'product.type.status' => array(
+			'code' => 'product.type.status',
+			'internalcode' => 'mproty."status"',
+			'label' => 'Type status',
+			'type' => 'integer',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 		),
-		'product.type.mtime'=> array(
-			'code'=>'product.type.mtime',
-			'internalcode'=>'mproty."mtime"',
-			'label'=>'Product type modification date/time',
-			'type'=> 'datetime',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'product.type.ctime' => array(
+			'code' => 'product.type.ctime',
+			'internalcode' => 'mproty."ctime"',
+			'label' => 'Type create date/time',
+			'type' => 'datetime',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
-		'product.type.editor'=> array(
-			'code'=>'product.type.editor',
-			'internalcode'=>'mproty."editor"',
-			'label'=>'Product type editor',
-			'type'=> 'string',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'product.type.mtime' => array(
+			'code' => 'product.type.mtime',
+			'internalcode' => 'mproty."mtime"',
+			'label' => 'Type modify date/time',
+			'type' => 'datetime',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
+		),
+		'product.type.editor' => array(
+			'code' => 'product.type.editor',
+			'internalcode' => 'mproty."editor"',
+			'label' => 'Type editor',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
 	);
 
@@ -106,16 +116,30 @@ class Standard
 	/**
 	 * Removes old entries from the storage.
 	 *
-	 * @param integer[] $siteids List of IDs for sites whose entries should be deleted
+	 * @param string[] $siteids List of IDs for sites whose entries should be deleted
+	 * @return \Aimeos\MShop\Product\Manager\Type\Iface Manager object for chaining method calls
 	 */
-	public function cleanup( array $siteids )
+	public function clear( array $siteids )
 	{
 		$path = 'mshop/product/manager/type/submanagers';
-		foreach( $this->getContext()->getConfig()->get( $path, array() ) as $domain ) {
-			$this->getSubManager( $domain )->cleanup( $siteids );
+		foreach( $this->getContext()->getConfig()->get( $path, [] ) as $domain ) {
+			$this->getObject()->getSubManager( $domain )->clear( $siteids );
 		}
 
-		$this->cleanupBase( $siteids, 'mshop/product/manager/type/standard/delete' );
+		return $this->clearBase( $siteids, 'mshop/product/manager/type/standard/delete' );
+	}
+
+
+	/**
+	 * Returns the available manager types
+	 *
+	 * @param boolean $withsub Return also the resource type of sub-managers if true
+	 * @return string[] Type of the manager and submanagers, subtypes are separated by slashes
+	 */
+	public function getResourceType( $withsub = true )
+	{
+		$path = 'mshop/product/manager/type/submanagers';
+		return $this->getResourceTypeBase( 'product/type', $path, [], $withsub );
 	}
 
 
@@ -123,7 +147,7 @@ class Standard
 	 * Returns the attributes that can be used for searching.
 	 *
 	 * @param boolean $withsub Return also attributes of sub-managers if true
-	 * @return array List of attribute items implementing \Aimeos\MW\Criteria\Attribute\Iface
+	 * @return \Aimeos\MW\Criteria\Attribute\Iface[] List of search attribute items
 	 */
 	public function getSearchAttributes( $withsub = true )
 	{
@@ -146,7 +170,7 @@ class Standard
 		 */
 		$path = 'mshop/product/manager/type/submanagers';
 
-		return $this->getSearchAttributesBase( $this->searchConfig, $path, array(), $withsub );
+		return $this->getSearchAttributesBase( $this->searchConfig, $path, [], $withsub );
 	}
 
 
@@ -228,12 +252,14 @@ class Standard
 		 * modify what is returned to the caller.
 		 *
 		 * This option allows you to wrap global decorators
-		 * ("\Aimeos\MShop\Common\Manager\Decorator\*") around the product type manager.
+		 * ("\Aimeos\MShop\Common\Manager\Decorator\*") around the product type
+		 * manager.
 		 *
 		 *  mshop/product/manager/type/decorators/global = array( 'decorator1' )
 		 *
 		 * This would add the decorator named "decorator1" defined by
-		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator1" only to the product controller.
+		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator1" only to the product
+		 * type manager.
 		 *
 		 * @param array List of decorator names
 		 * @since 2014.03
@@ -252,13 +278,14 @@ class Standard
 		 * modify what is returned to the caller.
 		 *
 		 * This option allows you to wrap local decorators
-		 * ("\Aimeos\MShop\Common\Manager\Decorator\*") around the product type manager.
+		 * ("\Aimeos\MShop\Product\Manager\Type\Decorator\*") around the product
+		 * type manager.
 		 *
 		 *  mshop/product/manager/type/decorators/local = array( 'decorator2' )
 		 *
 		 * This would add the decorator named "decorator2" defined by
-		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator2" only to the product
-		 * controller.
+		 * "\Aimeos\MShop\Product\Manager\Type\Decorator\Decorator2" only to the
+		 * product type manager.
 		 *
 		 * @param array List of decorator names
 		 * @since 2014.03
@@ -279,7 +306,13 @@ class Standard
 	 */
 	protected function getConfigPath()
 	{
-		/** mshop/product/manager/type/standard/insert
+		/** mshop/product/manager/type/standard/insert/mysql
+		 * Inserts a new product type record into the database table
+		 *
+		 * @see mshop/product/manager/type/standard/insert/ansi
+		 */
+
+		/** mshop/product/manager/type/standard/insert/ansi
 		 * Inserts a new product type record into the database table
 		 *
 		 * Items with no ID yet (i.e. the ID is NULL) will be created in
@@ -302,14 +335,20 @@ class Standard
 		 * @param string SQL statement for inserting records
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/product/manager/type/standard/update
-		 * @see mshop/product/manager/type/standard/newid
-		 * @see mshop/product/manager/type/standard/delete
-		 * @see mshop/product/manager/type/standard/search
-		 * @see mshop/product/manager/type/standard/count
+		 * @see mshop/product/manager/type/standard/update/ansi
+		 * @see mshop/product/manager/type/standard/newid/ansi
+		 * @see mshop/product/manager/type/standard/delete/ansi
+		 * @see mshop/product/manager/type/standard/search/ansi
+		 * @see mshop/product/manager/type/standard/count/ansi
 		 */
 
-		/** mshop/product/manager/type/standard/update
+		/** mshop/product/manager/type/standard/update/mysql
+		 * Updates an existing product type record in the database
+		 *
+		 * @see mshop/product/manager/type/standard/update/ansi
+		 */
+
+		/** mshop/product/manager/type/standard/update/ansi
 		 * Updates an existing product type record in the database
 		 *
 		 * Items which already have an ID (i.e. the ID is not NULL) will
@@ -329,14 +368,20 @@ class Standard
 		 * @param string SQL statement for updating records
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/product/manager/type/standard/insert
-		 * @see mshop/product/manager/type/standard/newid
-		 * @see mshop/product/manager/type/standard/delete
-		 * @see mshop/product/manager/type/standard/search
-		 * @see mshop/product/manager/type/standard/count
+		 * @see mshop/product/manager/type/standard/insert/ansi
+		 * @see mshop/product/manager/type/standard/newid/ansi
+		 * @see mshop/product/manager/type/standard/delete/ansi
+		 * @see mshop/product/manager/type/standard/search/ansi
+		 * @see mshop/product/manager/type/standard/count/ansi
 		 */
 
-		/** mshop/product/manager/type/standard/newid
+		/** mshop/product/manager/type/standard/newid/mysql
+		 * Retrieves the ID generated by the database when inserting a new record
+		 *
+		 * @see mshop/product/manager/type/standard/newid/ansi
+		 */
+
+		/** mshop/product/manager/type/standard/newid/ansi
 		 * Retrieves the ID generated by the database when inserting a new record
 		 *
 		 * As soon as a new record is inserted into the database table,
@@ -360,14 +405,20 @@ class Standard
 		 * @param string SQL statement for retrieving the last inserted record ID
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/product/manager/type/standard/insert
-		 * @see mshop/product/manager/type/standard/update
-		 * @see mshop/product/manager/type/standard/delete
-		 * @see mshop/product/manager/type/standard/search
-		 * @see mshop/product/manager/type/standard/count
+		 * @see mshop/product/manager/type/standard/insert/ansi
+		 * @see mshop/product/manager/type/standard/update/ansi
+		 * @see mshop/product/manager/type/standard/delete/ansi
+		 * @see mshop/product/manager/type/standard/search/ansi
+		 * @see mshop/product/manager/type/standard/count/ansi
 		 */
 
-		/** mshop/product/manager/type/standard/delete
+		/** mshop/product/manager/type/standard/delete/mysql
+		 * Deletes the items matched by the given IDs from the database
+		 *
+		 * @see mshop/product/manager/type/standard/delete/ansi
+		 */
+
+		/** mshop/product/manager/type/standard/delete/ansi
 		 * Deletes the items matched by the given IDs from the database
 		 *
 		 * Removes the records specified by the given IDs from the product database.
@@ -385,14 +436,20 @@ class Standard
 		 * @param string SQL statement for deleting items
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/product/manager/type/standard/insert
-		 * @see mshop/product/manager/type/standard/update
-		 * @see mshop/product/manager/type/standard/newid
-		 * @see mshop/product/manager/type/standard/search
-		 * @see mshop/product/manager/type/standard/count
+		 * @see mshop/product/manager/type/standard/insert/ansi
+		 * @see mshop/product/manager/type/standard/update/ansi
+		 * @see mshop/product/manager/type/standard/newid/ansi
+		 * @see mshop/product/manager/type/standard/search/ansi
+		 * @see mshop/product/manager/type/standard/count/ansi
 		 */
 
-		/** mshop/product/manager/type/standard/search
+		/** mshop/product/manager/type/standard/search/mysql
+		 * Retrieves the records matched by the given criteria in the database
+		 *
+		 * @see mshop/product/manager/type/standard/search/ansi
+		 */
+
+		/** mshop/product/manager/type/standard/search/ansi
 		 * Retrieves the records matched by the given criteria in the database
 		 *
 		 * Fetches the records matched by the given criteria from the product
@@ -437,14 +494,20 @@ class Standard
 		 * @param string SQL statement for searching items
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/product/manager/type/standard/insert
-		 * @see mshop/product/manager/type/standard/update
-		 * @see mshop/product/manager/type/standard/newid
-		 * @see mshop/product/manager/type/standard/delete
-		 * @see mshop/product/manager/type/standard/count
+		 * @see mshop/product/manager/type/standard/insert/ansi
+		 * @see mshop/product/manager/type/standard/update/ansi
+		 * @see mshop/product/manager/type/standard/newid/ansi
+		 * @see mshop/product/manager/type/standard/delete/ansi
+		 * @see mshop/product/manager/type/standard/count/ansi
 		 */
 
-		/** mshop/product/manager/type/standard/count
+		/** mshop/product/manager/type/standard/count/mysql
+		 * Counts the number of records matched by the given criteria in the database
+		 *
+		 * @see mshop/product/manager/type/standard/count/ansi
+		 */
+
+		/** mshop/product/manager/type/standard/count/ansi
 		 * Counts the number of records matched by the given criteria in the database
 		 *
 		 * Counts all records matched by the given criteria from the product
@@ -483,11 +546,11 @@ class Standard
 		 * @param string SQL statement for counting items
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/product/manager/type/standard/insert
-		 * @see mshop/product/manager/type/standard/update
-		 * @see mshop/product/manager/type/standard/newid
-		 * @see mshop/product/manager/type/standard/delete
-		 * @see mshop/product/manager/type/standard/search
+		 * @see mshop/product/manager/type/standard/insert/ansi
+		 * @see mshop/product/manager/type/standard/update/ansi
+		 * @see mshop/product/manager/type/standard/newid/ansi
+		 * @see mshop/product/manager/type/standard/delete/ansi
+		 * @see mshop/product/manager/type/standard/search/ansi
 		 */
 
 		return 'mshop/product/manager/type/standard/';

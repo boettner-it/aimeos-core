@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Text
  */
@@ -19,24 +19,28 @@ namespace Aimeos\MShop\Text\Item;
  * @subpackage Text
  */
 class Standard
-	extends \Aimeos\MShop\Common\Item\ListRef\Base
+	extends \Aimeos\MShop\Common\Item\Base
 	implements \Aimeos\MShop\Text\Item\Iface
 {
-	private $values;
+	use \Aimeos\MShop\Common\Item\ListRef\Traits;
+
+
+	private $langid;
 
 
 	/**
 	 * Initializes the text item object with the given values.
 	 *
 	 * @param array $values Associative list of key/value pairs
-	 * @param \Aimeos\MShop\Common\Lists\Item\Iface[] $listItems List of list items
+	 * @param \Aimeos\MShop\Common\Item\Lists\Iface[] $listItems List of list items
 	 * @param \Aimeos\MShop\Common\Item\Iface[] $refItems List of referenced items
 	 */
-	public function __construct( array $values = array(), array $listItems = array(), array $refItems = array() )
+	public function __construct( array $values = [], array $listItems = [], array $refItems = [] )
 	{
-		parent::__construct( 'text.', $values, $listItems, $refItems );
+		parent::__construct( 'text.', $values );
 
-		$this->values = $values;
+		$this->langid = ( isset( $values['.languageid'] ) ? $values['.languageid'] : null );
+		$this->initListItems( $listItems, $refItems );
 	}
 
 
@@ -47,48 +51,20 @@ class Standard
 	 */
 	public function getLanguageId()
 	{
-		return ( isset( $this->values['langid'] ) ? (string) $this->values['langid'] : null );
+		return $this->get( 'text.languageid' );
 	}
 
 
 	/**
 	 * Sets the ISO language code.
 	 *
-	 * @param string|null $langid ISO language code (e.g. de or de_DE)
+	 * @param string|null $id ISO language code (e.g. de or de_DE)
+	 * @return \Aimeos\MShop\Text\Item\Iface Text item for chaining method calls
 	 * @throws \Aimeos\MShop\Exception If the language ID is invalid
 	 */
-	public function setLanguageId( $langid )
+	public function setLanguageId( $id )
 	{
-		if( $langid === $this->getLanguageId() ) { return; }
-
-		$this->checkLanguageId( $langid );
-		$this->values['langid'] = $langid;
-		$this->setModified();
-	}
-
-
-	/**
-	 * Returns the type ID of the text item.
-	 *
-	 * @return integer|null Type ID of the text item
-	 */
-	public function getTypeId()
-	{
-		return ( isset( $this->values['typeid'] ) ? (int) $this->values['typeid'] : null );
-	}
-
-
-	/**
-	 *  Sets the type ID of the text item.
-	 *
-	 * @param integer $typeid Type ID of the text type
-	 */
-	public function setTypeId( $typeid )
-	{
-		if( $typeid == $this->getTypeId() ) { return; }
-
-		$this->values['typeid'] = (int) $typeid;
-		$this->setModified();
+		return $this->set( 'text.languageid', $this->checkLanguageId( $id ) );
 	}
 
 
@@ -99,7 +75,19 @@ class Standard
 	 */
 	public function getType()
 	{
-		return ( isset( $this->values['type'] ) ? (string) $this->values['type'] : null );
+		return $this->get( 'text.type' );
+	}
+
+
+	/**
+	 *  Sets the type of the text item.
+	 *
+	 * @param string $type Type of the text type
+	 * @return \Aimeos\MShop\Text\Item\Iface Text item for chaining method calls
+	 */
+	public function setType( $type )
+	{
+		return $this->set( 'text.type', $this->checkCode( $type ) );
 	}
 
 
@@ -110,7 +98,7 @@ class Standard
 	 */
 	public function getDomain()
 	{
-		return ( isset( $this->values['domain'] ) ? (string) $this->values['domain'] : '' );
+		return (string) $this->get( 'text.domain', '' );
 	}
 
 
@@ -118,13 +106,11 @@ class Standard
 	 * Sets the domain of the text item.
 	 *
 	 * @param string $domain Domain of the text item
+	 * @return \Aimeos\MShop\Text\Item\Iface Text item for chaining method calls
 	 */
 	public function setDomain( $domain )
 	{
-		if( $domain == $this->getDomain() ) { return; }
-
-		$this->values['domain'] = (string) $domain;
-		$this->setModified();
+		return $this->set( 'text.domain', (string) $domain );
 	}
 
 
@@ -135,7 +121,7 @@ class Standard
 	 */
 	public function getContent()
 	{
-		return ( isset( $this->values['content'] ) ? (string) $this->values['content'] : '' );
+		return (string) $this->get( 'text.content', '' );
 	}
 
 
@@ -143,14 +129,12 @@ class Standard
 	 * Sets the content of the text item.
 	 *
 	 * @param string $text Content of the text item
+	 * @return \Aimeos\MShop\Text\Item\Iface Text item for chaining method calls
 	 */
 	public function setContent( $text )
 	{
-		if( $text == $this->getContent() ) { return; }
-
 		ini_set( 'mbstring.substitute_character', 'none' );
-		$this->values['content'] = @mb_convert_encoding( (string) $text, 'UTF-8', 'UTF-8' );
-		$this->setModified();
+		return $this->set( 'text.content', @mb_convert_encoding( (string) $text, 'UTF-8', 'UTF-8' ) );
 	}
 
 
@@ -161,7 +145,7 @@ class Standard
 	 */
 	public function getLabel()
 	{
-		return ( isset( $this->values['label'] ) ? (string) $this->values['label'] : '' );
+		return (string) $this->get( 'text.label', '' );
 	}
 
 
@@ -169,13 +153,11 @@ class Standard
 	 * Sets the new label of the attribute item.
 	 *
 	 * @param string $label Type label of the attribute item
+	 * @return \Aimeos\MShop\Text\Item\Iface Text item for chaining method calls
 	 */
 	public function setLabel( $label )
 	{
-		if( $label == $this->getLabel() ) { return; }
-
-		$this->values['label'] = (string) $label;
-		$this->setModified();
+		return $this->set( 'text.label', (string) $label );
 	}
 
 
@@ -186,7 +168,7 @@ class Standard
 	 */
 	public function getStatus()
 	{
-		return ( isset( $this->values['status'] ) ? (int) $this->values['status'] : 0 );
+		return (int) $this->get( 'text.status', 1 );
 	}
 
 
@@ -194,58 +176,82 @@ class Standard
 	 * Sets the status of the text item.
 	 *
 	 * @param integer $status true/false for enabled/disabled
+	 * @return \Aimeos\MShop\Text\Item\Iface Text item for chaining method calls
 	 */
 	public function setStatus( $status )
 	{
-		if( $status == $this->getStatus() ) { return; }
-
-		$this->values['status'] = (int) $status;
-		$this->setModified();
+		return $this->set( 'text.status', (int) $status );
 	}
 
 
 	/**
-	 * Sets the item values from the given array.
+	 * Returns the item type
 	 *
-	 * @param array $list Associative list of item keys and their values
-	 * @return array Associative list of keys and their values that are unknown
+	 * @return string Item type, subtypes are separated by slashes
 	 */
-	public function fromArray( array $list )
+	public function getResourceType()
 	{
-		$unknown = array();
-		$list = parent::fromArray( $list );
+		return 'text';
+	}
+
+
+	/**
+	 * Tests if the item is available based on status, time, language and currency
+	 *
+	 * @return boolean True if available, false if not
+	 */
+	public function isAvailable()
+	{
+		return parent::isAvailable() && $this->getStatus() > 0
+			&& ( $this->langid === null || $this->getLanguageId() === null
+			|| $this->getLanguageId() === $this->langid );
+	}
+
+
+	/*
+	 * Sets the item values from the given array and removes that entries from the list
+	 *
+	 * @param array &$list Associative list of item keys and their values
+	 * @param boolean True to set private properties too, false for public only
+	 * @return \Aimeos\MShop\Text\Item\Iface Text item for chaining method calls
+	 */
+	public function fromArray( array &$list, $private = false )
+	{
+		$item = parent::fromArray( $list, $private );
 
 		foreach( $list as $key => $value )
 		{
 			switch( $key )
 			{
-				case 'text.languageid': $this->setLanguageId( $value ); break;
-				case 'text.typeid': $this->setTypeId( $value ); break;
-				case 'text.label': $this->setLabel( $value ); break;
-				case 'text.domain': $this->setDomain( $value ); break;
-				case 'text.content': $this->setContent( $value ); break;
-				case 'text.status': $this->setStatus( $value ); break;
-				default: $unknown[$key] = $value;
+				case 'text.languageid': $item = $item->setLanguageId( $value ); break;
+				case 'text.type': $item = $item->setType( $value ); break;
+				case 'text.label': $item = $item->setLabel( $value ); break;
+				case 'text.domain': $item = $item->setDomain( $value ); break;
+				case 'text.content': $item = $item->setContent( $value ); break;
+				case 'text.status': $item = $item->setStatus( $value ); break;
+				default: continue 2;
 			}
+
+			unset( $list[$key] );
 		}
 
-		return $unknown;
+		return $item;
 	}
 
 
 	/**
 	 * Returns the item values as array.
 	 *
-	 * @return Associative list of item properties and their values
+	 * @param boolean True to return private properties, false for public only
+	 * @return array Associative list of item properties and their values
 	 */
-	public function toArray()
+	public function toArray( $private = false )
 	{
-		$list = parent::toArray();
+		$list = parent::toArray( $private );
 
 		$list['text.languageid'] = $this->getLanguageId();
-		$list['text.typeid'] = $this->getTypeId();
-		$list['text.label'] = $this->getLabel();
 		$list['text.type'] = $this->getType();
+		$list['text.label'] = $this->getLabel();
 		$list['text.domain'] = $this->getDomain();
 		$list['text.content'] = $this->getContent();
 		$list['text.status'] = $this->getStatus();
@@ -253,4 +259,3 @@ class Standard
 		return $list;
 	}
 }
-;

@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Locale
  */
@@ -18,7 +18,8 @@ namespace Aimeos\MShop\Locale\Item;
  * @package MShop
  * @subpackage Locale
  */
-interface Iface extends \Aimeos\MShop\Common\Item\Iface
+interface Iface
+	extends \Aimeos\MShop\Common\Item\Iface, \Aimeos\MShop\Common\Item\Position\Iface, \Aimeos\MShop\Common\Item\Status\Iface
 {
 	/**
 	 * Returns the site item object.
@@ -28,14 +29,12 @@ interface Iface extends \Aimeos\MShop\Common\Item\Iface
 	 */
 	public function getSite();
 
-
 	/**
 	 * Returns the list site IDs up to the root site item.
 	 *
 	 * @return array List of site IDs
 	 */
 	public function getSitePath();
-
 
 	/**
 	 * Returns the list site IDs of the whole site subtree.
@@ -44,15 +43,13 @@ interface Iface extends \Aimeos\MShop\Common\Item\Iface
 	 */
 	public function getSiteSubTree();
 
-
 	/**
 	 * Sets the identifier of the shop instance.
 	 *
-	 * @param integer ID of the shop instance.
-	 * @return void
+	 * @param string $id ID of the shop instance
+	 * @return \Aimeos\MShop\Locale\Item\Iface Locale item for chaining method calls
 	 */
 	public function setSiteId( $id );
-
 
 	/**
 	 * Returns the ISO language code.
@@ -61,15 +58,13 @@ interface Iface extends \Aimeos\MShop\Common\Item\Iface
 	 */
 	public function getLanguageId();
 
-
 	/**
 	 * Sets the ISO language code.
 	 *
 	 * @param string|null $langid ISO language code (e.g. de or de_DE)
-	 * @return void
+	 * @return \Aimeos\MShop\Locale\Item\Iface Locale item for chaining method calls
 	 */
 	public function setLanguageId( $langid );
-
 
 	/**
 	 * Returns the currency ID.
@@ -78,48 +73,11 @@ interface Iface extends \Aimeos\MShop\Common\Item\Iface
 	 */
 	public function getCurrencyId();
 
-
 	/**
 	 * Sets the currency ID.
 	 *
 	 * @param string|null $currencyid Three letter ISO currency code (e.g. EUR)
-	 * @throws \Aimeos\MShop\Exception If the currency ID is invalid
-	 * @return void
+	 * @return \Aimeos\MShop\Locale\Item\Iface Locale item for chaining method calls
 	 */
 	public function setCurrencyId( $currencyid );
-
-
-	/**
-	 * Returns the position of the item.
-	 *
-	 * @return integer Position of the item
-	 */
-	public function getPosition();
-
-
-	/**
-	 * Sets the position of the item.
-	 *
-	 * @param integer $pos Position of the item
-	 * @return void
-	 */
-	public function setPosition( $pos );
-
-
-	/**
-	 * Returns the status property of the locale item
-	 *
-	 * @return integer Returns the status of the locale item
-	 */
-	public function getStatus();
-
-
-	/**
-	 * Sets the status property
-	 *
-	 * @param integer $status The status of the locale item
-	 * @return void
-	 */
-	public function setStatus( $status );
-
 }

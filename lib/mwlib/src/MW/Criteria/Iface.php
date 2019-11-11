@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Common
  */
@@ -29,7 +29,7 @@ interface Iface
 	 * "!": NOT term
 	 *
 	 * @param string $operator One of the known operators
-	 * @param array $list List of expression objects that should be combined
+	 * @param \Aimeos\MW\Criteria\Expression\Compare\Iface[] $list List of expression objects
 	 * @return \Aimeos\MW\Criteria\Expression\Combine\Iface Combine expression object
 	 */
 	public function combine( $operator, array $list );
@@ -53,6 +53,15 @@ interface Iface
 	 * @return \Aimeos\MW\Criteria\Expression\Compare\Iface Compare expression object
 	 */
 	public function compare( $operator, $name, $value );
+
+
+	/**
+	 * Creates a function signature for expressions.
+	 *
+	 * @param string $name Function name
+	 * @param array $params Single- or multi-dimensional list of parameters of type boolean, integer, float and string
+	 */
+	public function createFunction( $name, array $params );
 
 
 	/**
@@ -82,10 +91,11 @@ interface Iface
 	 *
 	 * @param array $types Associative list of item names and their types
 	 * @param array $translations Associative list of item names that should be translated
-	 * @param array $plugins Associative list of item names and plugins implementing \Aimeos\MW\Criteria\Plugin\Iface
-	 * @return string Expression string for searching
+	 * @param \Aimeos\MW\Criteria\Plugin\Iface[] $plugins Associative list of item names as keys and plugin objects as values
+	 * @param array $funcs Associative list of item names and functions modifying the conditions
+	 * @return mixed Data for searching
 	 */
-	public function getConditionString( array $types, array $translations = array(), array $plugins = array() );
+	public function getConditionSource( array $types, array $translations = [], array $plugins = [], array $funcs = [] );
 
 
 	/**
@@ -108,11 +118,12 @@ interface Iface
 	/**
 	 * Returns the string for sorting the result
 	 *
-	 * @param array $names List of item names
+	 * @param array $types Associative list of variable or column names as keys and their corresponding types
 	 * @param array $translations Associative list of item names that should be translated
-	 * @return string Order string for sorting the items
+	 * @param array $funcs Associative list of item names and functions modifying the conditions
+	 * @return mixed Data for sorting the items
 	 */
-	public function getSortationString( array $names, array $translations = array() );
+	public function getSortationSource( array $types, array $translations = [], array $funcs = [] );
 
 
 	/**
@@ -195,8 +206,18 @@ interface Iface
 	 * 		'name2' => '-',
 	 * 	);
 	 *
-	 * @param array $array Single-dimensional array of name and operator pairs
+	 * @param string[] $array Single-dimensional array of name and operator pairs
 	 * @return array List of sort expressions implementing \Aimeos\MW\Criteria\Expression\Sort\Iface
 	 */
 	public function toSortations( array $array );
+
+
+	/**
+	 * Returns the list of translated colums
+	 *
+	 * @param array $columns List of objects implementing getName() method
+	 * @param array $translations Associative list of item names that should be translated
+	 * @return array List of translated columns
+	 */
+	public function translate( array $columns, array $translations = [] );
 }

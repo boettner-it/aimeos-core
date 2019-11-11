@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Common
  */
@@ -80,28 +80,39 @@ abstract class Base
 	 *
 	 * @param array $types Associative list of variable or column names as keys and their corresponding types
 	 * @param array $translations Associative list of variable or column names that should be translated
-	 * @param array $plugins Associative list of item names and plugins implementing \Aimeos\MW\Criteria\Plugin\Iface
-	 * @return string Expression that evaluates to a boolean result
+	 * @param \Aimeos\MW\Criteria\Plugin\Iface[] $plugins Associative list of item names as keys and plugin objects as values
+	 * @param array $funcs Associative list of item names and functions modifying the conditions
+	 * @return mixed Expression that evaluates to a boolean result
 	 */
-	public function toString( array $types, array $translations = array(), array $plugins = array() )
+	public function toSource( array $types, array $translations = [], array $plugins = [], array $funcs = [] )
 	{
 		$this->setPlugins( $plugins );
 
 		$name = $this->name;
 
-		if( ( $transname = $this->translateName( $name, $translations ) ) === '' ) {
+		if( ( $transname = $this->translateName( $name, $translations, $funcs ) ) === null ) {
+			return;
+		}
+
+		if( $transname === '' ) {
 			$transname = $name;
 		}
+
+		$transvalue = $this->translateValue( $name, $this->value );
 
 		if( !isset( $types[$name] ) ) {
 			throw new \Aimeos\MW\Common\Exception( sprintf( 'Invalid name "%1$s"', $name ) );
 		}
 
-		if( $this->value === null ) {
+		if( $transvalue === null && ( $this->operator === '==' || $this->operator === '!=' ) ) {
 			return $this->createNullTerm( $transname );
 		}
 
-		if( is_array( $this->value ) ) {
+		if( is_array( $transname ) ) {
+			return $transname;
+		}
+
+		if( is_array( $transvalue ) ) {
 			return $this->createListTerm( $transname, $types[$name] );
 		}
 

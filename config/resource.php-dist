@@ -2,11 +2,7 @@
 
 /**
  * Common resource configuration file
- *
- * @copyright Copyright (c) Metaways Infosystems GmbH, 2011
- * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
  */
-
 
 return array(
 
@@ -23,16 +19,16 @@ return array(
 		'port' => 3306,
 
 		// name of the database to use
-		'database' => 'mshop',
+		'database' => 'aimeos',
 
 		// name of the database account used for connecting
-		'username' => 'mshop',
+		'username' => 'aimeos',
 
 		// secret password
 		'password' => '',
 
 		// SQL statements executed immediately after connecting to the database server
-		'stmt' => array( "SET NAMES 'utf8'", "SET SESSION sql_mode='ANSI'" ),
+		'stmt' => array( "SET SESSIOn sort_buffer_size=2097144; SET NAMES 'utf8'; SET SESSION sql_mode='ANSI'" ),
 
 		// number of concurrent database connections while processing one request
 		'limit' => 2,
@@ -43,4 +39,23 @@ return array(
 	// If using the order domain in an other database or database server
 	// 'db-order' => array('adapter' => 'mysql', 'host' => 'localhost', ....)
 
+	// default message queue configuration
+	'fs' => array(
+
+		// file system adapter
+		'adapter' => 'Standard',
+
+		// base directory for file system view
+		'basedir' => '.',
+	),
+
+	// default message queue configuration
+	'mq' => array(
+
+		// message queue adapter
+		'adapter' => 'Standard',
+
+		// use database configuration from resource "db"
+		'db' => 'db',
+	),
 );

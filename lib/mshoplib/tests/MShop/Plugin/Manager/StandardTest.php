@@ -1,25 +1,16 @@
 <?php
 
-namespace Aimeos\MShop\Plugin\Manager\StandardTest;
-
-
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
-class Publisher extends \Aimeos\MW\Observer\Publisher\Base
-{
-}
 
 
 namespace Aimeos\MShop\Plugin\Manager;
 
 
-/**
- * Test class for \Aimeos\MShop\Plugin\Manager\Standard.
- */
-class StandardTest extends \PHPUnit_Framework_TestCase
+class StandardTest extends \PHPUnit\Framework\TestCase
 {
 	private $object;
 	private $examplePlugin;
@@ -27,31 +18,13 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	private $editor = '';
 
 
-	/**
-	 * Sets up the fixture, for example, opens a network connection.
-	 * This method is called before a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function setUp()
 	{
-		$this->editor = \TestHelper::getContext()->getEditor();
-		$this->object = \Aimeos\MShop\Plugin\Manager\Factory::createManager( \TestHelper::getContext() );
-
-		$type = $this->object->getSubManager( 'type' );
-		$search = $type->createSearch();
-		$conditions = array(
-			$search->compare( '==', 'plugin.type.code', 'order' ),
-			$search->compare( '==', 'plugin.type.editor', $this->editor )
-		);
-		$search->setConditions( $search->combine( '&&', $conditions ) );
-		$results = $type->searchItems( $search );
-		if( ( $typeItem = reset( $results ) ) === false ) {
-			throw new \Exception( 'No item found' );
-		}
+		$this->editor = \TestHelperMShop::getContext()->getEditor();
+		$this->object = \Aimeos\MShop\Plugin\Manager\Factory::create( \TestHelperMShop::getContext() );
 
 		$this->examplePlugin = $this->object->createItem();
-		$this->examplePlugin->setTypeId( $typeItem->getId() );
+		$this->examplePlugin->setType( 'order' );
 
 		$this->examplePlugin->setProvider( 'Example' );
 		$this->examplePlugin->setConfig( array( "limit" => "10" ) );
@@ -61,40 +34,55 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	}
 
 
-	/**
-	 * Tears down the fixture, for example, closes a network connection.
-	 * This method is called after a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function tearDown()
 	{
-		unset( $this->object, $this->context );
+		unset( $this->object );
 	}
 
 
-	public function testCleanup()
+	public function testClear()
 	{
-		$this->object->cleanup( array( -1 ) );
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Manager\Iface::class, $this->object->clear( [-1] ) );
+	}
+
+
+	public function testDeleteItems()
+	{
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Manager\Iface::class, $this->object->deleteItems( [-1] ) );
+	}
+
+
+	public function testGetResourceType()
+	{
+		$result = $this->object->getResourceType();
+
+		$this->assertContains( 'plugin', $result );
 	}
 
 
 	public function testCreateItem()
 	{
-		$this->assertInstanceOf( '\\Aimeos\\MShop\\Plugin\\Item\\Iface', $this->object->createItem() );
+		$this->assertInstanceOf( \Aimeos\MShop\Plugin\Item\Iface::class, $this->object->createItem() );
+	}
+
+
+	public function testCreateItemType()
+	{
+		$item = $this->object->createItem( ['plugin.type' => 'order'] );
+		$this->assertEquals( 'order', $item->getType() );
 	}
 
 
 	public function testRegister()
 	{
-		$publisher = new \Aimeos\MShop\Plugin\Manager\StandardTest\Publisher();
+		$publisher = new TestPublisher();
 		$this->object->register( $publisher, 'order' );
 	}
 
 
 	public function testGetItem()
 	{
-		$search = $this->object->createSearch();
+		$search = $this->object->createSearch()->setSlice( 0, 1 );
 		$conditions = array(
 			$search->compare( '~=', 'plugin.provider', 'Shipping' ),
 			$search->compare( '==', 'plugin.editor', $this->editor )
@@ -102,7 +90,7 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$search->setConditions( $search->combine( '&&', $conditions ) );
 		$result = $this->object->searchItems( $search );
 		if( ( $expected = reset( $result ) ) === false ) {
-			throw new \Exception( sprintf( 'No plugin item including "%1$s" found', 'Shipping' ) );
+			throw new \RuntimeException( sprintf( 'No plugin item including "%1$s" found', 'Shipping' ) );
 		}
 
 		$actual = $this->object->getItem( $expected->getId() );
@@ -122,19 +110,19 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 		$a = $this->object->searchItems( $search );
 		if( ( $item = reset( $a ) ) === false ) {
-			throw new \Exception( 'Search provider in test failt' );
+			throw new \RuntimeException( 'Search provider in test failt' );
 		}
 
 		$item->setId( null );
 		$item->setProvider( 'Example1' );
-		$this->object->saveItem( $item );
+		$resultSaved = $this->object->saveItem( $item );
 		$itemSaved = $this->object->getItem( $item->getId() );
 
 		$itemExp = clone $itemSaved;
 		$itemExp->setProvider( 'Example' );
 		$itemExp->setPosition( 5 );
 		$itemExp->setStatus( -1 );
-		$this->object->saveItem( $itemExp );
+		$resultUpd = $this->object->saveItem( $itemExp );
 		$itemUpd = $this->object->getItem( $itemExp->getId() );
 
 		$this->object->deleteItem( $itemSaved->getId() );
@@ -144,7 +132,7 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$this->assertTrue( $itemSaved->getType() !== null );
 		$this->assertEquals( $item->getId(), $itemSaved->getId() );
 		$this->assertEquals( $item->getSiteId(), $itemSaved->getSiteId() );
-		$this->assertEquals( $item->getTypeId(), $itemSaved->getTypeId() );
+		$this->assertEquals( $item->getType(), $itemSaved->getType() );
 		$this->assertEquals( $item->getLabel(), $itemSaved->getLabel() );
 		$this->assertEquals( $item->getProvider(), $itemSaved->getProvider() );
 		$this->assertEquals( $item->getConfig(), $itemSaved->getConfig() );
@@ -158,7 +146,7 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$this->assertTrue( $itemUpd->getType() !== null );
 		$this->assertEquals( $itemExp->getId(), $itemUpd->getId() );
 		$this->assertEquals( $itemExp->getSiteId(), $itemUpd->getSiteId() );
-		$this->assertEquals( $itemExp->getTypeId(), $itemUpd->getTypeId() );
+		$this->assertEquals( $itemExp->getType(), $itemUpd->getType() );
 		$this->assertEquals( $itemExp->getLabel(), $itemUpd->getLabel() );
 		$this->assertEquals( $itemExp->getProvider(), $itemUpd->getProvider() );
 		$this->assertEquals( $itemExp->getConfig(), $itemUpd->getConfig() );
@@ -169,7 +157,10 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals( $itemExp->getTimeCreated(), $itemUpd->getTimeCreated() );
 		$this->assertRegExp( '/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/', $itemUpd->getTimeModified() );
 
-		$this->setExpectedException( '\\Aimeos\\MShop\\Exception' );
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Item\Iface::class, $resultSaved );
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Item\Iface::class, $resultUpd );
+
+		$this->setExpectedException( \Aimeos\MShop\Exception::class );
 		$this->object->getItem( $itemSaved->getId() );
 	}
 
@@ -179,10 +170,10 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$total = 0;
 		$search = $this->object->createSearch();
 
-		$expr = array();
+		$expr = [];
 		$expr[] = $search->compare( '!=', 'plugin.id', null );
 		$expr[] = $search->compare( '!=', 'plugin.siteid', null );
-		$expr[] = $search->compare( '!=', 'plugin.typeid', null );
+		$expr[] = $search->compare( '==', 'plugin.type', 'order' );
 		$expr[] = $search->compare( '!=', 'plugin.label', null );
 		$expr[] = $search->compare( '~=', 'plugin.provider', 'ProductLimit' );
 		$expr[] = $search->compare( '~=', 'plugin.config', 'single-number-max' );
@@ -192,29 +183,25 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$expr[] = $search->compare( '>=', 'plugin.ctime', '1970-01-01 00:00:00' );
 		$expr[] = $search->compare( '==', 'plugin.editor', $this->editor );
 
-		$expr[] = $search->compare( '!=', 'plugin.type.id', null );
-		$expr[] = $search->compare( '!=', 'plugin.type.siteid', null );
-		$expr[] = $search->compare( '==', 'plugin.type.code', 'order' );
-		$expr[] = $search->compare( '==', 'plugin.type.domain', 'plugin' );
-		$expr[] = $search->compare( '==', 'plugin.type.label', 'Order' );
-		$expr[] = $search->compare( '==', 'plugin.type.status', 1 );
-		$expr[] = $search->compare( '>=', 'plugin.type.mtime', '1970-01-01 00:00:00' );
-		$expr[] = $search->compare( '>=', 'plugin.type.ctime', '1970-01-01 00:00:00' );
-		$expr[] = $search->compare( '==', 'plugin.type.editor', $this->editor );
-
 		$search->setConditions( $search->combine( '&&', $expr ) );
-		$results = $this->object->searchItems( $search, array(), $total );
+		$results = $this->object->searchItems( $search, [], $total );
 		$this->assertEquals( 1, count( $results ) );
+	}
 
-		$expr = $conditions = array();
+
+	public function testSearchItemsProvider()
+	{
+		$search = $this->object->createSearch();
+
+		$expr = $conditions = [];
 		$expr[] = $search->compare( '~=', 'plugin.provider', 'Shipping,Example' );
 		$expr[] = $search->compare( '==', 'plugin.editor', $this->editor );
 		$conditions[] = $search->combine( '&&', $expr );
-		$expr = array();
+		$expr = [];
 		$expr[] = $search->compare( '~=', 'plugin.provider', 'ProductLimit,Example' );
 		$expr[] = $search->compare( '==', 'plugin.editor', $this->editor );
 		$conditions[] = $search->combine( '&&', $expr );
-		$expr = array();
+		$expr = [];
 		$expr[] = $search->compare( '~=', 'plugin.provider', 'BasketLimits,Example' );
 		$expr[] = $search->compare( '==', 'plugin.editor', $this->editor );
 		$conditions[] = $search->combine( '&&', $expr );
@@ -223,18 +210,14 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$search = $this->object->createSearch();
 		$search->setConditions( $search->combine( '||', $conditions ) );
 		$this->assertEquals( 3, count( $this->object->searchItems( $search ) ) );
+	}
 
-		//search with base criteria
-		$search = $this->object->createSearch( true );
-		$expr = array(
-			$search->combine( '||', $conditions ),
-			$search->getConditions()
-		);
-		$search->setConditions( $search->combine( '&&', $expr ) );
-		$total = 0;
-		$search->setSlice( 0, 2 );
-		$this->assertEquals( 2, count( $this->object->searchItems( $search, array(), $total ) ) );
-		$this->assertEquals( 3, $total );
+
+	public function testSearchItemsBase()
+	{
+		$search = $this->object->createSearch( true )->setSlice( 0, 2 );
+		$results = $this->object->searchItems( $search, [] );
+		$this->assertEquals( 2, count( $results ) );
 
 		foreach( $results as $itemId => $item ) {
 			$this->assertEquals( $itemId, $item->getId() );
@@ -244,17 +227,23 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testGetSubManager()
 	{
-		$this->assertInstanceOf( '\\Aimeos\\MShop\\Common\\Manager\\Iface', $this->object->getSubManager( 'type' ) );
-		$this->assertInstanceOf( '\\Aimeos\\MShop\\Common\\Manager\\Iface', $this->object->getSubManager( 'type', 'Standard' ) );
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Manager\Iface::class, $this->object->getSubManager( 'type' ) );
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Manager\Iface::class, $this->object->getSubManager( 'type', 'Standard' ) );
 
-		$this->setExpectedException( '\\Aimeos\\MShop\\Exception' );
+		$this->setExpectedException( \Aimeos\MShop\Exception::class );
 		$this->object->getSubManager( 'unknown' );
 	}
 
 
 	public function testGetSubManagerInvalidName()
 	{
-		$this->setExpectedException( '\\Aimeos\\MShop\\Exception' );
+		$this->setExpectedException( \Aimeos\MShop\Exception::class );
 		$this->object->getSubManager( 'type', 'unknown' );
 	}
+}
+
+
+class TestPublisher implements \Aimeos\MW\Observer\Publisher\Iface
+{
+	use \Aimeos\MW\Observer\Publisher\Traits;
 }

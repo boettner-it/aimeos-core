@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Plugin
  */
@@ -22,54 +22,40 @@ class Standard
 	extends \Aimeos\MShop\Common\Item\Base
 	implements \Aimeos\MShop\Plugin\Item\Iface
 {
-	private $values;
+	use \Aimeos\MShop\Common\Item\Config\Traits;
+
 
 	/**
 	 * Initializes the plugin object
 	 *
-	 * @param array $values Associative array of id, typeid, name, config and status
+	 * @param array $values Associative array of id, type, name, config and status
 	 */
-	public function __construct( array $values = array() )
+	public function __construct( array $values = [] )
 	{
 		parent::__construct( 'plugin.', $values );
-
-		$this->values = $values;
 	}
 
 
 	/**
 	 * Returns the type of the plugin.
 	 *
-	 * @return string Plugin type
+	 * @return string|null Plugin type
 	 */
 	public function getType()
 	{
-		return ( isset( $this->values['type'] ) ? (string) $this->values['type'] : '' );
+		return $this->get( 'plugin.type', 'order' );
 	}
 
 
 	/**
-	 * Returns the type ID of the plugin.
+	 * Sets the new type of the plugin item.
 	 *
-	 * @return integer Plugin type ID
+	 * @param string $type New plugin type
+	 * @return \Aimeos\MShop\Plugin\Item\Iface Plugin item for chaining method calls
 	 */
-	public function getTypeId()
+	public function setType( $type )
 	{
-		return ( isset( $this->values['typeid'] ) ? (int) $this->values['typeid'] : null );
-	}
-
-
-	/**
-	 * Sets the new type ID of the plugin item.
-	 *
-	 * @param integer $typeid New plugin type ID
-	 */
-	public function setTypeId( $typeid )
-	{
-		if( $typeid == $this->getTypeId() ) { return; }
-
-		$this->values['typeid'] = (int) $typeid;
-		$this->setModified();
+		return $this->set( 'plugin.type', $this->checkCode( $type ) );
 	}
 
 
@@ -80,7 +66,24 @@ class Standard
 	 */
 	public function getProvider()
 	{
-		return ( isset( $this->values['provider'] ) ? (string) $this->values['provider'] : '' );
+		return (string) $this->get( 'plugin.provider', '' );
+	}
+
+
+	/**
+	 * Sets the new provider of the plugin item which is the short
+	 * name of the plugin class name.
+	 *
+	 * @param string $provider Plugin provider, esp. short plugin class name
+	 * @return \Aimeos\MShop\Plugin\Item\Iface Plugin item for chaining method calls
+	 */
+	public function setProvider( $provider )
+	{
+		if( preg_match( '/^[A-Za-z0-9]+(,[A-Za-z0-9]+)*$/', $provider ) !== 1 ) {
+			throw new \Aimeos\MShop\Plugin\Exception( sprintf( 'Invalid provider name "%1$s"', $provider ) );
+		}
+
+		return $this->set( 'plugin.provider', (string) $provider );
 	}
 
 
@@ -91,7 +94,7 @@ class Standard
 	 */
 	public function getLabel()
 	{
-		return ( isset( $this->values['label'] ) ? (string) $this->values['label'] : '' );
+		return (string) $this->get( 'plugin.label', '' );
 	}
 
 
@@ -99,30 +102,11 @@ class Standard
 	 * Sets the new label of the plugin item.
 	 *
 	 * @param string $label New label of the plugin item
+	 * @return \Aimeos\MShop\Plugin\Item\Iface Plugin item for chaining method calls
 	 */
 	public function setLabel( $label )
 	{
-		if( $label == $this->getLabel() ) {
-			return;
-		}
-
-		$this->values['label'] = (string) $label;
-		$this->setModified();
-	}
-
-
-	/**
-	 * Sets the new provider of the plugin item which is the short
-	 * name of the plugin class name.
-	 *
-	 * @param string $provider Plugin provider, esp. short plugin class name
-	 */
-	public function setProvider( $provider )
-	{
-		if( $provider == $this->getProvider() ) { return; }
-
-		$this->values['provider'] = (string) $provider;
-		$this->setModified();
+		return $this->set( 'plugin.label', (string) $label );
 	}
 
 
@@ -133,7 +117,7 @@ class Standard
 	 */
 	public function getConfig()
 	{
-		return ( isset( $this->values['config'] ) ? (array) $this->values['config'] : array() );
+		return (array) $this->get( 'plugin.config', [] );
 	}
 
 
@@ -141,11 +125,11 @@ class Standard
 	 * Sets the new configuration for the plugin item.
 	 *
 	 * @param array $config Custom configuration values
+	 * @return \Aimeos\MShop\Plugin\Item\Iface Plugin item for chaining method calls
 	 */
 	public function setConfig( array $config )
 	{
-		$this->values['config'] = $config;
-		$this->setModified();
+		return $this->set( 'plugin.config', $config );
 	}
 
 
@@ -156,7 +140,7 @@ class Standard
 	 */
 	public function getPosition()
 	{
-		return ( isset( $this->values['pos'] ) ? (int) $this->values['pos'] : 0 );
+		return (int) $this->get( 'plugin.position', 0 );
 	}
 
 
@@ -164,13 +148,11 @@ class Standard
 	 * Sets the new position of the plugin item.
 	 *
 	 * @param integer $position Position of the item
+	 * @return \Aimeos\MShop\Plugin\Item\Iface Plugin item for chaining method calls
 	 */
 	public function setPosition( $position )
 	{
-		if( $position == $this->getPosition() ) { return; }
-
-		$this->values['pos'] = (int) $position;
-		$this->setModified();
+		return $this->set( 'plugin.position', (int) $position );
 	}
 
 
@@ -181,7 +163,7 @@ class Standard
 	 */
 	public function getStatus()
 	{
-		return ( isset( $this->values['status'] ) ? (int) $this->values['status'] : 0 );
+		return (int) $this->get( 'plugin.status', 1 );
 	}
 
 
@@ -189,56 +171,78 @@ class Standard
 	 * Sets the new status of the plugin item.
 	 *
 	 * @param integer $status Status of the item
+	 * @return \Aimeos\MShop\Plugin\Item\Iface Plugin item for chaining method calls
 	 */
 	public function setStatus( $status )
 	{
-		if( $status == $this->getStatus() ) { return; }
-
-		$this->values['status'] = (int) $status;
-		$this->setModified();
+		return $this->set( 'plugin.status', (int) $status );
 	}
 
 
 	/**
-	 * Sets the item values from the given array.
+	 * Returns the item type
 	 *
-	 * @param array $list Associative list of item keys and their values
-	 * @return array Associative list of keys and their values that are unknown
+	 * @return string Item type, subtypes are separated by slashes
 	 */
-	public function fromArray( array $list )
+	public function getResourceType()
 	{
-		$unknown = array();
-		$list = parent::fromArray( $list );
+		return 'plugin';
+	}
+
+
+	/**
+	 * Tests if the item is available based on status, time, language and currency
+	 *
+	 * @return boolean True if available, false if not
+	 */
+	public function isAvailable()
+	{
+		return parent::isAvailable() && $this->getStatus() > 0;
+	}
+
+
+	/*
+	 * Sets the item values from the given array and removes that entries from the list
+	 *
+	 * @param array &$list Associative list of item keys and their values
+	 * @param boolean True to set private properties too, false for public only
+	 * @return \Aimeos\MShop\Plugin\Item\Iface Plugin item for chaining method calls
+	 */
+	public function fromArray( array &$list, $private = false )
+	{
+		$item = parent::fromArray( $list, $private );
 
 		foreach( $list as $key => $value )
 		{
 			switch( $key )
 			{
-				case 'plugin.typeid': $this->setTypeId( $value ); break;
-				case 'plugin.label': $this->setLabel( $value ); break;
-				case 'plugin.provider': $this->setProvider( $value ); break;
-				case 'plugin.config': $this->setConfig( $value ); break;
-				case 'plugin.status': $this->setStatus( $value ); break;
-				case 'plugin.position': $this->setPosition( $value ); break;
-				default: $unknown[$key] = $value;
+				case 'plugin.type': $item = $item->setType( $value ); break;
+				case 'plugin.label': $item = $item->setLabel( $value ); break;
+				case 'plugin.provider': $item = $item->setProvider( $value ); break;
+				case 'plugin.config': $item = $item->setConfig( $value ); break;
+				case 'plugin.status': $item = $item->setStatus( $value ); break;
+				case 'plugin.position': $item = $item->setPosition( $value ); break;
+				default: continue 2;
 			}
+
+			unset( $list[$key] );
 		}
 
-		return $unknown;
+		return $item;
 	}
 
 
 	/**
 	 * Returns the item values as array.
 	 *
-	 * @return Associative list of item properties and their values
+	 * @param boolean True to return private properties, false for public only
+	 * @return array Associative list of item properties and their values
 	 */
-	public function toArray()
+	public function toArray( $private = false )
 	{
-		$list = parent::toArray();
+		$list = parent::toArray( $private );
 
 		$list['plugin.type'] = $this->getType();
-		$list['plugin.typeid'] = $this->getTypeId();
 		$list['plugin.label'] = $this->getLabel();
 		$list['plugin.provider'] = $this->getProvider();
 		$list['plugin.config'] = $this->getConfig();

@@ -3,60 +3,109 @@
 /**
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
  * @copyright Metaways Infosystems GmbH, 2011
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 
 namespace Aimeos\MShop\Product\Item;
 
 
-/**
- * Test class for \Aimeos\MShop\Product\Item\Standard.
- */
-class StandardTest extends \PHPUnit_Framework_TestCase
+class StandardTest extends \PHPUnit\Framework\TestCase
 {
 	private $object;
 	private $values;
 
 
-	/**
-	 * Sets up the fixture, for example, opens a network connection.
-	 * This method is called before a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function setUp()
 	{
 		$this->values = array(
-			'id' => 1,
-			'siteid'=>99,
-			'typeid' => 2,
-			'type' => 'test',
-			'status' => 0,
-			'code' => 'TEST',
-			'suppliercode' => 'unitSupplier',
-			'label' => 'testproduct',
-			'config' => array( 'css-class' => 'test' ),
-			'start' => null,
-			'end' => null,
-			'ctime' => '2011-01-19 17:04:32',
-			'mtime' => '2011-01-19 18:04:32',
-			'editor' => 'unitTestUser'
+			'product.id' => 1,
+			'product.siteid' => 99,
+			'product.type' => 'test',
+			'product.status' => 1,
+			'product.code' => 'TEST',
+			'product.dataset' => 'Shirts',
+			'product.label' => 'testproduct',
+			'product.config' => array( 'css-class' => 'test' ),
+			'product.datestart' => null,
+			'product.dateend' => null,
+			'product.ctime' => '2011-01-19 17:04:32',
+			'product.mtime' => '2011-01-19 18:04:32',
+			'product.editor' => 'unitTestUser',
+			'product.target' => 'testtarget',
+			'additional' => 'value',
 		);
 
-		$this->object = new \Aimeos\MShop\Product\Item\Standard( $this->values );
+		$propItems = array(
+			2 => new \Aimeos\MShop\Common\Item\Property\Standard( 'product.property.', array(
+				'product.property.id' => 2,
+				'product.property.parentid' => 1,
+				'product.property.type' => 'proptest',
+				'product.property.languageid' => 'de',
+				'.languageid' => 'de',
+			) ),
+			3 => new \Aimeos\MShop\Common\Item\Property\Standard( 'product.property.', array(
+				'product.property.id' => 3,
+				'product.property.parentid' => 1,
+				'product.property.type' => 'proptype',
+				'product.property.languageid' => 'de',
+				'.languageid' => 'fr',
+			) ),
+		);
+
+		$this->object = new \Aimeos\MShop\Product\Item\Standard( $this->values, [], [], $propItems );
 	}
 
-	/**
-	 * Tears down the fixture, for example, closes a network connection.
-	 * This method is called after a test is executed.
-	 *
-	 * @access protected
-	 */
+
 	protected function tearDown()
 	{
-		$this->object = null;
-		unset( $this->textListItems );
+		unset( $this->object, $this->values );
+	}
+
+
+	public function testMagicMethods()
+	{
+		$this->assertFalse( isset( $this->object->test ) );
+		$this->assertEquals( null, $this->object->test );
+
+		$this->object->test = 'value';
+
+		$this->assertTrue( isset( $this->object->test ) );
+		$this->assertEquals( 'value', $this->object->test );
+
+		$this->assertEquals( '1', (string) $this->object );
+	}
+
+
+	public function testGetSet()
+	{
+		$this->assertEquals( false, $this->object->get( 'test', false ) );
+
+		$this->object->set( 'test', 'value' );
+
+		$this->assertEquals( 'value', $this->object->get( 'test', false ) );
+	}
+
+
+	public function testGetId()
+	{
+		$this->assertEquals( '1', $this->object->getId() );
+	}
+
+
+	public function testSetId()
+	{
+		$return = $this->object->setId( null );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Product\Item\Iface::class, $return );
+		$this->assertNull( $this->object->getId() );
+		$this->assertTrue( $this->object->isModified() );
+
+		$return = $this->object->setId( 1 );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Product\Item\Iface::class, $return );
+		$this->assertEquals( '1', $this->object->getId() );
+		$this->assertFalse( $this->object->isModified() );
 	}
 
 
@@ -66,26 +115,57 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	}
 
 
-	public function testGetTypeId()
+	public function testGetPropertyItems()
 	{
-		$this->assertEquals( 2, $this->object->getTypeId() );
+		$propItems = $this->object->getPropertyItems();
+
+		$this->assertEquals( 1, count( $propItems ) );
+
+		foreach( $propItems as $propItem ) {
+			$this->assertInstanceOf( \Aimeos\MShop\Common\Item\Property\Iface::class, $propItem );
+		}
 	}
 
 
-	public function testSetTypeId()
+	public function testGetPropertyItemsAll()
 	{
-		$this->assertFalse( $this->object->isModified() );
+		$propItems = $this->object->getPropertyItems( null, false );
 
-		$this->object->setTypeId( 1 );
-		$this->assertEquals( 1, $this->object->getTypeId() );
+		$this->assertEquals( 2, count( $propItems ) );
 
-		$this->assertTrue( $this->object->isModified() );
+		foreach( $propItems as $propItem ) {
+			$this->assertInstanceOf( \Aimeos\MShop\Common\Item\Property\Iface::class, $propItem );
+		}
+	}
+
+
+	public function testGetPropertyItemsType()
+	{
+		$propItems = $this->object->getPropertyItems( 'proptest' );
+
+		$this->assertEquals( 1, count( $propItems ) );
+
+		foreach( $propItems as $propItem ) {
+			$this->assertInstanceOf( \Aimeos\MShop\Common\Item\Property\Iface::class, $propItem );
+		}
 	}
 
 
 	public function testGetType()
 	{
 		$this->assertEquals( 'test', $this->object->getType() );
+	}
+
+
+	public function testSetType()
+	{
+		$this->assertFalse( $this->object->isModified() );
+
+		$return = $this->object->setType( 'default' );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Product\Item\Iface::class, $return );
+		$this->assertEquals( 'default', $this->object->getType() );
+		$this->assertTrue( $this->object->isModified() );
 	}
 
 
@@ -99,9 +179,28 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	{
 		$this->assertFalse( $this->object->isModified() );
 
-		$this->object->setCode( 'NEU' );
-		$this->assertEquals( 'NEU', $this->object->getCode() );
+		$return = $this->object->setCode( 'NEU' );
 
+		$this->assertInstanceOf( \Aimeos\MShop\Product\Item\Iface::class, $return );
+		$this->assertEquals( 'NEU', $this->object->getCode() );
+		$this->assertTrue( $this->object->isModified() );
+	}
+
+
+	public function testGetDataset()
+	{
+		$this->assertEquals( 'Shirts', $this->object->getDataset() );
+	}
+
+
+	public function testSetDataset()
+	{
+		$this->assertFalse( $this->object->isModified() );
+
+		$return = $this->object->setDataset( 'Skirts' );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Product\Item\Iface::class, $return );
+		$this->assertEquals( 'Skirts', $this->object->getDataset() );
 		$this->assertTrue( $this->object->isModified() );
 	}
 
@@ -112,55 +211,19 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	}
 
 
-	public function testGetSupplierCode()
-	{
-		$this->assertEquals( 'unitSupplier', $this->object->getSupplierCode() );
-	}
-
-
-	public function testSetSupplierCode()
-	{
-		$this->assertFalse( $this->object->isModified() );
-
-		$this->object->setSupplierCode( 'unitTestSupplier' );
-		$this->assertEquals( 'unitTestSupplier', $this->object->getSupplierCode() );
-
-		$this->assertTrue( $this->object->isModified() );
-	}
-
-
-	public function testGetId()
-	{
-		$this->assertEquals( '1', $this->object->getId() );
-	}
-
-
-	public function testSetId()
-	{
-		$this->object->setId( 1 );
-		$this->assertEquals( '1', $this->object->getId() );
-
-		$this->setExpectedException( '\\Aimeos\\MShop\\Exception' );
-
-		$this->object->setId( 2 );
-		$this->assertEquals( '2', $this->object->getId() );
-		$this->assertTrue( $this->object->isModified() );
-
-		$this->object->setId( null );
-		$this->assertNull( $this->object->getId() );
-	}
-
-
 	public function testGetStatus()
 	{
-		$this->assertEquals( 0, $this->object->getStatus() );
+		$this->assertEquals( 1, $this->object->getStatus() );
 	}
 
 
 	public function testSetStatus()
 	{
-		$this->object->setStatus( 8 );
+		$return = $this->object->setStatus( 8 );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Product\Item\Iface::class, $return );
 		$this->assertEquals( 8, $this->object->getStatus() );
+		$this->assertTrue( $this->object->isModified() );
 	}
 
 
@@ -172,8 +235,11 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testSetLabel()
 	{
-		$this->object->setLabel( 'editproduct' );
+		$return = $this->object->setLabel( 'editproduct' );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Product\Item\Iface::class, $return );
 		$this->assertEquals( 'editproduct', $this->object->getLabel() );
+		$this->assertTrue( $this->object->isModified() );
 	}
 
 
@@ -183,13 +249,39 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	}
 
 
+	public function testGetConfigValue()
+	{
+		$this->assertEquals( 'test', $this->object->getConfigValue( 'css-class' ) );
+	}
+
+
 	public function testSetConfig()
 	{
 		$this->assertFalse( $this->object->isModified() );
 
-		$this->object->setConfig( array( 'key' => 'value' ) );
-		$this->assertTrue( $this->object->isModified() );
+		$return = $this->object->setConfig( array( 'key' => 'value' ) );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Product\Item\Iface::class, $return );
 		$this->assertEquals( array( 'key' => 'value' ), $this->object->getConfig() );
+		$this->assertTrue( $this->object->isModified() );
+	}
+
+
+	public function testGetTarget()
+	{
+		$this->assertEquals( 'testtarget', $this->object->getTarget() );
+	}
+
+
+	public function testSetTarget()
+	{
+		$this->assertFalse( $this->object->isModified() );
+
+		$return = $this->object->setTarget( 'ttarget' );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Product\Item\Iface::class, $return );
+		$this->assertEquals( 'ttarget', $this->object->getTarget() );
+		$this->assertTrue( $this->object->isModified() );
 	}
 
 
@@ -201,8 +293,11 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testSetDateStart()
 	{
-		$this->object->setDateStart( '2010-04-22 06:22:22' );
+		$return = $this->object->setDateStart( '2010-04-22 06:22:22' );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Product\Item\Iface::class, $return );
 		$this->assertEquals( '2010-04-22 06:22:22', $this->object->getDateStart() );
+		$this->assertTrue( $this->object->isModified() );
 	}
 
 
@@ -214,8 +309,11 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testSetDateEnd()
 	{
-		$this->object->setDateEnd( '2010-05-22 06:22:22' );
-		$this->assertEquals( '2010-05-22 06:22:22', $this->object->getDateEnd() );
+		$return = $this->object->setDateEnd( '2010-05-22 06:22' );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Product\Item\Iface::class, $return );
+		$this->assertEquals( '2010-05-22 06:22:00', $this->object->getDateEnd() );
+		$this->assertTrue( $this->object->isModified() );
 	}
 
 
@@ -228,6 +326,34 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	public function testGetTimeCreated()
 	{
 		$this->assertEquals( '2011-01-19 17:04:32', $this->object->getTimeCreated() );
+	}
+
+
+	public function testSetTimeCreated()
+	{
+		$return = $this->object->setTimeCreated( '2010-05-22 06:22:22' );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Product\Item\Iface::class, $return );
+		$this->assertEquals( '2010-05-22 06:22:22', $this->object->getTimeCreated() );
+		$this->assertTrue( $this->object->isModified() );
+	}
+
+
+	public function testIsAvailable()
+	{
+		$this->assertTrue( $this->object->isAvailable() );
+		$this->object->setAvailable( false );
+		$this->assertFalse( $this->object->isAvailable() );
+	}
+
+
+	public function testIsAvailableOnStatus()
+	{
+		$this->assertTrue( $this->object->isAvailable() );
+		$this->object->setStatus( 0 );
+		$this->assertFalse( $this->object->isAvailable() );
+		$this->object->setStatus( -1 );
+		$this->assertFalse( $this->object->isAvailable() );
 	}
 
 
@@ -244,57 +370,67 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	}
 
 
+	public function testGetResourceType()
+	{
+		$this->assertEquals( 'product', $this->object->getResourceType() );
+	}
+
+
 	public function testFromArray()
 	{
 		$item = new \Aimeos\MShop\Product\Item\Standard();
 
-		$list = array(
+		$list = $entries = array(
 			'product.id' => 1,
-			'product.typeid' => 2,
+			'product.type' => 'test',
 			'product.label' => 'test item',
 			'product.code' => 'test',
-			'product.suppliercode' => 'testsup',
+			'product.dataset' => 'Shirts',
 			'product.datestart' => '2000-01-01 00:00:00',
 			'product.dateend' => '2001-01-01 00:00:00',
 			'product.config' => array( 'key' => 'value' ),
 			'product.status' => 0,
+			'product.target' => 'ttarget',
+			'additional' => 'value',
 		);
 
-		$unknown = $item->fromArray( $list );
+		$item = $item->fromArray( $entries, true );
 
-		$this->assertEquals( array(), $unknown );
-
+		$this->assertEquals( ['additional' => 'value'], $entries );
 		$this->assertEquals( $list['product.id'], $item->getId() );
-		$this->assertEquals( $list['product.typeid'], $item->getTypeId() );
+		$this->assertEquals( $list['product.type'], $item->getType() );
 		$this->assertEquals( $list['product.code'], $item->getCode() );
 		$this->assertEquals( $list['product.label'], $item->getLabel() );
-		$this->assertEquals( $list['product.suppliercode'], $item->getSuppliercode() );
+		$this->assertEquals( $list['product.dataset'], $item->getDataset() );
 		$this->assertEquals( $list['product.datestart'], $item->getDateStart() );
 		$this->assertEquals( $list['product.dateend'], $item->getDateEnd() );
 		$this->assertEquals( $list['product.config'], $item->getConfig() );
 		$this->assertEquals( $list['product.status'], $item->getStatus() );
+		$this->assertEquals( $list['product.target'], $item->getTarget() );
+		$this->assertEquals( $list['additional'], $item->additional );
+		$this->assertNull( $item->getSiteId() );
 	}
 
 
 	public function testToArray()
 	{
-		$arrayObject = $this->object->toArray();
+		$arrayObject = $this->object->toArray( true );
 		$this->assertEquals( count( $this->values ), count( $arrayObject ) );
 
 		$this->assertEquals( $this->object->getId(), $arrayObject['product.id'] );
 		$this->assertEquals( $this->object->getSiteId(), $arrayObject['product.siteid'] );
 		$this->assertEquals( $this->object->getCode(), $arrayObject['product.code'] );
-		$this->assertEquals( $this->object->getTypeId(), $arrayObject['product.typeid'] );
 		$this->assertEquals( $this->object->getType(), $arrayObject['product.type'] );
+		$this->assertEquals( $this->object->getDataset(), $arrayObject['product.dataset'] );
 		$this->assertEquals( $this->object->getLabel(), $arrayObject['product.label'] );
 		$this->assertEquals( $this->object->getStatus(), $arrayObject['product.status'] );
-		$this->assertEquals( $this->object->getSuppliercode(), $arrayObject['product.suppliercode'] );
 		$this->assertEquals( $this->object->getDateStart(), $arrayObject['product.datestart'] );
 		$this->assertEquals( $this->object->getDateEnd(), $arrayObject['product.dateend'] );
 		$this->assertEquals( $this->object->getConfig(), $arrayObject['product.config'] );
 		$this->assertEquals( $this->object->getTimeCreated(), $arrayObject['product.ctime'] );
 		$this->assertEquals( $this->object->getTimeModified(), $arrayObject['product.mtime'] );
 		$this->assertEquals( $this->object->getEditor(), $arrayObject['product.editor'] );
+		$this->assertEquals( $this->object->getTarget(), $arrayObject['product.target'] );
 	}
 
 }

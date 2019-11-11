@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Common
  */
@@ -20,7 +20,7 @@ namespace Aimeos\MW\Criteria\Expression\Compare;
  */
 class PHP extends \Aimeos\MW\Criteria\Expression\Compare\Base
 {
-	private static $operators = array( '==' => '==', '!=' => '!=', '>=' => '>=', '<=' => '<=', '>' => '>', '<' => '<' );
+	private static $operators = array( '>' => '>', '>=' => '>=', '<' => '<', '<=' => '<=', '==' => '==', '!=' => '!=' );
 
 
 	/**
@@ -74,6 +74,10 @@ class PHP extends \Aimeos\MW\Criteria\Expression\Compare\Base
 	 */
 	protected function createNullTerm( $name )
 	{
+		if( is_array( $name ) ) {
+			return '';
+		}
+
 		switch( $this->getOperator() )
 		{
 			case '==':
@@ -90,7 +94,7 @@ class PHP extends \Aimeos\MW\Criteria\Expression\Compare\Base
 	 * Creates a term from a list of values.
 	 *
 	 * @param string $name Translated name of the variable
-	 * @param string $type Type constant
+	 * @param integer $type Type constant
 	 * @return string Created term string
 	 */
 	protected function createListTerm( $name, $type )
@@ -99,7 +103,7 @@ class PHP extends \Aimeos\MW\Criteria\Expression\Compare\Base
 		{
 			case '==':
 
-				$list = array();
+				$list = [];
 				foreach( (array) $this->getValue() as $value ) {
 					$list[] = $this->createTerm( $name, $type, $value );
 				}
@@ -107,7 +111,7 @@ class PHP extends \Aimeos\MW\Criteria\Expression\Compare\Base
 
 			case '!=':
 
-				$list = array();
+				$list = [];
 				foreach( (array) $this->getValue() as $value ) {
 					$list[] = $this->createTerm( $name, $type, $value );
 				}
@@ -148,7 +152,7 @@ class PHP extends \Aimeos\MW\Criteria\Expression\Compare\Base
 	 * @param string $operator Operator used for the expression
 	 * @param string $type Type constant
 	 * @param mixed $value Value that the variable should be compared to
-	 * @return mixed Escaped value
+	 * @return boolean|double|integer|string Escaped value
 	 */
 	protected function escape( $operator, $type, $value )
 	{
@@ -161,7 +165,7 @@ class PHP extends \Aimeos\MW\Criteria\Expression\Compare\Base
 			case 'int':
 				$value = (int) $value; break;
 			case 'float':
-				$value = (float) $value; break;
+				$value = (double) $value; break;
 			default:
 				$value = '\'' . addcslashes( $value, '\'' ) . '\'';
 		}

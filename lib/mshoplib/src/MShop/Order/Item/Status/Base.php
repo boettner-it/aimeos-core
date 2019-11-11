@@ -1,8 +1,8 @@
 <?php
 /**
- * @copyright Metaways Infosystems GmbH, 2013
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2013
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Order
  */
@@ -41,6 +41,11 @@ abstract class Base
 	 */
 	const EMAIL_DELIVERY = 'email-delivery';
 
+	/**
+	 * Already sent voucher e-mails.
+	 */
+	const EMAIL_VOUCHER = 'email-voucher';
+
 
 	/**
 	 * Stock level is already updated.
@@ -52,4 +57,15 @@ abstract class Base
 	 * Stock level is already updated.
 	 */
 	const COUPON_UPDATE = 'coupon-update';
+
+
+	/**
+	 * Returns the item type
+	 *
+	 * @return string Item type, subtypes are separated by slashes
+	 */
+	public function getResourceType()
+	{
+		return 'order/status';
+	}
 }

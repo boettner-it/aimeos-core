@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Config
  */
@@ -27,13 +27,14 @@ interface Iface
 	 * @param mixed $default Value returned if requested key isn't found
 	 * @return mixed Value associated to the requested key
 	 */
-	public function get($name, $default = null);
+	public function get( $name, $default = null );
 
 	/**
 	 * Sets the value for the specified key.
 	 *
 	 * @param string $name Path to the requested value like tree/node/classname
 	 * @param mixed $value Value that should be associated with the given path
+	 * @return \Aimeos\MW\Config\Iface Config instance for method chaining
 	 */
-	public function set($name, $value);
+	public function set( $name, $value );
 }

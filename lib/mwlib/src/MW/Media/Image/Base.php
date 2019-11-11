@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2014
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2014
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Media
  */
@@ -26,24 +26,27 @@ class Base
 	 *
 	 * @param integer $srcWidth Width of the image
 	 * @param integer $srcHeight Height of the image
-	 * @param integer $destWidth New width of the image
-	 * @param integer $destHeight New height of the image
+	 * @param integer|null $destWidth New width of the image
+	 * @param integer|null $destHeight New height of the image
 	 * @return array Array containing the new width at position 0 and the new height as position 1
 	 */
 	protected function getSizeFitted( $srcWidth, $srcHeight, $destWidth, $destHeight )
 	{
-		$destWidth = ( $destWidth === null ? $srcWidth : $destWidth );
-		$destHeight = ( $destHeight === null ? $srcHeight : $destHeight );
+		if( !empty( $srcWidth ) && !empty( $srcHeight ) )
+		{
+			$destWidth = ( $destWidth === null ? $srcWidth : $destWidth );
+			$destHeight = ( $destHeight === null ? $srcHeight : $destHeight );
 
-		$wRatio = $srcWidth / $destWidth;
-		$hRatio = $srcHeight / $destHeight;
+			$wRatio = $srcWidth / $destWidth;
+			$hRatio = $srcHeight / $destHeight;
 
-		if( $wRatio > $hRatio ) {
-			$destHeight = round( $srcHeight / $wRatio );
-		} else {
-			$destWidth = round( $srcWidth / $hRatio );
+			if( $wRatio > $hRatio ) {
+				$destHeight = (int) round( $srcHeight / $wRatio );
+			} else {
+				$destWidth = (int) round( $srcWidth / $hRatio );
+			}
 		}
 
-		return array( $destWidth, $destHeight );
+		return [$destWidth, $destHeight];
 	}
 }

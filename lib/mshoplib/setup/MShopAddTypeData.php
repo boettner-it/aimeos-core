@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2012
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2012
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 
@@ -15,10 +15,6 @@ namespace Aimeos\MW\Setup\Task;
  */
 class MShopAddTypeData extends \Aimeos\MW\Setup\Task\Base
 {
-	private $editor = '';
-	private $domainManagers = array();
-
-
 	/**
 	 * Returns the list of task names which this task depends on.
 	 *
@@ -26,7 +22,7 @@ class MShopAddTypeData extends \Aimeos\MW\Setup\Task\Base
 	 */
 	public function getPreDependencies()
 	{
-		return array( 'TablesCreateMShop' );
+		return array( 'MShopSetLocale' );
 	}
 
 
@@ -37,17 +33,16 @@ class MShopAddTypeData extends \Aimeos\MW\Setup\Task\Base
 	 */
 	public function getPostDependencies()
 	{
-		return array();
+		return [];
 	}
 
 
 	/**
 	 * Executes the task for MySQL databases.
 	 */
-	protected function mysql()
+	public function migrate()
 	{
 		// executed by tasks in sub-directories for specific sites
-		// $this->process();
 	}
 
 
@@ -56,10 +51,7 @@ class MShopAddTypeData extends \Aimeos\MW\Setup\Task\Base
 	 */
 	protected function process()
 	{
-		$iface = '\\Aimeos\\MShop\\Context\\Item\\Iface';
-		if( !( $this->additional instanceof $iface ) ) {
-			throw new \Aimeos\MW\Setup\Exception( sprintf( 'Additionally provided object is not of type "%1$s"', $iface ) );
-		}
+		\Aimeos\MW\Common\Base::checkClass( \Aimeos\MShop\Context\Item\Iface::class, $this->additional );
 
 		$sitecode = $this->additional->getLocale()->getSite()->getCode();
 		$this->msg( sprintf( 'Adding MShop type data for site "%1$s"', $sitecode ), 0 );
@@ -79,12 +71,6 @@ class MShopAddTypeData extends \Aimeos\MW\Setup\Task\Base
 
 	protected function processFile( array $testdata )
 	{
-		$editor = $this->additional->getEditor();
-		$this->additional->setEditor( $this->editor );
-
-
-		$this->txBegin();
-
 		foreach( $testdata as $domain => $datasets )
 		{
 			$this->msg( sprintf( 'Checking "%1$s" type data', $domain ), 1 );
@@ -106,15 +92,11 @@ class MShopAddTypeData extends \Aimeos\MW\Setup\Task\Base
 				try {
 					$domainManager->saveItem( $type );
 					$num++;
-				} catch( \Exception $e ) {; } // if type was already available
+				} catch( \Exception $e ) { ; } // if type was already available
 			}
 
 			$this->status( $num > 0 ? $num . '/' . $total : 'OK' );
 		}
-
-		$this->txCommit();
-
-		$this->additional->setEditor( $editor );
 	}
 
 
@@ -122,62 +104,18 @@ class MShopAddTypeData extends \Aimeos\MW\Setup\Task\Base
 	 * Returns the manager for the given domain and sub-domains.
 	 *
 	 * @param string $domain String of domain and sub-domains, e.g. "product" or "order/base/service"
-	 * @throws \Aimeos\Controller\Frontend\Exception If domain string is invalid or no manager can be instantiated
+	 * @return \Aimeos\MShop\Common\Manager\Iface Domain manager
+	 * @throws \Aimeos\MShop\Exception If domain string is invalid or no manager can be instantiated
 	 */
 	protected function getDomainManager( $domain )
 	{
-		$domain = strtolower( trim( $domain, "/ \n\t\r\0\x0B" ) );
-
-		if( strlen( $domain ) === 0 ) {
-			throw new \Exception( 'An empty domain is invalid' );
-		}
-
-		if( !isset( $this->domainManagers[$domain] ) )
-		{
-			$parts = explode( '/', $domain );
-
-			foreach( $parts as $part )
-			{
-				if( ctype_alnum( $part ) === false ) {
-					throw new \Exception( sprintf( 'Invalid domain "%1$s"', $domain ) );
-				}
-			}
-
-			if( ( $domainname = array_shift( $parts ) ) === null ) {
-				throw new \Exception( 'An empty domain is invalid' );
-			}
-
-
-			if( !isset( $this->domainManagers[$domainname] ) )
-			{
-				$iface = '\\Aimeos\\MShop\\Common\\Manager\\Iface';
-				$factory = '\\Aimeos\\MShop\\' . ucwords( $domainname ) . '\\Manager\\Factory';
-				$manager = call_user_func_array( $factory . '::createManager', array( $this->additional ) );
-
-				if( !( $manager instanceof $iface ) ) {
-					throw new \Exception( sprintf( 'No factory "%1$s" found', $factory ) );
-				}
-
-				$this->domainManagers[$domainname] = $manager;
-			}
-
-
-			foreach( $parts as $part )
-			{
-				$tmpname = $domainname . '/' . $part;
-
-				if( !isset( $this->domainManagers[$tmpname] ) ) {
-					$this->domainManagers[$tmpname] = $this->domainManagers[$domainname]->getSubManager( $part );
-				}
-
-				$domainname = $tmpname;
-			}
-		}
-
-		return $this->domainManagers[$domain];
+		return \Aimeos\MShop::create( $this->additional, $domain );
 	}
 
 
+	/**
+	 * Starts a new transaction
+	 */
 	protected function txBegin()
 	{
 		$dbm = $this->additional->getDatabaseManager();
@@ -188,6 +126,9 @@ class MShopAddTypeData extends \Aimeos\MW\Setup\Task\Base
 	}
 
 
+	/**
+	 * Commits an existing transaction
+	 */
 	protected function txCommit()
 	{
 		$dbm = $this->additional->getDatabaseManager();

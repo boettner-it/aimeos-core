@@ -1,193 +1,205 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 
 namespace Aimeos\MShop\Order\Item;
 
 
-/**
- * Test class for \Aimeos\MShop\Order\Item\Standard.
- */
-class StandardTest extends \PHPUnit_Framework_TestCase
+class StandardTest extends \PHPUnit\Framework\TestCase
 {
 	private $object;
 	private $values;
 
 
-	/**
-	 * Sets up the fixture, for example, opens a network connection.
-	 * This method is called before a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function setUp()
 	{
 		$this->values = array(
-			'id' => 15,
-			'siteid'=>99,
-			'type' => \Aimeos\MShop\Order\Item\Base::TYPE_WEB,
-			'statusdelivery' => \Aimeos\MShop\Order\Item\Base::STAT_PENDING,
-			'statuspayment' => \Aimeos\MShop\Order\Item\Base::PAY_RECEIVED,
-			'datepayment' => '2004-12-01 12:34:56',
-			'datedelivery' => '2004-01-03 12:34:56',
-			'relatedid' => 1,
-			'baseid' => 4,
-			'mtime' => '2011-01-01 00:00:02',
-			'ctime' => '2011-01-01 00:00:01',
-			'editor' => 'unitTestUser'
+			'order.id' => 15,
+			'order.siteid' => 99,
+			'order.type' => \Aimeos\MShop\Order\Item\Base::TYPE_WEB,
+			'order.statusdelivery' => \Aimeos\MShop\Order\Item\Base::STAT_PENDING,
+			'order.statuspayment' => \Aimeos\MShop\Order\Item\Base::PAY_RECEIVED,
+			'order.datepayment' => '2004-12-01 12:34:56',
+			'order.datedelivery' => '2004-01-03 12:34:56',
+			'order.relatedid' => 1,
+			'order.baseid' => 4,
+			'order.mtime' => '2011-01-01 00:00:02',
+			'order.ctime' => '2011-01-01 00:00:01',
+			'order.editor' => 'unitTestUser'
 		);
 
 		$this->object = new \Aimeos\MShop\Order\Item\Standard( $this->values );
 	}
 
-	/**
-	 * Tears down the fixture, for example, closes a network connection.
-	 * This method is called after a test is executed.
-	 *
-	 * @access protected
-	 */
+
 	protected function tearDown()
 	{
 		unset( $this->object );
 	}
 
+
 	public function testGetId()
 	{
-		$this->assertEquals( $this->values['id'], $this->object->getId() );
+		$this->assertEquals( $this->values['order.id'], $this->object->getId() );
 	}
+
 
 	public function testSetId()
 	{
-		$this->object->setId( null );
+		$return = $this->object->setId( null );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Order\Item\Iface::class, $return );
 		$this->assertEquals( null, $this->object->getId() );
 		$this->assertTrue( $this->object->isModified() );
 
-		$this->object->setId( 15 );
+		$return = $this->object->setId( 15 );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Order\Item\Iface::class, $return );
 		$this->assertEquals( 15, $this->object->getId() );
 		$this->assertFalse( $this->object->isModified() );
-
-		$this->setExpectedException( '\\Aimeos\\MShop\\Exception' );
-		$this->object->setId( 6 );
 	}
 
-	public function testSetId2()
-	{
-		$this->setExpectedException( '\\Aimeos\\MShop\\Exception' );
-		$this->object->setId( 'test' );
-	}
 
 	public function testGetSiteId()
 	{
 		$this->assertEquals( 99, $this->object->getSiteId() );
 	}
 
+
 	public function testGetBaseId()
 	{
-		$this->assertSame( $this->values['baseid'], $this->object->getBaseId() );
+		$this->assertEquals( $this->values['order.baseid'], $this->object->getBaseId() );
 	}
+
 
 	public function testSetBaseId()
 	{
-		$this->object->setBaseId( 15 );
+		$return = $this->object->setBaseId( 15 );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Order\Item\Iface::class, $return );
 		$this->assertEquals( 15, $this->object->getBaseId() );
 		$this->assertTrue( $this->object->isModified() );
 	}
 
+
 	public function testGetType()
 	{
-		$this->assertEquals( $this->values['type'], $this->object->getType() );
+		$this->assertEquals( $this->values['order.type'], $this->object->getType() );
 	}
+
 
 	public function testSetType()
 	{
-		$this->object->setType( \Aimeos\MShop\Order\Item\Base::TYPE_PHONE );
+		$return = $this->object->setType( \Aimeos\MShop\Order\Item\Base::TYPE_PHONE );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Order\Item\Iface::class, $return );
 		$this->assertEquals( \Aimeos\MShop\Order\Item\Base::TYPE_PHONE, $this->object->getType() );
 		$this->assertTrue( $this->object->isModified() );
-
-		$this->setExpectedException( '\\Aimeos\\MShop\\Order\\Exception' );
-		$this->object->setType( 500 );
 	}
+
 
 	public function testGetDateDelivery()
 	{
-		$this->assertEquals( $this->values['datedelivery'], $this->object->getDateDelivery() );
+		$this->assertEquals( $this->values['order.datedelivery'], $this->object->getDateDelivery() );
 	}
+
 
 	public function testSetDateDelivery()
 	{
-		$this->object->setDateDelivery( '2008-04-12 12:34:56' );
+		$return = $this->object->setDateDelivery( '2008-04-12 12:34:56' );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Order\Item\Iface::class, $return );
 		$this->assertEquals( '2008-04-12 12:34:56', $this->object->getDateDelivery() );
 		$this->assertTrue( $this->object->isModified() );
 
-		$this->setExpectedException( '\\Aimeos\\MShop\\Order\\Exception' );
+		$this->setExpectedException( \Aimeos\MShop\Exception::class );
 		$this->object->setDateDelivery( '2008-34-12' );
 	}
 
+
 	public function testGetDatePayment()
 	{
-		$this->assertEquals( $this->values['datepayment'], $this->object->getDatePayment() );
+		$this->assertEquals( $this->values['order.datepayment'], $this->object->getDatePayment() );
 	}
+
 
 	public function testSetDatePayment()
 	{
-		$this->object->setDatePayment( '2008-04-12 12:34:56' );
+		$return = $this->object->setDatePayment( '2008-04-12 12:34:56' );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Order\Item\Iface::class, $return );
 		$this->assertEquals( '2008-04-12 12:34:56', $this->object->getDatePayment() );
 		$this->assertTrue( $this->object->isModified() );
 
-		$this->setExpectedException( '\\Aimeos\\MShop\\Order\\Exception' );
+		$this->setExpectedException( \Aimeos\MShop\Exception::class );
 		$this->object->setDatePayment( '2008-34-12' );
 	}
 
+
 	public function testGetDeliveryStatus()
 	{
-		$this->assertEquals( $this->values['statusdelivery'], $this->object->getDeliveryStatus() );
+		$this->assertEquals( $this->values['order.statusdelivery'], $this->object->getDeliveryStatus() );
 	}
+
 
 	public function testSetDeliveryStatus()
 	{
-		$this->object->setDeliveryStatus( \Aimeos\MShop\Order\Item\Base::STAT_PROGRESS );
+		$return = $this->object->setDeliveryStatus( \Aimeos\MShop\Order\Item\Base::STAT_PROGRESS );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Order\Item\Iface::class, $return );
 		$this->assertEquals( \Aimeos\MShop\Order\Item\Base::STAT_PROGRESS, $this->object->getDeliveryStatus() );
 		$this->assertTrue( $this->object->isModified() );
 	}
 
+
 	public function testGetPaymentStatus()
 	{
-		$this->assertEquals( $this->values['statuspayment'], $this->object->getPaymentStatus() );
+		$this->assertEquals( $this->values['order.statuspayment'], $this->object->getPaymentStatus() );
 	}
+
 
 	public function testSetPaymentStatus()
 	{
-		$this->object->setPaymentStatus( \Aimeos\MShop\Order\Item\Base::PAY_DELETED );
+		$return = $this->object->setPaymentStatus( \Aimeos\MShop\Order\Item\Base::PAY_DELETED );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Order\Item\Iface::class, $return );
 		$this->assertEquals( \Aimeos\MShop\Order\Item\Base::PAY_DELETED, $this->object->getPaymentStatus() );
 		$this->assertTrue( $this->object->isModified() );
 	}
 
+
 	public function testGetRelatedId()
 	{
-		$this->assertEquals( $this->values['relatedid'], $this->object->getRelatedId() );
+		$this->assertEquals( $this->values['order.relatedid'], $this->object->getRelatedId() );
 	}
+
 
 	public function testSetRelatedId()
 	{
-		$this->object->setRelatedId( 22 );
+		$return = $this->object->setRelatedId( 22 );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Order\Item\Iface::class, $return );
 		$this->assertEquals( 22, $this->object->getRelatedId() );
 		$this->assertTrue( $this->object->isModified() );
 	}
+
 
 	public function testGetTimeModified()
 	{
 		$this->assertEquals( '2011-01-01 00:00:02', $this->object->getTimeModified() );
 	}
 
+
 	public function testGetTimeCreated()
 	{
 		$this->assertEquals( '2011-01-01 00:00:01', $this->object->getTimeCreated() );
 	}
+
 
 	public function testGetEditor()
 	{
@@ -195,11 +207,17 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	}
 
 
+	public function testGetResourceType()
+	{
+		$this->assertEquals( 'order', $this->object->getResourceType() );
+	}
+
+
 	public function testFromArray()
 	{
 		$item = new \Aimeos\MShop\Order\Item\Standard();
 
-		$list = array(
+		$list = $entries = array(
 			'order.id' => 1,
 			'order.type' => \Aimeos\MShop\Order\Item\Base::TYPE_WEB,
 			'order.baseid' => 2,
@@ -210,10 +228,9 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 			'order.datedelivery' => '2001-01-01 00:00:00',
 		);
 
-		$unknown = $item->fromArray( $list );
+		$item = $item->fromArray( $entries, true );
 
-		$this->assertEquals( array(), $unknown );
-
+		$this->assertEquals( [], $entries );
 		$this->assertEquals( $list['order.id'], $item->getId() );
 		$this->assertEquals( $list['order.type'], $item->getType() );
 		$this->assertEquals( $list['order.baseid'], $item->getBaseId() );
@@ -227,7 +244,7 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testToArray()
 	{
-		$list = $this->object->toArray();
+		$list = $this->object->toArray( true );
 		$this->assertEquals( count( $this->values ), count( $list ) );
 
 		$this->assertEquals( $this->object->getId(), $list['order.id'] );
@@ -244,24 +261,9 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals( $this->object->getEditor(), $list['order.editor'] );
 	}
 
+
 	public function testIsModified()
 	{
 		$this->assertFalse( $this->object->isModified() );
-	}
-
-	public function testMagicGetOldPaymentStatus()
-	{
-		$this->assertEquals( \Aimeos\MShop\Order\Item\Base::PAY_RECEIVED, $this->object->oldPaymentStatus );
-	}
-
-	public function testMagicGetOldDeliveryStatus()
-	{
-		$this->assertEquals( \Aimeos\MShop\Order\Item\Base::STAT_PENDING, $this->object->oldDeliveryStatus );
-	}
-
-	public function testMagicGetException()
-	{
-		$this->setExpectedException( '\\Aimeos\\MShop\\Order\\Exception' );
-		$this->object->notExisting;
 	}
 }

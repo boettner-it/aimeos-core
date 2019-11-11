@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2012
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2012
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 
@@ -13,7 +13,7 @@ namespace Aimeos\MW\Setup\Task;
 /**
  * Adds customer test data.
  */
-class CustomerAddTestData extends \Aimeos\MW\Setup\Task\Base
+class CustomerAddTestData extends \Aimeos\MW\Setup\Task\BaseAddTestData
 {
 	/**
 	 * Returns the list of task names which this task depends on.
@@ -22,185 +22,118 @@ class CustomerAddTestData extends \Aimeos\MW\Setup\Task\Base
 	 */
 	public function getPreDependencies()
 	{
-		return array( 'MShopSetLocale', 'MediaAddTestData' );
-	}
-
-
-	/**
-	 * Returns the list of task names which depends on this task.
-	 *
-	 * @return array List of task names
-	 */
-	public function getPostDependencies()
-	{
-		return array();
-	}
-
-
-	/**
-	 * Executes the task for MySQL databases.
-	 */
-	protected function mysql()
-	{
-		$this->process();
+		return ['ProductAddTestData', 'TextAddTestData'];
 	}
 
 
 	/**
 	 * Adds customer test data.
 	 */
-	protected function process()
+	public function migrate()
 	{
-		$iface = '\\Aimeos\\MShop\\Context\\Item\\Iface';
-		if( !( $this->additional instanceof $iface ) ) {
-			throw new \Aimeos\MW\Setup\Exception( sprintf( 'Additionally provided object is not of type "%1$s"', $iface ) );
-		}
+		\Aimeos\MW\Common\Base::checkClass( \Aimeos\MShop\Context\Item\Iface::class, $this->additional );
 
 		$this->msg( 'Adding customer test data', 0 );
-		$this->additional->setEditor( 'core:unittest' );
 
-		$ds = DIRECTORY_SEPARATOR;
-		$path = __DIR__ . $ds . 'data' . $ds . 'customer.php';
+		$this->additional->setEditor( 'core:lib/mshoplib' );
+		$this->process( __DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'customer.php' );
 
+		$this->status( 'done' );
+	}
+
+
+	/**
+	 * Adds the customer data
+	 *
+	 * @param string $path Path to data file
+	 * @throws \Aimeos\MShop\Exception
+	 */
+	protected function process( $path )
+	{
 		if( ( $testdata = include( $path ) ) == false ) {
 			throw new \Aimeos\MShop\Exception( sprintf( 'No file "%1$s" found for customer domain', $path ) );
 		}
 
-		$customerManager = \Aimeos\MShop\Customer\Manager\Factory::createManager( $this->additional, 'Standard' );
-		$customerAddressManager = $customerManager->getSubManager( 'address', 'Standard' );
-		$customerGroupManager = $customerManager->getSubManager( 'group', 'Standard' );
+		$manager = $this->getManager( 'customer' );
+		$listManager = $manager->getSubManager( 'lists' );
+		$groupManager = $manager->getSubManager( 'group' );
+		$addrManager = $manager->getSubManager( 'address' );
+		$propManager = $manager->getSubManager( 'property' );
 
-		$this->conn->begin();
+		$manager->begin();
 
-		$parentIds = $this->addCustomerData( $testdata, $customerManager, $customerAddressManager->createItem() );
-		$this->addCustomerAddressData( $testdata, $customerAddressManager, $parentIds );
-		$this->addCustomerGroupData( $testdata, $customerGroupManager, $parentIds );
+		$search = $manager->createSearch();
+		$search->setConditions( $search->compare( '=~', 'customer.code', 'UTC00' ) );
+		$manager->deleteItems( array_keys( $manager->searchItems( $search ) ) );
 
-		$this->conn->commit();
+		$this->storeTypes( $testdata, ['customer/lists/type', 'customer/property/type'] );
+		$this->addGroupItems( $groupManager, $testdata );
 
-		$this->status( 'done' );
-
-	}
-
-
-	/**
-	 * Adds the customer test data.
-	 *
-	 * @param array $testdata Associative list of key/list pairs
-	 * @param \Aimeos\MShop\Common\Manager\Iface $customerManager Customer manager
-	 * @param \Aimeos\MShop\Common\Item\Address\Iface $address Customer address item
-	 * @throws \Aimeos\MW\Setup\Exception If a required ID is not available
-	 */
-	protected function addCustomerData( array $testdata, \Aimeos\MShop\Common\Manager\Iface $customerManager,
-		\Aimeos\MShop\Common\Item\Address\Iface $address )
-	{
-		$parentIds = array();
-		$customer = $customerManager->createItem();
-
-		foreach( $testdata['customer'] as $key => $dataset )
+		$items = [];
+		foreach( $testdata['customer'] as $entry )
 		{
-			$address->setCompany( $dataset['company'] );
-			$address->setVatID( ( isset( $dataset['vatid'] ) ? $dataset['vatid'] : '' ) );
-			$address->setSalutation( $dataset['salutation'] );
-			$address->setTitle( $dataset['title'] );
-			$address->setFirstname( $dataset['firstname'] );
-			$address->setLastname( $dataset['lastname'] );
-			$address->setAddress1( $dataset['address1'] );
-			$address->setAddress2( $dataset['address2'] );
-			$address->setAddress3( $dataset['address3'] );
-			$address->setPostal( $dataset['postal'] );
-			$address->setCity( $dataset['city'] );
-			$address->setState( $dataset['state'] );
-			$address->setCountryId( $dataset['countryid'] );
-			$address->setTelephone( $dataset['telephone'] );
-			$address->setEmail( $dataset['email'] );
-			$address->setTelefax( $dataset['telefax'] );
-			$address->setWebsite( $dataset['website'] );
-			$address->setLanguageId( $dataset['langid'] );
-
-			$customer->setId( null );
-			$customer->setLabel( $dataset['label'] );
-			$customer->setCode( $dataset['code'] );
-			$customer->setStatus( $dataset['status'] );
-			$customer->setPaymentAddress( $address );
-			$customer->setPassword( ( isset( $dataset['password'] ) ? $dataset['password'] : '' ) );
-			$customer->setBirthday( ( isset( $dataset['birthday'] ) ? $dataset['birthday'] : null ) );
-
-			$customerManager->saveItem( $customer );
-			$parentIds[$key] = $customer->getId();
+			$item = $manager->createItem()->fromArray( $entry, true );
+			$item = $this->addGroupData( $groupManager, $item, $entry );
+			$item = $this->addPropertyData( $propManager, $item, $entry );
+			$item = $this->addAddressData( $addrManager, $item, $entry );
+			$items[] = $this->addListData( $listManager, $item, $entry );
 		}
 
-		return $parentIds;
+		$manager->saveItems( $items );
+		$manager->commit();
 	}
 
 
 	/**
-	 * Adds the customer address test data.
+	 * Adds the group test data
 	 *
-	 * @param array $testdata Associative list of key/list pairs
-	 * @param \Aimeos\MShop\Common\Manager\Iface $customerAddressManager Customer address manager
-	 * @param array $parentIds Associative list of keys of the customer test data and customer IDs
-	 * @throws \Aimeos\MW\Setup\Exception If a required ID is not available
+	 * @param \Aimeos\MShop\Common\Manager\Iface $groupManager Customer group manager
+	 * @param \Aimeos\MShop\Customer\Item\Iface $item Item object
+	 * @param array $data List of key/list pairs lists
+	 * @return \Aimeos\MShop\Customer\Item\Iface Modified item object
 	 */
-	protected function addCustomerAddressData( array $testdata, \Aimeos\MShop\Common\Manager\Iface $customerAddressManager,
-		array $parentIds )
+	protected function addGroupData( \Aimeos\MShop\Common\Manager\Iface $groupManager, \Aimeos\MShop\Customer\Item\Iface $item, array $data )
 	{
-		$address = $customerAddressManager->createItem();
-
-		foreach( $testdata['customer/address'] as $dataset )
+		if( isset( $data['group'] ) )
 		{
-			if( !isset( $parentIds[$dataset['refid']] ) ) {
-				throw new \Aimeos\MW\Setup\Exception( sprintf( 'No customer ID found for "%1$s"', $dataset['refid'] ) );
+			$grpIds = $list = [];
+			$search = $groupManager->createSearch()->setSlice( 0, 10000 );
+
+			foreach( $groupManager->searchItems( $search ) as $id => $groupItem ) {
+				$list[$groupItem->getCode()] = $id;
 			}
 
-			$address->setId( null );
-			$address->setCompany( $dataset['company'] );
-			$address->setVatID( ( isset( $dataset['vatid'] ) ? $dataset['vatid'] : '' ) );
-			$address->setSalutation( $dataset['salutation'] );
-			$address->setTitle( $dataset['title'] );
-			$address->setFirstname( $dataset['firstname'] );
-			$address->setLastname( $dataset['lastname'] );
-			$address->setAddress1( $dataset['address1'] );
-			$address->setAddress2( $dataset['address2'] );
-			$address->setAddress3( $dataset['address3'] );
-			$address->setPostal( $dataset['postal'] );
-			$address->setCity( $dataset['city'] );
-			$address->setState( $dataset['state'] );
-			$address->setCountryId( $dataset['countryid'] );
-			$address->setTelephone( $dataset['telephone'] );
-			$address->setEmail( $dataset['email'] );
-			$address->setTelefax( $dataset['telefax'] );
-			$address->setWebsite( $dataset['website'] );
-			$address->setLanguageId( $dataset['langid'] );
-			$address->setFlag( $dataset['flag'] );
-			$address->setPosition( $dataset['pos'] );
-			$address->setRefId( $parentIds[$dataset['refid']] );
+			foreach( $data['group'] as $code )
+			{
+				if( isset( $list[$code] ) ) {
+					$grpIds[] = $list[$code];
+				}
+			}
 
-			$customerAddressManager->saveItem( $address, false );
+			$item->setGroups( $grpIds );
 		}
+
+		return $item;
 	}
 
 
 	/**
-	 * Adds the customer group test data.
+	 * Adds the customer group items
 	 *
-	 * @param array $testdata Associative list of key/list pairs
-	 * @param \Aimeos\MShop\Common\Manager\Iface $customerGroupManager Customer group manager
-	 * @param array $parentIds Associative list of keys of the customer test data and customer IDs
+	 * @param \Aimeos\MShop\Common\Manager\Iface $groupManager Customer group manager
+	 * @param array $data Associative list of key/list pairs
 	 * @throws \Aimeos\MW\Setup\Exception If a required ID is not available
 	 */
-	protected function addCustomerGroupData( array $testdata, \Aimeos\MShop\Common\Manager\Iface $customerGroupManager,
-		array $parentIds )
+	protected function addGroupItems( \Aimeos\MShop\Common\Manager\Iface $groupManager, array $data )
 	{
-		$group = $customerGroupManager->createItem();
-
-		foreach( $testdata['customer/group'] as $dataset )
+		if( isset( $data['customer/group'] ) )
 		{
-			$group->setId( null );
-			$group->setCode( $dataset['code'] );
-			$group->setLabel( $dataset['label'] );
-
-			$customerGroupManager->saveItem( $group, false );
+			foreach( $data['customer/group'] as $entry )
+			{
+				try {
+					$groupManager->saveItem( $groupManager->createItem()->fromArray( $entry ), false );
+				} catch( \Exception $e ) { echo $e->getMessage(); } // ignore duplicates
+			}
 		}
 	}
 }

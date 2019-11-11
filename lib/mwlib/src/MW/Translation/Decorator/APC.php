@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2012
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2012
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Translation
  */
@@ -22,6 +22,7 @@ class APC
 	extends \Aimeos\MW\Translation\Decorator\Base
 	implements \Aimeos\MW\Translation\Decorator\Iface
 {
+	private $enable = false;
 	private $prefix;
 
 
@@ -33,12 +34,13 @@ class APC
 	 */
 	public function __construct( \Aimeos\MW\Translation\Iface $object, $prefix = '' )
 	{
-		if( function_exists( 'apc_store' ) === false ) {
-			throw new \Aimeos\MW\Translation\Exception( 'APC not available' );
-		}
-
 		parent::__construct( $object );
-		$this->prefix = $prefix;
+
+		if( function_exists( 'apcu_store' ) === true )
+		{
+			$this->enable = true;
+			$this->prefix = $prefix;
+		}
 	}
 
 
@@ -51,11 +53,15 @@ class APC
 	 */
 	public function dt( $domain, $string )
 	{
+		if( $this->enable === false ) {
+			return parent::dt( $domain, $string );
+		}
+
 		$key = $this->prefix . $domain . '|' . $this->getLocale() . '|' . $string;
 
 		// regular cache
 		$success = false;
-		$value = apc_fetch( $key, $success );
+		$value = apcu_fetch( $key, $success );
 
 		if( $success === true ) {
 			return $value;
@@ -64,7 +70,7 @@ class APC
 		// not cached
 		$value = parent::dt( $domain, $string );
 
-		apc_store( $key, $value );
+		apcu_store( $key, $value );
 
 		return $value;
 	}
@@ -81,13 +87,17 @@ class APC
 	 */
 	public function dn( $domain, $singular, $plural, $number )
 	{
+		if( $this->enable === false ) {
+			return parent::dn( $domain, $singular, $plural, $number );
+		}
+
 		$locale = $this->getLocale();
 		$index = $this->getPluralIndex( $number, $locale );
 		$key = $this->prefix . $domain . '|' . $locale . '|' . $singular . '|' . $index;
 
 		// regular cache
 		$success = false;
-		$value = apc_fetch( $key, $success );
+		$value = apcu_fetch( $key, $success );
 
 		if( $success === true ) {
 			return $value;
@@ -96,7 +106,7 @@ class APC
 		// not cached
 		$value = parent::dn( $domain, $singular, $plural, $number );
 
-		apc_store( $key, $value );
+		apcu_store( $key, $value );
 
 		return $value;
 	}

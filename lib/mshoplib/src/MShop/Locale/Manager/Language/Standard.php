@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Locale
  */
@@ -20,14 +20,14 @@ namespace Aimeos\MShop\Locale\Manager\Language;
  */
 class Standard
 	extends \Aimeos\MShop\Common\Manager\Base
-	implements \Aimeos\MShop\Locale\Manager\Language\Iface
+	implements \Aimeos\MShop\Locale\Manager\Language\Iface, \Aimeos\MShop\Common\Manager\Factory\Iface
 {
 	private $searchConfig = array(
 		'locale.language.id' => array(
 			'code' => 'locale.language.id',
 			'internalcode' => 'mlocla."id"',
 			'internaldeps' => array( 'LEFT JOIN "mshop_locale_language" AS mlocla ON (mloc."langid" = mlocla."id")' ),
-			'label' => 'Locale language ID',
+			'label' => 'Language ID',
 			'type' => 'string',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 			'public' => false,
@@ -35,7 +35,7 @@ class Standard
 		'locale.language.siteid' => array(
 			'code' => 'locale.language.siteid',
 			'internalcode' => 'mlocla."siteid"',
-			'label' => 'Locale language site ID',
+			'label' => 'Language site ID',
 			'type' => 'string',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 			'public' => false,
@@ -43,44 +43,47 @@ class Standard
 		'locale.language.label' => array(
 			'code' => 'locale.language.label',
 			'internalcode' => 'mlocla."label"',
-			'label' => 'Locale language label',
+			'label' => 'Language label',
 			'type' => 'string',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
 		'locale.language.code' => array(
 			'code' => 'locale.language.code',
 			'internalcode' => 'mlocla."id"',
-			'label' => 'Locale language code',
+			'label' => 'Language code',
 			'type' => 'string',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
 		'locale.language.status' => array(
 			'code' => 'locale.language.status',
 			'internalcode' => 'mlocla."status"',
-			'label' => 'Locale language status',
+			'label' => 'Language status',
 			'type' => 'integer',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 		),
-		'locale.language.ctime'=> array(
-			'code'=>'locale.language.ctime',
-			'internalcode'=>'mlocla."ctime"',
-			'label'=>'Locale language create date/time',
-			'type'=> 'datetime',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR
+		'locale.language.ctime' => array(
+			'code' => 'locale.language.ctime',
+			'internalcode' => 'mlocla."ctime"',
+			'label' => 'Language create date/time',
+			'type' => 'datetime',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
-		'locale.language.mtime'=> array(
-			'code'=>'locale.language.mtime',
-			'internalcode'=>'mlocla."mtime"',
-			'label'=>'Locale language modification date/time',
-			'type'=> 'datetime',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR
+		'locale.language.mtime' => array(
+			'code' => 'locale.language.mtime',
+			'internalcode' => 'mlocla."mtime"',
+			'label' => 'Language modify date/time',
+			'type' => 'datetime',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
-		'locale.language.editor'=> array(
-			'code'=>'locale.language.editor',
-			'internalcode'=>'mlocla."editor"',
-			'label'=>'Locale language editor',
-			'type'=> 'string',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR
+		'locale.language.editor' => array(
+			'code' => 'locale.language.editor',
+			'internalcode' => 'mlocla."editor"',
+			'label' => 'Language editor',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
 	);
 
@@ -98,16 +101,17 @@ class Standard
 
 
 	/**
-	 * Creates a new language object.
+	 * Creates a new empty item instance
 	 *
-	 * @return \Aimeos\MShop\Locale\Item\Language\Standard
+	 * @param array $values Values the item should be initialized with
+	 * @return \Aimeos\MShop\Locale\Item\Language\Iface New locale language item object
 	 */
-	public function createItem()
+	public function createItem( array $values = [] )
 	{
 		try {
-			$values = array( 'siteid' => $this->getContext()->getLocale()->getSiteId() );
+			$values['locale.language.siteid'] = $this->getContext()->getLocale()->getSiteId();
 		} catch( \Exception $ex ) {
-			$values = array( 'siteid' => null );
+			$values['locale.language.siteid'] = null;
 		}
 
 		return $this->createItemBase( $values );
@@ -117,17 +121,15 @@ class Standard
 	/**
 	 * Saves the language object to the storage.
 	 *
-	 * @param \Aimeos\MShop\Common\Item\Iface $item Language object
+	 * @param \Aimeos\MShop\Locale\Item\Language\Iface $item Language object
 	 * @param boolean $fetch True if the new ID should be returned in the item
+	 * @return \Aimeos\MShop\Locale\Item\Language\Iface $item Updated item including the generated ID
 	 */
-	public function saveItem( \Aimeos\MShop\Common\Item\Iface $item, $fetch = true )
+	public function saveItem( \Aimeos\MShop\Locale\Item\Language\Iface $item, $fetch = true )
 	{
-		$iface = '\\Aimeos\\MShop\\Locale\\Item\\Language\\Iface';
-		if( !( $item instanceof $iface ) ) {
-			throw new \Aimeos\MShop\Locale\Exception( sprintf( 'Object is not of required type "%1$s"', $iface ) );
+		if( !$item->isModified() ) {
+			return $item;
 		}
-
-		if( !$item->isModified() ) { return; }
 
 		$context = $this->getContext();
 
@@ -139,15 +141,22 @@ class Standard
 		{
 			$id = $item->getId();
 			$date = date( 'Y-m-d H:i:s' );
+			$columns = $this->getObject()->getSaveAttributes();
 
 			if( $id === null )
 			{
-				/** mshop/locale/manager/language/standard/insert
+				/** mshop/locale/manager/language/standard/insert/mysql
+				 * Inserts a new language record into the database table
+				 *
+				 * @see mshop/locale/manager/language/standard/insert/ansi
+				 */
+
+				/** mshop/locale/manager/language/standard/insert/ansi
 				 * Inserts a new language record into the database table
 				 *
 				 * The SQL statement must be a string suitable for being used as
 				 * prepared statement. It must include question marks for binding
-				 * the values from the log item to the statement before they are
+				 * the values from the language item to the statement before they are
 				 * sent to the database server. The number of question marks must
 				 * be the same as the number of columns listed in the INSERT
 				 * statement. The order of the columns must correspond to the
@@ -161,21 +170,28 @@ class Standard
 				 * @param string SQL statement for inserting records
 				 * @since 2014.03
 				 * @category Developer
-				 * @see mshop/locale/manager/language/standard/update
-				 * @see mshop/locale/manager/language/standard/delete
-				 * @see mshop/locale/manager/language/standard/search
-				 * @see mshop/locale/manager/language/standard/count
+				 * @see mshop/locale/manager/language/standard/update/ansi
+				 * @see mshop/locale/manager/language/standard/delete/ansi
+				 * @see mshop/locale/manager/language/standard/search/ansi
+				 * @see mshop/locale/manager/language/standard/count/ansi
 				 */
 				$path = 'mshop/locale/manager/language/standard/insert';
+				$sql = $this->addSqlColumns( array_keys( $columns ), $this->getSqlConfig( $path ) );
 			}
 			else
 			{
-				/** mshop/locale/manager/language/standard/update
+				/** mshop/locale/manager/language/standard/update/mysql
+				 * Updates an existing language record in the database
+				 *
+				 * @see mshop/locale/manager/language/standard/update/ansi
+				 */
+
+				/** mshop/locale/manager/language/standard/update/ansi
 				 * Updates an existing language record in the database
 				 *
 				 * The SQL statement must be a string suitable for being used as
 				 * prepared statement. It must include question marks for binding
-				 * the values from the log item to the statement before they are
+				 * the values from the language item to the statement before they are
 				 * sent to the database server. The order of the columns must
 				 * correspond to the order in the saveItems() method, so the
 				 * correct values are bound to the columns.
@@ -187,26 +203,32 @@ class Standard
 				 * @param string SQL statement for updating records
 				 * @since 2014.03
 				 * @category Developer
-				 * @see mshop/locale/manager/language/standard/insert
-				 * @see mshop/locale/manager/language/standard/delete
-				 * @see mshop/locale/manager/language/standard/search
-				 * @see mshop/locale/manager/language/standard/count
+				 * @see mshop/locale/manager/language/standard/insert/ansi
+				 * @see mshop/locale/manager/language/standard/delete/ansi
+				 * @see mshop/locale/manager/language/standard/search/ansi
+				 * @see mshop/locale/manager/language/standard/count/ansi
 				 */
 				$path = 'mshop/locale/manager/language/standard/update';
+				$sql = $this->addSqlColumns( array_keys( $columns ), $this->getSqlConfig( $path ), false );
 			}
 
-			$stmt = $this->getCachedStatement( $conn, $path );
+			$idx = 1;
+			$stmt = $this->getCachedStatement( $conn, $path, $sql );
 
-			$stmt->bind( 1, $item->getLabel() );
-			$stmt->bind( 2, $item->getStatus(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 3, $item->getSiteId(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 4, $date ); // mtime
-			$stmt->bind( 5, $context->getEditor() );
+			foreach( $columns as $name => $entry ) {
+				$stmt->bind( $idx++, $item->get( $name ), $entry->getInternalType() );
+			}
+
+			$stmt->bind( $idx++, $item->getLabel() );
+			$stmt->bind( $idx++, $item->getStatus(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmt->bind( $idx++, $item->getSiteId(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmt->bind( $idx++, $date ); // mtime
+			$stmt->bind( $idx++, $context->getEditor() );
 			// code and ID are identical after saving and ID is the flag to detect updates or inserts
-			$stmt->bind( 6, $item->getCode() );
+			$stmt->bind( $idx++, $item->getCode() );
 
 			if( $id === null ) {
-				$stmt->bind( 7, $date ); // ctime
+				$stmt->bind( $idx++, $date ); // ctime
 			}
 
 			$stmt->execute()->finish();
@@ -220,17 +242,26 @@ class Standard
 			$dbm->release( $conn, $dbname );
 			throw $e;
 		}
+
+		return $item;
 	}
 
 
 	/**
-	 * Removes multiple items specified by ids in the array.
+	 * Removes multiple items.
 	 *
-	 * @param array $ids List of IDs
+	 * @param \Aimeos\MShop\Common\Item\Iface[]|string[] $itemIds List of item objects or IDs of the items
+	 * @return \Aimeos\MShop\Locale\Manager\Currency\Iface Manager object for chaining method calls
 	 */
-	public function deleteItems( array $ids )
+	public function deleteItems( array $itemIds )
 	{
-		/** mshop/locale/manager/language/standard/delete
+		/** mshop/locale/manager/language/standard/delete/mysql
+		 * Deletes the items matched by the given IDs from the database
+		 *
+		 * @see mshop/locale/manager/language/standard/delete/ansi
+		 */
+
+		/** mshop/locale/manager/language/standard/delete/ansi
 		 * Deletes the items matched by the given IDs from the database
 		 *
 		 * Removes the language records specified by the given IDs from the
@@ -248,13 +279,14 @@ class Standard
 		 * @param string SQL statement for deleting items
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/locale/manager/language/standard/insert
-		 * @see mshop/locale/manager/language/standard/update
-		 * @see mshop/locale/manager/language/standard/search
-		 * @see mshop/locale/manager/language/standard/count
+		 * @see mshop/locale/manager/language/standard/insert/ansi
+		 * @see mshop/locale/manager/language/standard/update/ansi
+		 * @see mshop/locale/manager/language/standard/search/ansi
+		 * @see mshop/locale/manager/language/standard/count/ansi
 		 */
 		$path = 'mshop/locale/manager/language/standard/delete';
-		$this->deleteItemsBase( $ids, $path );
+
+		return $this->deleteItemsBase( $itemIds, $path );
 	}
 
 
@@ -262,13 +294,28 @@ class Standard
 	 * Create a Language object from a given Language ID/Key.
 	 *
 	 * @param string $id Language id to create the Language object
+	 * @param string[] $ref List of domains to fetch list items and referenced items for
 	 * @return \Aimeos\MShop\Locale\Item\Language\Iface Returns the language item of the given id
+	 * @param boolean $default Add default criteria
 	 * @throws \Aimeos\MW\DB\Exception If language object couldn't be fetched
 	 * @throws \Aimeos\MShop\Exception If item couldn't be found
 	 */
-	public function getItem( $id, array $ref = array() )
+	public function getItem( $id, array $ref = [], $default = false )
 	{
-		return $this->getItemBase( 'locale.language.id', $id, $ref );
+		return $this->getItemBase( 'locale.language.id', $id, $ref, $default );
+	}
+
+
+	/**
+	 * Returns the available manager types
+	 *
+	 * @param boolean $withsub Return also the resource type of sub-managers if true
+	 * @return string[] Type of the manager and submanagers, subtypes are separated by slashes
+	 */
+	public function getResourceType( $withsub = true )
+	{
+		$path = 'mshop/locale/manager/language/submanagers';
+		return $this->getResourceTypeBase( 'locale/language', $path, [], $withsub );
 	}
 
 
@@ -276,7 +323,7 @@ class Standard
 	 * Returns the attributes that can be used for searching.
 	 *
 	 * @param boolean $withsub Return also attributes of sub-managers if true
-	 * @return array List of attribute items implementing \Aimeos\MW\Criteria\Attribute\Iface
+	 * @return \Aimeos\MW\Criteria\Attribute\Iface[] List of search attribute items
 	 */
 	public function getSearchAttributes( $withsub = true )
 	{
@@ -299,7 +346,7 @@ class Standard
 		 */
 		$path = 'mshop/locale/manager/language/submanagers';
 
-		return $this->getSearchAttributesBase( $this->searchConfig, $path, array(), $withsub );
+		return $this->getSearchAttributesBase( $this->searchConfig, $path, [], $withsub );
 	}
 
 
@@ -381,12 +428,14 @@ class Standard
 		 * modify what is returned to the caller.
 		 *
 		 * This option allows you to wrap global decorators
-		 * ("\Aimeos\MShop\Common\Manager\Decorator\*") around the locale language manager.
+		 * ("\Aimeos\MShop\Common\Manager\Decorator\*") around the locale language
+		 * manager.
 		 *
 		 *  mshop/locale/manager/language/decorators/global = array( 'decorator1' )
 		 *
 		 * This would add the decorator named "decorator1" defined by
-		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator1" only to the locale controller.
+		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator1" only to the locale
+		 * language manager.
 		 *
 		 * @param array List of decorator names
 		 * @since 2014.03
@@ -405,13 +454,14 @@ class Standard
 		 * modify what is returned to the caller.
 		 *
 		 * This option allows you to wrap local decorators
-		 * ("\Aimeos\MShop\Common\Manager\Decorator\*") around the locale language manager.
+		 * ("\Aimeos\MShop\Locale\Manager\Language\Decorator\*") around the locale
+		 * language manager.
 		 *
 		 *  mshop/locale/manager/language/decorators/local = array( 'decorator2' )
 		 *
 		 * This would add the decorator named "decorator2" defined by
-		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator2" only to the locale
-		 * controller.
+		 * "\Aimeos\MShop\Locale\Manager\Language\Decorator\Decorator2" only to the
+		 * locale language manager.
 		 *
 		 * @param array List of decorator names
 		 * @since 2014.03
@@ -426,18 +476,33 @@ class Standard
 
 
 	/**
+	 * Returns the item specified by its code and domain/type if necessary
+	 *
+	 * @param string $code Code of the item
+	 * @param string[] $ref List of domains to fetch list items and referenced items for
+	 * @param string|null $domain Domain of the item if necessary to identify the item uniquely
+	 * @param string|null $type Type code of the item if necessary to identify the item uniquely
+	 * @param boolean $default True to add default criteria
+	 * @return \Aimeos\MShop\Common\Item\Iface Item object
+	 */
+	public function findItem( $code, array $ref = [], $domain = null, $type = null, $default = false )
+	{
+		return $this->findItemBase( array( 'locale.language.id' => $code ), $ref, $default );
+	}
+
+
+	/**
 	 * Searches for language items matching the given criteria.
 	 *
-	 * @param \Aimeos\MW\Criteria\Iface $search Search object
-	 * @param array $ref List of domains to fetch list items and referenced items for
-	 * @param integer &$total Number of items that are available in total
-	 * @return array List of items implementing \Aimeos\MShop\Locale\Language\Item\Iface
+	 * @param \Aimeos\MW\Criteria\Iface $search Search criteria object
+	 * @param string[] $ref List of domains to fetch list items and referenced items for
+	 * @param integer|null &$total Number of items that are available in total
+	 * @return \Aimeos\MShop\Locale\Item\Language\Iface[] List of locale language items
 	 */
-	public function searchItems( \Aimeos\MW\Criteria\Iface $search, array $ref = array(), &$total = null )
+	public function searchItems( \Aimeos\MW\Criteria\Iface $search, array $ref = [], &$total = null )
 	{
-		$items = array();
+		$items = [];
 		$context = $this->getContext();
-		$config = $context->getConfig();
 
 		$dbm = $context->getDatabaseManager();
 		$dbname = $this->getResourceName();
@@ -445,19 +510,33 @@ class Standard
 
 		try
 		{
-			$attributes = $this->getSearchAttributes();
-			$types = $this->getSearchTypes( $attributes );
+			$attributes = $this->getObject()->getSearchAttributes();
 			$translations = $this->getSearchTranslations( $attributes );
+			$types = $this->getSearchTypes( $attributes );
+			$columns = $this->getObject()->getSaveAttributes();
+			$sortcols = $search->translate( $search->getSortations(), $translations );
 
-			$find = array( ':cond', ':order', ':start', ':size' );
+			$colstring = '';
+			foreach( $columns as $name => $entry ) {
+				$colstring .= $entry->getInternalCode() . ', ';
+			}
+
+			$find = array( ':columns', ':cond', ':order', ':start', ':size' );
 			$replace = array(
-				$search->getConditionString( $types, $translations ),
-				$search->getSortationString( $types, $translations ),
+				$colstring . ( $sortcols ? join( ', ', $sortcols ) . ', ' : '' ),
+				$search->getConditionSource( $types, $translations ),
+				$search->getSortationSource( $types, $translations ),
 				$search->getSliceStart(),
 				$search->getSliceSize(),
 			);
 
-			/** mshop/locale/manager/language/standard/search
+			/** mshop/locale/manager/language/standard/search/mysql
+			 * Retrieves the records matched by the given criteria in the database
+			 *
+			 * @see mshop/locale/manager/language/standard/search/ansi
+			 */
+
+			/** mshop/locale/manager/language/standard/search/ansi
 			 * Retrieves the records matched by the given criteria in the database
 			 *
 			 * Fetches the records matched by the given criteria from the attribute
@@ -502,10 +581,10 @@ class Standard
 			 * @param string SQL statement for searching items
 			 * @since 2014.03
 			 * @category Developer
-			 * @see mshop/locale/manager/language/standard/insert
-			 * @see mshop/locale/manager/language/standard/update
-			 * @see mshop/locale/manager/language/standard/delete
-			 * @see mshop/locale/manager/language/standard/count
+			 * @see mshop/locale/manager/language/standard/insert/ansi
+			 * @see mshop/locale/manager/language/standard/update/ansi
+			 * @see mshop/locale/manager/language/standard/delete/ansi
+			 * @see mshop/locale/manager/language/standard/count/ansi
 			 */
 			$path = 'mshop/locale/manager/language/standard/search';
 
@@ -515,7 +594,7 @@ class Standard
 			try
 			{
 				while( ( $row = $results->fetch() ) !== false ) {
-					$items[$row['id']] = $this->createItemBase( $row );
+					$items[(string) $row['locale.language.id']] = $this->createItemBase( $row );
 				}
 			}
 			catch( \Exception $e )
@@ -524,65 +603,8 @@ class Standard
 				throw $e;
 			}
 
-			if( $total !== null )
-			{
-				/** mshop/locale/manager/language/standard/count
-				 * Counts the number of records matched by the given criteria in the database
-				 *
-				 * Counts all records matched by the given criteria from the attribute
-				 * database. The records must be from one of the sites that are
-				 * configured via the context item. If the current site is part of
-				 * a tree of sites, the statement can count all records from the
-				 * current site and the complete sub-tree of sites.
-				 *
-				 * As the records can normally be limited by criteria from sub-managers,
-				 * their tables must be joined in the SQL context. This is done by
-				 * using the "internaldeps" property from the definition of the ID
-				 * column of the sub-managers. These internal dependencies specify
-				 * the JOIN between the tables and the used columns for joining. The
-				 * ":joins" placeholder is then replaced by the JOIN strings from
-				 * the sub-managers.
-				 *
-				 * To limit the records matched, conditions can be added to the given
-				 * criteria object. It can contain comparisons like column names that
-				 * must match specific values which can be combined by AND, OR or NOT
-				 * operators. The resulting string of SQL conditions replaces the
-				 * ":cond" placeholder before the statement is sent to the database
-				 * server.
-				 *
-				 * Both, the strings for ":joins" and for ":cond" are the same as for
-				 * the "search" SQL statement.
-				 *
-				 * Contrary to the "search" statement, it doesn't return any records
-				 * but instead the number of records that have been found. As counting
-				 * thousands of records can be a long running task, the maximum number
-				 * of counted records is limited for performance reasons.
-				 *
-				 * The SQL statement should conform to the ANSI standard to be
-				 * compatible with most relational database systems. This also
-				 * includes using double quotes for table and column names.
-				 *
-				 * @param string SQL statement for counting items
-				 * @since 2014.03
-				 * @category Developer
-				 * @see mshop/locale/manager/language/standard/insert
-				 * @see mshop/locale/manager/language/standard/update
-				 * @see mshop/locale/manager/language/standard/delete
-				 * @see mshop/locale/manager/language/standard/search
-				 */
-				$path = 'mshop/locale/manager/language/standard/count';
-
-				$sql = $this->getSqlConfig( $path );
-				$results = $this->getSearchResults( $conn, str_replace( $find, $replace, $sql ) );
-
-				$row = $results->fetch();
-				$results->finish();
-
-				if( $row === false ) {
-					throw new \Aimeos\MShop\Locale\Exception( 'No total results value found' );
-				}
-
-				$total = $row['count'];
+			if( $total !== null ) {
+				$total = $this->getTotal( $conn, $find, $replace );
 			}
 
 			$dbm->release( $conn, $dbname );
@@ -598,10 +620,10 @@ class Standard
 
 
 	/**
-	 * Creates a search object and sets base criteria.
+	 * Creates a search critera object
 	 *
-	 * @param boolean $default
-	 * @return \Aimeos\MW\Criteria\Iface
+	 * @param boolean $default Add default criteria (optional)
+	 * @return \Aimeos\MW\Criteria\Iface New search criteria object
 	 */
 	public function createSearch( $default = false )
 	{
@@ -617,28 +639,112 @@ class Standard
 	 * Returns the search results for the given SQL statement.
 	 *
 	 * @param \Aimeos\MW\DB\Connection\Iface $conn Database connection
-	 * @param $sql SQL statement
+	 * @param string $sql SQL statement
 	 * @return \Aimeos\MW\DB\Result\Iface Search result object
 	 */
 	protected function getSearchResults( \Aimeos\MW\DB\Connection\Iface $conn, $sql )
 	{
-		$statement = $conn->create( $sql );
-		$this->getContext()->getLogger()->log( __METHOD__ . ': SQL statement: ' . $statement, \Aimeos\MW\Logger\Base::DEBUG );
+		$time = microtime( true );
 
-		$results = $statement->execute();
+		$stmt = $conn->create( $sql );
+		$result = $stmt->execute();
 
-		return $results;
+		$msg = [
+			'time' => ( microtime( true ) - $time ) * 1000,
+			'class' => get_class( $this ),
+			'stmt' => (string) $stmt,
+		];
+		$this->getContext()->getLogger()->log( $msg, \Aimeos\MW\Logger\Base::DEBUG, 'core/sql' );
+
+		return $result;
 	}
 
 
 	/**
 	 * Create new item object initialized with given parameters.
 	 *
-	 * @return \Aimeos\MShop\Locale\Item\Language\Iface
-	 * @throws \Aimeos\MShop\Locale\Exception On failures with the language item object
+	 * @param array $data Associative list of item key/value pairs
+	 * @return \Aimeos\MShop\Locale\Item\Language\Iface Language item
 	 */
-	protected function createItemBase( array $data = array( ) )
+	protected function createItemBase( array $data = [] )
 	{
 		return new \Aimeos\MShop\Locale\Item\Language\Standard( $data );
+	}
+
+
+	/**
+	 * Returns the total number of items found for the conditions
+	 *
+	 * @param \Aimeos\MW\DB\Connection\Iface $conn Database connection
+	 * @param string[] $find List of markers that should be replaced in the SQL statement
+	 * @param string[] $replace List of replacements for the markers in the SQL statement
+	 * @throws \Aimeos\MShop\Locale\Exception If no total value was found
+	 * @return integer Total number of found items
+	 */
+	protected function getTotal( \Aimeos\MW\DB\Connection\Iface $conn, array $find, array $replace )
+	{
+		/** mshop/locale/manager/language/standard/count/mysql
+		 * Counts the number of records matched by the given criteria in the database
+		 *
+		 * @see mshop/locale/manager/language/standard/count/ansi
+		 */
+
+		/** mshop/locale/manager/language/standard/count/ansi
+		 * Counts the number of records matched by the given criteria in the database
+		 *
+		 * Counts all records matched by the given criteria from the attribute
+		 * database. The records must be from one of the sites that are
+		 * configured via the context item. If the current site is part of
+		 * a tree of sites, the statement can count all records from the
+		 * current site and the complete sub-tree of sites.
+		 *
+		 * As the records can normally be limited by criteria from sub-managers,
+		 * their tables must be joined in the SQL context. This is done by
+		 * using the "internaldeps" property from the definition of the ID
+		 * column of the sub-managers. These internal dependencies specify
+		 * the JOIN between the tables and the used columns for joining. The
+		 * ":joins" placeholder is then replaced by the JOIN strings from
+		 * the sub-managers.
+		 *
+		 * To limit the records matched, conditions can be added to the given
+		 * criteria object. It can contain comparisons like column names that
+		 * must match specific values which can be combined by AND, OR or NOT
+		 * operators. The resulting string of SQL conditions replaces the
+		 * ":cond" placeholder before the statement is sent to the database
+		 * server.
+		 *
+		 * Both, the strings for ":joins" and for ":cond" are the same as for
+		 * the "search" SQL statement.
+		 *
+		 * Contrary to the "search" statement, it doesn't return any records
+		 * but instead the number of records that have been found. As counting
+		 * thousands of records can be a long running task, the maximum number
+		 * of counted records is limited for performance reasons.
+		 *
+		 * The SQL statement should conform to the ANSI standard to be
+		 * compatible with most relational database systems. This also
+		 * includes using double quotes for table and column names.
+		 *
+		 * @param string SQL statement for counting items
+		 * @since 2014.03
+		 * @category Developer
+		 * @see mshop/locale/manager/language/standard/insert/ansi
+		 * @see mshop/locale/manager/language/standard/update/ansi
+		 * @see mshop/locale/manager/language/standard/delete/ansi
+		 * @see mshop/locale/manager/language/standard/search/ansi
+		 */
+		$path = 'mshop/locale/manager/language/standard/count';
+
+		$sql = $this->getSqlConfig( $path );
+		$results = $this->getSearchResults( $conn, str_replace( $find, $replace, $sql ) );
+
+		$row = $results->fetch();
+		$results->finish();
+
+		if( $row === false ) {
+			throw new \Aimeos\MShop\Locale\Exception( 'No total results value found' );
+		}
+
+		return $row['count'];
 	}
 }

@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Common
  */
@@ -18,7 +18,9 @@ namespace Aimeos\MShop\Common\Item\Address;
  * @package MShop
  * @subpackage Common
  */
-abstract class Base extends \Aimeos\MShop\Common\Item\Base
+abstract class Base
+	extends \Aimeos\MShop\Common\Item\Base
+	implements \Aimeos\MShop\Common\Item\Address\Iface
 {
 	/**
 	 * Saluation is not known.
@@ -47,7 +49,6 @@ abstract class Base extends \Aimeos\MShop\Common\Item\Base
 	const SALUTATION_MR = 'mr';
 
 	private $prefix;
-	private $values;
 
 
 	/**
@@ -60,7 +61,6 @@ abstract class Base extends \Aimeos\MShop\Common\Item\Base
 	{
 		parent::__construct( $prefix, $values );
 
-		$this->values = $values;
 		$this->prefix = $prefix;
 	}
 
@@ -74,7 +74,7 @@ abstract class Base extends \Aimeos\MShop\Common\Item\Base
 	 */
 	public function getCompany()
 	{
-		return ( isset( $this->values['company'] ) ? (string) $this->values['company'] : '' );
+		return (string) $this->get( $this->prefix . 'company', '' );
 	}
 
 
@@ -82,14 +82,13 @@ abstract class Base extends \Aimeos\MShop\Common\Item\Base
 	 * Sets a new company name.
 	 *
 	 * @param string $company New company name
+	 * @return \Aimeos\MShop\Common\Item\Address\Iface Common address item for chaining method calls
 	 */
 	public function setCompany( $company )
 	{
-		if( $company == $this->getCompany() ) { return; }
-
-		$this->values['company'] = (string) $company;
-		$this->setModified();
+		return $this->set( $this->prefix . 'company', (string) $company );
 	}
+
 
 	/**
 	 * Returns the vatid.
@@ -98,7 +97,7 @@ abstract class Base extends \Aimeos\MShop\Common\Item\Base
 	 */
 	public function getVatID()
 	{
-		return ( isset( $this->values['vatid'] ) ? (string) $this->values['vatid'] : '' );
+		return (string) $this->get( $this->prefix . 'vatid', '' );
 	}
 
 
@@ -106,13 +105,11 @@ abstract class Base extends \Aimeos\MShop\Common\Item\Base
 	 * Sets a new vatid.
 	 *
 	 * @param string $vatid New vatid
+	 * @return \Aimeos\MShop\Common\Item\Address\Iface Common address item for chaining method calls
 	 */
 	public function setVatID( $vatid )
 	{
-		if( $vatid == $this->getVatID() ) { return; }
-
-		$this->values['vatid'] = (string) $vatid;
-		$this->setModified();
+		return $this->set( $this->prefix . 'vatid', (string) $vatid );
 	}
 
 
@@ -123,7 +120,7 @@ abstract class Base extends \Aimeos\MShop\Common\Item\Base
 	 */
 	public function getSalutation()
 	{
-		return ( isset( $this->values['salutation'] ) ? (string) $this->values['salutation'] : \Aimeos\MShop\Common\Item\Address\Base::SALUTATION_UNKNOWN );
+		return (string) $this->get( $this->prefix . 'salutation', \Aimeos\MShop\Common\Item\Address\Base::SALUTATION_UNKNOWN );
 	}
 
 
@@ -131,15 +128,11 @@ abstract class Base extends \Aimeos\MShop\Common\Item\Base
 	 * Sets the new salutation for the person described by the address.
 	 *
 	 * @param string $salutation Salutation constant defined in \Aimeos\MShop\Common\Item\Address\Base
+	 * @return \Aimeos\MShop\Common\Item\Address\Iface Common address item for chaining method calls
 	 */
 	public function setSalutation( $salutation )
 	{
-		if( $salutation == $this->getSalutation() ) { return; }
-
-		$this->checkSalutation( $salutation );
-
-		$this->values['salutation'] = (string) $salutation;
-		$this->setModified();
+		return $this->set( $this->prefix . 'salutation', (string) $this->checkSalutation( $salutation ) );
 	}
 
 
@@ -150,7 +143,7 @@ abstract class Base extends \Aimeos\MShop\Common\Item\Base
 	 */
 	public function getTitle()
 	{
-		return ( isset( $this->values['title'] ) ? (string) $this->values['title'] : '' );
+		return (string) $this->get( $this->prefix . 'title', '' );
 	}
 
 
@@ -158,13 +151,11 @@ abstract class Base extends \Aimeos\MShop\Common\Item\Base
 	 * Sets a new title of the person.
 	 *
 	 * @param string $title New title of the person
+	 * @return \Aimeos\MShop\Common\Item\Address\Iface Common address item for chaining method calls
 	 */
 	public function setTitle( $title )
 	{
-		if( $title == $this->getTitle() ) { return; }
-
-		$this->values['title'] = (string) $title;
-		$this->setModified();
+		return $this->set( $this->prefix . 'title', (string) $title );
 	}
 
 
@@ -175,7 +166,7 @@ abstract class Base extends \Aimeos\MShop\Common\Item\Base
 	 */
 	public function getFirstname()
 	{
-		return ( isset( $this->values['firstname'] ) ? (string) $this->values['firstname'] : '' );
+		return (string) $this->get( $this->prefix . 'firstname', '' );
 	}
 
 
@@ -183,13 +174,11 @@ abstract class Base extends \Aimeos\MShop\Common\Item\Base
 	 * Sets a new first name of the person.
 	 *
 	 * @param string $firstname New first name of the person
+	 * @return \Aimeos\MShop\Common\Item\Address\Iface Common address item for chaining method calls
 	 */
 	public function setFirstname( $firstname )
 	{
-		if( $firstname == $this->getFirstname() ) { return; }
-
-		$this->values['firstname'] = (string) $firstname;
-		$this->setModified();
+		return $this->set( $this->prefix . 'firstname', (string) $firstname );
 	}
 
 
@@ -200,7 +189,7 @@ abstract class Base extends \Aimeos\MShop\Common\Item\Base
 	 */
 	public function getLastname()
 	{
-		return ( isset( $this->values['lastname'] ) ? (string) $this->values['lastname'] : '' );
+		return (string) $this->get( $this->prefix . 'lastname', '' );
 	}
 
 
@@ -208,13 +197,11 @@ abstract class Base extends \Aimeos\MShop\Common\Item\Base
 	 * Sets a new last name of the person.
 	 *
 	 * @param string $lastname New last name of the person
+	 * @return \Aimeos\MShop\Common\Item\Address\Iface Common address item for chaining method calls
 	 */
 	public function setLastname( $lastname )
 	{
-		if( $lastname == $this->getLastname() ) { return; }
-
-		$this->values['lastname'] = (string) $lastname;
-		$this->setModified();
+		return $this->set( $this->prefix . 'lastname', (string) $lastname );
 	}
 
 
@@ -225,7 +212,7 @@ abstract class Base extends \Aimeos\MShop\Common\Item\Base
 	 */
 	public function getAddress1()
 	{
-		return ( isset( $this->values['address1'] ) ? (string) $this->values['address1'] : '' );
+		return (string) $this->get( $this->prefix . 'address1', '' );
 	}
 
 
@@ -233,13 +220,11 @@ abstract class Base extends \Aimeos\MShop\Common\Item\Base
 	 * Sets a new first address part, e.g. the street name.
 	 *
 	 * @param string $address1 New first address part
+	 * @return \Aimeos\MShop\Common\Item\Address\Iface Common address item for chaining method calls
 	 */
 	public function setAddress1( $address1 )
 	{
-		if( $address1 == $this->getAddress1() ) { return; }
-
-		$this->values['address1'] = (string) $address1;
-		$this->setModified();
+		return $this->set( $this->prefix . 'address1', (string) $address1 );
 	}
 
 
@@ -250,7 +235,7 @@ abstract class Base extends \Aimeos\MShop\Common\Item\Base
 	 */
 	public function getAddress2()
 	{
-		return ( isset( $this->values['address2'] ) ? (string) $this->values['address2'] : '' );
+		return (string) $this->get( $this->prefix . 'address2', '' );
 	}
 
 
@@ -258,13 +243,11 @@ abstract class Base extends \Aimeos\MShop\Common\Item\Base
 	 * Sets a new second address part, e.g. the house number.
 	 *
 	 * @param string $address2 New second address part
+	 * @return \Aimeos\MShop\Common\Item\Address\Iface Common address item for chaining method calls
 	 */
 	public function setAddress2( $address2 )
 	{
-		if( $address2 == $this->getAddress2() ) { return; }
-
-		$this->values['address2'] = (string) $address2;
-		$this->setModified();
+		return $this->set( $this->prefix . 'address2', (string) $address2 );
 	}
 
 
@@ -275,7 +258,7 @@ abstract class Base extends \Aimeos\MShop\Common\Item\Base
 	 */
 	public function getAddress3()
 	{
-		return ( isset( $this->values['address3'] ) ? (string) $this->values['address3'] : '' );
+		return (string) $this->get( $this->prefix . 'address3', '' );
 	}
 
 
@@ -283,13 +266,11 @@ abstract class Base extends \Aimeos\MShop\Common\Item\Base
 	 * Sets a new third address part, e.g. the house name or floor number.
 	 *
 	 * @param string $address3 New third address part
+	 * @return \Aimeos\MShop\Common\Item\Address\Iface Common address item for chaining method calls
 	 */
 	public function setAddress3( $address3 )
 	{
-		if( $address3 == $this->getAddress3() ) { return; }
-
-		$this->values['address3'] = (string) $address3;
-		$this->setModified();
+		return $this->set( $this->prefix . 'address3', (string) $address3 );
 	}
 
 
@@ -300,7 +281,7 @@ abstract class Base extends \Aimeos\MShop\Common\Item\Base
 	 */
 	public function getPostal()
 	{
-		return ( isset( $this->values['postal'] ) ? (string) $this->values['postal'] : '' );
+		return (string) $this->get( $this->prefix . 'postal', '' );
 	}
 
 
@@ -308,13 +289,11 @@ abstract class Base extends \Aimeos\MShop\Common\Item\Base
 	 * Sets a new postal code.
 	 *
 	 * @param string $postal New postal code
+	 * @return \Aimeos\MShop\Common\Item\Address\Iface Common address item for chaining method calls
 	 */
 	public function setPostal( $postal )
 	{
-		if( $postal == $this->getPostal() ) { return; }
-
-		$this->values['postal'] = (string) $postal;
-		$this->setModified();
+		return $this->set( $this->prefix . 'postal', (string) $postal );
 	}
 
 
@@ -325,7 +304,7 @@ abstract class Base extends \Aimeos\MShop\Common\Item\Base
 	 */
 	public function getCity()
 	{
-		return ( isset( $this->values['city'] ) ? (string) $this->values['city'] : '' );
+		return (string) $this->get( $this->prefix . 'city', '' );
 	}
 
 
@@ -333,13 +312,11 @@ abstract class Base extends \Aimeos\MShop\Common\Item\Base
 	 * Sets a new city name.
 	 *
 	 * @param string $city New city name
+	 * @return \Aimeos\MShop\Common\Item\Address\Iface Common address item for chaining method calls
 	 */
 	public function setCity( $city )
 	{
-		if( $city == $this->getCity() ) { return; }
-
-		$this->values['city'] = (string) $city;
-		$this->setModified();
+		return $this->set( $this->prefix . 'city', (string) $city );
 	}
 
 
@@ -350,7 +327,7 @@ abstract class Base extends \Aimeos\MShop\Common\Item\Base
 	 */
 	public function getState()
 	{
-		return ( isset( $this->values['state'] ) ? (string) $this->values['state'] : '' );
+		return (string) $this->get( $this->prefix . 'state', '' );
 	}
 
 
@@ -358,13 +335,22 @@ abstract class Base extends \Aimeos\MShop\Common\Item\Base
 	 * Sets a new state name.
 	 *
 	 * @param string $state New state name
+	 * @return \Aimeos\MShop\Common\Item\Address\Iface Common address item for chaining method calls
 	 */
 	public function setState( $state )
 	{
-		if( $state == $this->getState() ) { return; }
+		return $this->set( $this->prefix . 'state', (string) $state );
+	}
 
-		$this->values['state'] = (string) $state;
-		$this->setModified();
+
+	/**
+	 * Returns the unique ID of the country the address belongs to.
+	 *
+	 * @return string|null Unique ID of the country
+	 */
+	public function getCountryId()
+	{
+		return (string) $this->get( $this->prefix . 'countryid' );
 	}
 
 
@@ -372,24 +358,22 @@ abstract class Base extends \Aimeos\MShop\Common\Item\Base
 	 * Sets the ID of the country the address is in.
 	 *
 	 * @param string $countryid Unique ID of the country
+	 * @return \Aimeos\MShop\Common\Item\Address\Iface Common address item for chaining method calls
 	 */
 	public function setCountryId( $countryid )
 	{
-		if( $countryid === $this->getCountryId() ) { return; }
-
-		$this->values['countryid'] = strtoupper( (string) $countryid );
-		$this->setModified();
+		return $this->set( $this->prefix . 'countryid', $this->checkCountryId( $countryid ) );
 	}
 
 
 	/**
-	 * Returns the unique ID of the country the address belongs to.
+	 * Returns the unique ID of the language.
 	 *
-	 * @return string Unique ID of the country
+	 * @return string|null Unique ID of the language
 	 */
-	public function getCountryId()
+	public function getLanguageId()
 	{
-		return ( isset( $this->values['countryid'] ) ? (string) $this->values['countryid'] : null );
+		return (string) $this->get( $this->prefix . 'languageid' );
 	}
 
 
@@ -397,24 +381,11 @@ abstract class Base extends \Aimeos\MShop\Common\Item\Base
 	 * Sets the ID of the language.
 	 *
 	 * @param string $langid Unique ID of the language
+	 * @return \Aimeos\MShop\Common\Item\Address\Iface Common address item for chaining method calls
 	 */
 	public function setLanguageId( $langid )
 	{
-		if( $langid === $this->getLanguageId() ) { return; }
-
-		$this->values['langid'] = strtolower( (string) $langid );
-		$this->setModified();
-	}
-
-
-	/**
-	 * Returns the unique ID of the language.
-	 *
-	 * @return string Unique ID of the language
-	 */
-	public function getLanguageId()
-	{
-		return ( isset( $this->values['langid'] ) ? (string) $this->values['langid'] : null );
+		return $this->set( $this->prefix . 'languageid', $this->checkLanguageId( $langid ) );
 	}
 
 
@@ -425,7 +396,7 @@ abstract class Base extends \Aimeos\MShop\Common\Item\Base
 	 */
 	public function getTelephone()
 	{
-		return ( isset( $this->values['telephone'] ) ? (string) $this->values['telephone'] : '' );
+		return (string) $this->get( $this->prefix . 'telephone', '' );
 	}
 
 
@@ -433,13 +404,11 @@ abstract class Base extends \Aimeos\MShop\Common\Item\Base
 	 * Sets a new telephone number.
 	 *
 	 * @param string $telephone New telephone number
+	 * @return \Aimeos\MShop\Common\Item\Address\Iface Common address item for chaining method calls
 	 */
 	public function setTelephone( $telephone )
 	{
-		if( $telephone == $this->getTelephone() ) { return; }
-
-		$this->values['telephone'] = (string) $telephone;
-		$this->setModified();
+		return $this->set( $this->prefix . 'telephone', (string) $telephone );
 	}
 
 
@@ -450,7 +419,7 @@ abstract class Base extends \Aimeos\MShop\Common\Item\Base
 	 */
 	public function getEmail()
 	{
-		return ( isset( $this->values['email'] ) ? (string) $this->values['email'] : '' );
+		return (string) $this->get( $this->prefix . 'email', '' );
 	}
 
 
@@ -458,17 +427,15 @@ abstract class Base extends \Aimeos\MShop\Common\Item\Base
 	 * Sets a new email address.
 	 *
 	 * @param string $email New email address
+	 * @return \Aimeos\MShop\Common\Item\Address\Iface Common address item for chaining method calls
 	 */
 	public function setEmail( $email )
 	{
-		if( $email == $this->getEmail() ) { return; }
-
-		if( $email !== '' && preg_match( '/^.+@[a-zA-Z0-9\-]+(\.[a-zA-Z0-9\-]+)*$/', $email ) !== 1 ) {
+		if( $email != '' && preg_match( '/^.+@[a-zA-Z0-9\-]+(\.[a-zA-Z0-9\-]+)*$/', $email ) !== 1 ) {
 			throw new \Aimeos\MShop\Exception( sprintf( 'Invalid characters in email address: "%1$s"', $email ) );
 		}
 
-		$this->values['email'] = (string) $email;
-		$this->setModified();
+		return $this->set( $this->prefix . 'email', (string) $email );
 	}
 
 
@@ -479,7 +446,7 @@ abstract class Base extends \Aimeos\MShop\Common\Item\Base
 	 */
 	public function getTelefax()
 	{
-		return ( isset( $this->values['telefax'] ) ? (string) $this->values['telefax'] : '' );
+		return (string) $this->get( $this->prefix . 'telefax', '' );
 	}
 
 
@@ -487,13 +454,11 @@ abstract class Base extends \Aimeos\MShop\Common\Item\Base
 	 * Sets a new telefax number.
 	 *
 	 * @param string $telefax New telefax number
+	 * @return \Aimeos\MShop\Common\Item\Address\Iface Common address item for chaining method calls
 	 */
 	public function setTelefax( $telefax )
 	{
-		if( $telefax == $this->getTelefax() ) { return; }
-
-		$this->values['telefax'] = (string) $telefax;
-		$this->setModified();
+		return $this->set( $this->prefix . 'telefax', (string) $telefax );
 	}
 
 
@@ -504,105 +469,180 @@ abstract class Base extends \Aimeos\MShop\Common\Item\Base
 	 */
 	public function getWebsite()
 	{
-		return ( isset( $this->values['website'] ) ? (string) $this->values['website'] : '' );
+		return (string) $this->get( $this->prefix . 'website', '' );
 	}
 
 
 	/**
 	 * Sets a new website URL.
 	 *
-	 * @param string $website New website URL
+	 * @param string|null $website New website URL
+	 * @return \Aimeos\MShop\Common\Item\Address\Iface Common address item for chaining method calls
 	 */
 	public function setWebsite( $website )
 	{
-		if( $website == $this->getWebsite() ) { return; }
-
 		$pattern = '#^([a-z]+://)?[a-zA-Z0-9\-]+(\.[a-zA-Z0-9\-]+)+(:[0-9]+)?(/.*)?$#';
 
-		if( $website !== '' && preg_match( $pattern, $website ) !== 1 ) {
+		if( $website != '' && preg_match( $pattern, $website ) !== 1 ) {
 			throw new \Aimeos\MShop\Exception( sprintf( 'Invalid web site URL "%1$s"', $website ) );
 		}
 
-		$this->values['website'] = (string) $website;
+		return $this->set( $this->prefix . 'website', (string) $website );
+	}
+
+
+	/**
+	 * Returns the longitude coordinate of the customer address
+	 *
+	 * @return float|null Longitude coordinate as decimal value or null
+	 */
+	public function getLongitude()
+	{
+		return $this->get( $this->prefix . 'longitude' );
+	}
+
+
+	/**
+	 * Sets the longitude coordinate of the customer address
+	 *
+	 * @param float|null $value Longitude coordinate as decimal value or null
+	 * @return \Aimeos\MShop\Customer\Item\Iface Customer item for chaining method calls
+	 */
+	public function setLongitude( $value )
+	{
+		return $this->set( $this->prefix . 'longitude', $value !== '' && $value !== null ? (float) $value : null );
+	}
+
+
+	/**
+	 * Returns the latitude coordinate of the customer address
+	 *
+	 * @return float|null Latitude coordinate as decimal value or null
+	 */
+	public function getLatitude()
+	{
+		return $this->get( $this->prefix . 'latitude' );
+	}
+
+
+	/**
+	 * Sets the latitude coordinate of the customer address
+	 *
+	 * @param float|null $value Latitude coordinate as decimal value or null
+	 * @return \Aimeos\MShop\Customer\Item\Iface Customer item for chaining method calls
+	 */
+	public function setLatitude( $value )
+	{
+		return $this->set( $this->prefix . 'latitude', $value !== '' && $value !== null ? (float) $value : null );
+	}
+
+
+	/**
+	 * Returns the item type
+	 *
+	 * @return string Item type, subtypes are separated by slashes
+	 */
+	public function getResourceType()
+	{
+		return str_replace( '.', '/', rtrim( $this->prefix, '.' ) );
+	}
+
+
+	/**
+	 * Copies the values of the address item into another one.
+	 *
+	 * @param \Aimeos\MShop\Common\Item\Address\Iface $item Address item
+	 * @return \Aimeos\MShop\Common\Item\Address\Iface Common address item for chaining method calls
+	 */
+	public function copyFrom( \Aimeos\MShop\Common\Item\Address\Iface $item )
+	{
+		$this->setCompany( $item->getCompany() );
+		$this->setVatID( $item->getVatID() );
+		$this->setSalutation( $item->getSalutation() );
+		$this->setTitle( $item->getTitle() );
+		$this->setFirstname( $item->getFirstname() );
+		$this->setLastname( $item->getLastname() );
+		$this->setAddress1( $item->getAddress1() );
+		$this->setAddress2( $item->getAddress2() );
+		$this->setAddress3( $item->getAddress3() );
+		$this->setPostal( $item->getPostal() );
+		$this->setCity( $item->getCity() );
+		$this->setState( $item->getState() );
+		$this->setCountryId( $item->getCountryId() );
+		$this->setLanguageId( $item->getLanguageId() );
+		$this->setTelephone( $item->getTelephone() );
+		$this->setTelefax( $item->getTelefax() );
+		$this->setEmail( $item->getEmail() );
+		$this->setWebsite( $item->getWebsite() );
+		$this->setLongitude( $item->getLongitude() );
+		$this->setLatitude( $item->getLatitude() );
+
 		$this->setModified();
+
+		return $this;
 	}
 
 
-	/**
-	 * Returns the flag value.
+	/*
+	 * Sets the item values from the given array and removes that entries from the list
 	 *
-	 * @return integer Generic flag value
+	 * @param array &$list Associative list of item keys and their values
+	 * @param boolean True to set private properties too, false for public only
+	 * @return \Aimeos\MShop\Common\Item\Address\Iface Address item for chaining method calls
 	 */
-	public function getFlag()
+	public function fromArray( array &$list, $private = false )
 	{
-		return ( isset( $this->values['flag'] ) ? (int) $this->values['flag'] : 0 );
-	}
-
-
-	/**
-	 * Sets a new flag value.
-	 *
-	 * @param integer $flag New flag value
-	 */
-	public function setFlag( $flag )
-	{
-		if( $flag == $this->getFlag() ) { return; }
-
-		$this->values['flag'] = (int) $flag;
-		$this->setModified();
-	}
-
-
-	/**
-	 * Sets the item values from the given array.
-	 *
-	 * @param array $list Associative list of item keys and their values
-	 * @return array Associative list of keys and their values that are unknown
-	 */
-	public function fromArray( array $list )
-	{
-		$unknown = array();
-		$list = parent::fromArray( $list );
+		$item = parent::fromArray( $list, $private );
 
 		foreach( $list as $key => $value )
 		{
+			if( strncmp( 'customer.address.', $key, 17 ) !== 0 ) {
+				$key = str_replace( ['order.base.address.', 'customer.'], $this->prefix, $key );
+			} else {
+				$key = str_replace( 'customer.address.', $this->prefix, $key );
+			}
+
 			switch( $key )
 			{
-				case $this->prefix . 'salutation': $this->setSalutation( $value ); break;
-				case $this->prefix . 'company': $this->setCompany( $value ); break;
-				case $this->prefix . 'vatid': $this->setVatID( $value ); break;
-				case $this->prefix . 'title': $this->setTitle( $value ); break;
-				case $this->prefix . 'firstname': $this->setFirstname( $value ); break;
-				case $this->prefix . 'lastname': $this->setLastname( $value ); break;
-				case $this->prefix . 'address1': $this->setAddress1( $value ); break;
-				case $this->prefix . 'address2': $this->setAddress2( $value ); break;
-				case $this->prefix . 'address3': $this->setAddress3( $value ); break;
-				case $this->prefix . 'postal': $this->setPostal( $value ); break;
-				case $this->prefix . 'city': $this->setCity( $value ); break;
-				case $this->prefix . 'state': $this->setState( $value ); break;
-				case $this->prefix . 'countryid': $this->setCountryId( $value ); break;
-				case $this->prefix . 'languageid': $this->setLanguageId( $value ); break;
-				case $this->prefix . 'telephone': $this->setTelephone( $value ); break;
-				case $this->prefix . 'telefax': $this->setTelefax( $value ); break;
-				case $this->prefix . 'email': $this->setEmail( $value ); break;
-				case $this->prefix . 'website': $this->setWebsite( $value ); break;
-				case $this->prefix . 'flag': $this->setFlag( $value ); break;
-				default: $unknown[$key] = $value;
+				case $this->prefix . 'salutation': $item = $item->setSalutation( $value ); break;
+				case $this->prefix . 'company': $item = $item->setCompany( $value ); break;
+				case $this->prefix . 'vatid': $item = $item->setVatID( $value ); break;
+				case $this->prefix . 'title': $item = $item->setTitle( $value ); break;
+				case $this->prefix . 'firstname': $item = $item->setFirstname( $value ); break;
+				case $this->prefix . 'lastname': $item = $item->setLastname( $value ); break;
+				case $this->prefix . 'address1': $item = $item->setAddress1( $value ); break;
+				case $this->prefix . 'address2': $item = $item->setAddress2( $value ); break;
+				case $this->prefix . 'address3': $item = $item->setAddress3( $value ); break;
+				case $this->prefix . 'postal': $item = $item->setPostal( $value ); break;
+				case $this->prefix . 'city': $item = $item->setCity( $value ); break;
+				case $this->prefix . 'state': $item = $item->setState( $value ); break;
+				case $this->prefix . 'countryid': $item = $item->setCountryId( $value ); break;
+				case $this->prefix . 'languageid': $item = $item->setLanguageId( $value ); break;
+				case $this->prefix . 'telephone': $item = $item->setTelephone( $value ); break;
+				case $this->prefix . 'telefax': $item = $item->setTelefax( $value ); break;
+				case $this->prefix . 'email': $item = $item->setEmail( $value ); break;
+				case $this->prefix . 'website': $item = $item->setWebsite( $value ); break;
+				case $this->prefix . 'longitude': $item = $item->setLongitude( $value ); break;
+				case $this->prefix . 'latitude': $item = $item->setLatitude( $value ); break;
+				default: continue 2;
 			}
+
+			unset( $list[$key] );
 		}
 
-		return $unknown;
+		return $item;
 	}
 
 
 	/**
 	 * Returns the item values as array.
 	 *
-	 * @return Associative list of item properties and their values
+	 * @param boolean True to return private properties, false for public only
+	 * @return array Associative list of item properties and their values
 	 */
-	public function toArray()
+	public function toArray( $private = false )
 	{
-		$list = parent::toArray();
+		$list = parent::toArray( $private );
 
 		$list[$this->prefix . 'salutation'] = $this->getSalutation();
 		$list[$this->prefix . 'company'] = $this->getCompany();
@@ -622,7 +662,8 @@ abstract class Base extends \Aimeos\MShop\Common\Item\Base
 		$list[$this->prefix . 'telefax'] = $this->getTelefax();
 		$list[$this->prefix . 'email'] = $this->getEmail();
 		$list[$this->prefix . 'website'] = $this->getWebsite();
-		$list[$this->prefix . 'flag'] = $this->getFlag();
+		$list[$this->prefix . 'longitude'] = $this->getLongitude();
+		$list[$this->prefix . 'latitude'] = $this->getLatitude();
 
 		return $list;
 	}
@@ -631,8 +672,8 @@ abstract class Base extends \Aimeos\MShop\Common\Item\Base
 	/**
 	 * Checks the given address salutation is valid
 	 *
-	 * @param integer $value Address salutation defined in \Aimeos\MShop\Common\Item\Address\Base
-	 * @throws \Aimeos\MShop\Common\Exception If salutation is invalid
+	 * @param string $value Address salutation defined in \Aimeos\MShop\Common\Item\Address\Base
+	 * @throws \Aimeos\MShop\Exception If salutation is invalid
 	 */
 	protected function checkSalutation( $value )
 	{
@@ -643,9 +684,9 @@ abstract class Base extends \Aimeos\MShop\Common\Item\Base
 			case \Aimeos\MShop\Common\Item\Address\Base::SALUTATION_MRS:
 			case \Aimeos\MShop\Common\Item\Address\Base::SALUTATION_MISS:
 			case \Aimeos\MShop\Common\Item\Address\Base::SALUTATION_MR:
-				return;
-			default:
-				throw new \Aimeos\MShop\Common\Exception( sprintf( 'Address salutation "%1$s" not within allowed range', $value ) );
+				return $value;
 		}
+
+		throw new \Aimeos\MShop\Exception( sprintf( 'Address salutation "%1$s" not within allowed range', $value ) );
 	}
 }

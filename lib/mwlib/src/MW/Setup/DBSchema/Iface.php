@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Setup
  */
@@ -20,14 +20,17 @@ namespace Aimeos\MW\Setup\DBSchema;
  */
 interface Iface
 {
+	const HAS_SEQUENCES = 'seqence';
+
 	/**
-	 * Initializes the database schema object.
+	 * Initializes the database schema object
 	 *
-	 * @param \Aimeos\MW\DB\Connection\Iface $conn Database connection
+	 * @param \Aimeos\MW\DB\Manager\Iface $dbm Database manager
+	 * @param string $rname Resource name
 	 * @param string $dbname Database name
-	 * @return void
+	 * @param string $name Adapter name
 	 */
-	public function __construct( \Aimeos\MW\DB\Connection\Iface $conn, $dbname );
+	public function __construct( \Aimeos\MW\DB\Manager\Iface $dbm, $rname, $dbname, $name );
 
 	/**
 	 * Checks if the given table exists for the specified table in the database.
@@ -36,6 +39,14 @@ interface Iface
 	 * @return boolean True if the table exists, false if not
 	 */
 	public function tableExists( $tablename );
+
+	/**
+	 * Checks if the given sequence exists in the database.
+	 *
+	 * @param string $seqname Name of the database sequence
+	 * @return boolean True if the sequence exists, false if not
+	 */
+	public function sequenceExists( $seqname );
 
 	/**
 	 * Checks if the given index (not foreign keys, primary or unique constraints) exists in the database.
@@ -72,11 +83,19 @@ interface Iface
 	 * @return \Aimeos\MW\Setup\DBSchema\Column\Iface Object which contains the details
 	 */
 	public function getColumnDetails( $tablename, $columnname );
-	
+
 	/**
-	 * Returns the database name.
+	 * Returns the name of the database adapter
 	 *
-	 * @return string Database name
+	 * @return string Name of the adapter, e.g. 'mysql'
 	 */
-	public function getDBName( );
+	public function getName();
+
+	/**
+	 * Tests if something is supported
+	 *
+	 * @param string $what Type of object
+	 * @return boolean True if supported, false if not
+	 */
+	public function supports( $what );
 }

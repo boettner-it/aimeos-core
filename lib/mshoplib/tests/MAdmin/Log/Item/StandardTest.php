@@ -1,50 +1,40 @@
 <?php
 
+/**
+ * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
+ */
+
+
 namespace Aimeos\MAdmin\Log\Item;
 
 
-/**
- * @copyright Metaways Infosystems GmbH, 2011
- * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
- */
-class StandardTest extends \PHPUnit_Framework_TestCase
+class StandardTest extends \PHPUnit\Framework\TestCase
 {
 	private $object;
 	private $values;
 
 
-	/**
-	 * Sets up the fixture, for example, opens a network connection.
-	 * This method is called before a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function setUp()
 	{
 		$this->values = array(
-			'id' => 1,
-			'siteid' => 2,
-			'facility' => 'UT facility',
-			'timestamp' => '2010-01-01 00:00:00',
-			'priority' => 1,
-			'message' => 'unittest log message',
-			'request' => 'UT request',
-			'ctime' => '2010-01-01 00:00:00',
-			'mtime' => '2010-01-01 00:00:00',
-			'editor' => 'editor foo'
+			'log.id' => 1,
+			'log.siteid' => 2,
+			'log.facility' => 'UT facility',
+			'log.timestamp' => '2010-01-01 00:00:00',
+			'log.priority' => 1,
+			'log.message' => 'unittest log message',
+			'log.request' => 'UT request',
+			'log.ctime' => '2010-01-01 00:00:00',
+			'log.mtime' => '2010-01-01 00:00:00',
+			'log.editor' => 'editor foo'
 		);
 
 		$this->object = new \Aimeos\MAdmin\Log\Item\Standard( $this->values );
 	}
 
 
-	/**
-	 * Tears down the fixture, for example, closes a network connection.
-	 * This method is called after a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function tearDown()
 	{
 		$this->object = null;
@@ -67,16 +57,6 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$this->object->setId( 1 );
 		$this->assertEquals( 1, $this->object->getId() );
 		$this->assertFalse( $this->object->isModified() );
-
-		$this->setExpectedException( '\\Aimeos\\MShop\\Exception' );
-		$this->object->setId( 6 );
-	}
-
-
-	public function testSetId2()
-	{
-		$this->setExpectedException( '\\Aimeos\\MShop\\Exception' );
-		$this->object->setId( 'test' );
 	}
 
 
@@ -94,8 +74,8 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testSetFacility()
 	{
-		$this->object->setFacility( 'UT facility' );
-		$this->assertEquals( 'UT facility', $this->object->getFacility() );
+		$this->object->setFacility( 'UT facility 2' );
+		$this->assertEquals( 'UT facility 2', $this->object->getFacility() );
 		$this->assertTrue( $this->object->isModified() );
 	}
 
@@ -108,8 +88,8 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testSetPriority()
 	{
-		$this->object->setPriority( 1 );
-		$this->assertEquals( 1, $this->object->getPriority() );
+		$this->object->setPriority( 2 );
+		$this->assertEquals( 2, $this->object->getPriority() );
 		$this->assertTrue( $this->object->isModified() );
 	}
 
@@ -122,8 +102,8 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testSetMessage()
 	{
-		$this->object->setMessage( 'unittest log message' );
-		$this->assertEquals( 'unittest log message', $this->object->getMessage() );
+		$this->object->setMessage( 'unittest log message 2' );
+		$this->assertEquals( 'unittest log message 2', $this->object->getMessage() );
 		$this->assertTrue( $this->object->isModified() );
 	}
 
@@ -136,8 +116,8 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testSetRequest()
 	{
-		$this->object->setRequest( 'UT request' );
-		$this->assertEquals( 'UT request', $this->object->getRequest() );
+		$this->object->setRequest( 'UT request 2' );
+		$this->assertEquals( 'UT request 2', $this->object->getRequest() );
 		$this->assertTrue( $this->object->isModified() );
 	}
 
@@ -148,11 +128,17 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	}
 
 
+	public function testGetResourceType()
+	{
+		$this->assertEquals( 'log', $this->object->getResourceType() );
+	}
+
+
 	public function testFromArray()
 	{
 		$item = new \Aimeos\MAdmin\Log\Item\Standard();
 
-		$list = array(
+		$list = $entries = array(
 			'log.id' => 1,
 			'log.siteid' => 2,
 			'log.priority' => 1,
@@ -162,10 +148,9 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 			'log.request' => 'UT request',
 		);
 
-		$unknown = $item->fromArray( $list );
+		$item = $item->fromArray( $entries, true );
 
-		$this->assertEquals( array( 'log.timestamp' => '2010-01-01 00:00:00' ), $unknown );
-
+		$this->assertEquals( ['log.siteid' => 2, 'log.timestamp' => '2010-01-01 00:00:00'], $entries );
 		$this->assertEquals( $list['log.id'], $item->getId() );
 		$this->assertEquals( $list['log.priority'], $item->getPriority() );
 		$this->assertEquals( $list['log.facility'], $item->getFacility() );
@@ -177,7 +162,7 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testToArray()
 	{
-		$list = $this->object->toArray();
+		$list = $this->object->toArray( true );
 
 		$this->assertEquals( count( $this->values ), count( $list ) );
 

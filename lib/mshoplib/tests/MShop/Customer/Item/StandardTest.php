@@ -1,84 +1,86 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 
 namespace Aimeos\MShop\Customer\Item;
 
 
-/**
- * Test class for \Aimeos\MShop\Customer\Item\Standard.
- */
-class StandardTest extends \PHPUnit_Framework_TestCase
+class StandardTest extends \PHPUnit\Framework\TestCase
 {
 	private $object;
 	private $values;
 	private $address;
 
 
-	/**
-	 * Sets up the fixture, for example, opens a network connection.
-	 * This method is called before a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function setUp()
 	{
-		$addressValues = array(
-			'refid' => 'referenceid',
-			'pos' => 1,
-		);
-
-		$this->address = new \Aimeos\MShop\Common\Item\Address\Standard( 'common.address.', $addressValues );
-
 		$this->values = array(
-			'id' => 541,
-			'siteid' => 123,
-			'label' => 'unitObject',
-			'code' => '12345ABCDEF',
-			'birthday' => '2010-01-01',
-			'status' => 1,
-			'password' => '',
-			'vdate' => null,
-			'company' => 'unitCompany',
-			'vatid' => 'DE999999999',
-			'salutation' => \Aimeos\MShop\Common\Item\Address\Base::SALUTATION_MR,
-			'title' => 'Dr.',
-			'firstname' => 'firstunit',
-			'lastname' => 'lastunit',
-			'address1' => 'unit str.',
-			'address2' => ' 166',
-			'address3' => '4.OG',
-			'postal' => '22769',
-			'city' => 'Hamburg',
-			'state' => 'Hamburg',
-			'countryid' => 'de',
-			'langid' => 'de',
-			'telephone' => '05554433221',
-			'email' => 'test@example.com',
-			'telefax' => '05554433222',
-			'website' => 'www.example.com',
-			'mtime'=> '2010-01-05 00:00:05',
-			'ctime'=> '2010-01-01 00:00:00',
-			'editor' => 'unitTestUser'
+			'customer.id' => 541,
+			'customer.siteid' => 123,
+			'customer.label' => 'unitObject',
+			'customer.code' => '12345ABCDEF',
+			'customer.birthday' => '2010-01-01',
+			'customer.status' => 1,
+			'customer.groups' => [1, 2],
+			'customer.password' => '',
+			'customer.dateverified' => null,
+			'customer.company' => 'unitCompany',
+			'customer.vatid' => 'DE999999999',
+			'customer.salutation' => \Aimeos\MShop\Common\Item\Address\Base::SALUTATION_MR,
+			'customer.title' => 'Dr.',
+			'customer.firstname' => 'firstunit',
+			'customer.lastname' => 'lastunit',
+			'customer.address1' => 'unit str.',
+			'customer.address2' => ' 166',
+			'customer.address3' => '4.OG',
+			'customer.postal' => '22769',
+			'customer.city' => 'Hamburg',
+			'customer.state' => 'Hamburg',
+			'customer.countryid' => 'DE',
+			'customer.languageid' => 'de',
+			'customer.telephone' => '05554433221',
+			'customer.email' => 'test@example.com',
+			'customer.telefax' => '05554433222',
+			'customer.website' => 'www.example.com',
+			'customer.longitude' => '10.0',
+			'customer.latitude' => '50.0',
+			'customer.mtime'=> '2010-01-05 00:00:05',
+			'customer.ctime'=> '2010-01-01 00:00:00',
+			'customer.editor' => 'unitTestUser',
+			'additional' => 'something',
 		);
 
-		$this->object = new \Aimeos\MShop\Customer\Item\Standard( $this->address, $this->values, array(), array(), 'mshop', null );
+		$this->address = new \Aimeos\MShop\Common\Item\Address\Standard( 'customer.', $this->values );
+
+		$addresses = array(
+			new \Aimeos\MShop\Customer\Item\Address\Standard( 'customer.address.', ['customer.address.position' => 0] ),
+			new \Aimeos\MShop\Customer\Item\Address\Standard( 'customer.address.', ['customer.address.position' => 1] ),
+		);
+
+		$this->object = new \Aimeos\MShop\Customer\Item\Standard( $this->address, $this->values, [], [], $addresses, [], null, 'mshop' );
 	}
 
-	/**
-	 * Tears down the fixture, for example, closes a network connection.
-	 * This method is called after a test is executed.
-	 *
-	 * @access protected
-	 */
+
 	protected function tearDown()
 	{
 		unset( $this->object, $this->address, $this->values );
+	}
+
+	public function testGet()
+	{
+		$this->assertEquals( 'something', $this->object->additional );
+		$this->assertNull( $this->object->missing );
+	}
+
+	public function testIsset()
+	{
+		$this->assertTrue( isset( $this->object->additional ) );
+		$this->assertFalse( isset( $this->object->missing ) );
 	}
 
 	public function testGetId()
@@ -88,9 +90,11 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testSetId()
 	{
-		$this->object->setId( null );
-		$this->assertTrue( $this->object->isModified() );
+		$return = $this->object->setId( null );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Customer\Item\Iface::class, $return );
 		$this->assertNull( $this->object->getId() );
+		$this->assertTrue( $this->object->isModified() );
 	}
 
 	public function testGetSiteId()
@@ -105,9 +109,11 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testSetLabel()
 	{
-		$this->object->setLabel( 'newName' );
-		$this->assertTrue( $this->object->isModified() );
+		$return = $this->object->setLabel( 'newName' );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Customer\Item\Iface::class, $return );
 		$this->assertEquals( 'newName', $this->object->getLabel() );
+		$this->assertTrue( $this->object->isModified() );
 	}
 
 	public function testGetCode()
@@ -117,9 +123,11 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testSetCode()
 	{
-		$this->object->setCode( 'neuerUser@unittest.com' );
-		$this->assertTrue( $this->object->isModified() );
+		$return = $this->object->setCode( 'neuerUser@unittest.com' );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Customer\Item\Iface::class, $return );
 		$this->assertEquals( 'neuerUser@unittest.com', $this->object->getCode() );
+		$this->assertTrue( $this->object->isModified() );
 	}
 
 	public function testGetStatus()
@@ -129,14 +137,18 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testSetStatus()
 	{
-		$this->object->setStatus( 0 );
+		$return = $this->object->setStatus( 0 );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Customer\Item\Iface::class, $return );
 		$this->assertEquals( 0, $this->object->getStatus() );
 		$this->assertTrue( $this->object->isModified() );
 	}
 
-	public function testSetAndGetPassword()
+	public function testGetSetPassword()
 	{
-		$this->object->setPassword( '08154712' );
+		$return = $this->object->setPassword( '08154712' );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Customer\Item\Iface::class, $return );
 		$this->assertEquals( '08154712', $this->object->getPassword() );
 		$this->assertTrue( $this->object->isModified() );
 	}
@@ -163,7 +175,9 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testSetBirthday()
 	{
-		$this->object->setBirthday( '2010-02-01' );
+		$return = $this->object->setBirthday( '2010-02-01' );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Customer\Item\Iface::class, $return );
 		$this->assertEquals( '2010-02-01', $this->object->getBirthday() );
 		$this->assertTrue( $this->object->isModified() );
 	}
@@ -175,24 +189,31 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testSetDateVerified()
 	{
-		$this->object->setDateVerified( '2010-02-01' );
+		$return = $this->object->setDateVerified( '2010-02-01' );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Customer\Item\Iface::class, $return );
 		$this->assertEquals( '2010-02-01', $this->object->getDateVerified() );
 		$this->assertTrue( $this->object->isModified() );
 	}
 
 	public function testGetGroups()
 	{
-		$listValues = array( 'domain' => 'customer/group', 'refid' => 123 );
+		$listValues = array( 'domain' => 'customer/group', 'type' => 'default', 'refid' => 123 );
 		$listItems = array( 'customer/group' => array( new \Aimeos\MShop\Common\Item\Lists\Standard( '', $listValues ) ) );
-		$object = new \Aimeos\MShop\Customer\Item\Standard( $this->address, array(), $listItems );
+		$object = new \Aimeos\MShop\Customer\Item\Standard( $this->address, [], $listItems );
 
 		$this->assertEquals( array( 123 ), $object->getGroups() );
+	}
+
+	public function testSetGroups()
+	{
+		$this->object->setGroups( array( 1, 2, 3 ) );
+		$this->assertEquals( array( 1, 2, 3 ), $this->object->getGroups() );
 	}
 
 	public function testGetPaymentAddress()
 	{
 		$address = $this->object->getPaymentAddress();
-		$this->assertEquals( $address->getRefId(), 'referenceid' );
 		$this->assertEquals( $address->getCompany(), 'unitCompany' );
 		$this->assertEquals( $address->getVatID(), 'DE999999999' );
 		$this->assertEquals( $address->getSalutation(), \Aimeos\MShop\Common\Item\Address\Base::SALUTATION_MR );
@@ -211,22 +232,74 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals( $address->getEmail(), 'test@example.com' );
 		$this->assertEquals( $address->getTelefax(), '05554433222' );
 		$this->assertEquals( $address->getWebsite(), 'www.example.com' );
+		$this->assertEquals( $address->getLongitude(), '10.0' );
+		$this->assertEquals( $address->getLatitude(), '50.0' );
 	}
 
 	public function testSetPaymentAddress()
 	{
 		$this->address->setCompany( 'unitCompany0815' );
-		$this->object->setPaymentAddress( $this->address );
+		$return = $this->object->setPaymentAddress( $this->address );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Customer\Item\Iface::class, $return );
 		$this->assertEquals( $this->address, $this->object->getPaymentAddress() );
+	}
+
+
+	public function testGetAddressItems()
+	{
+		$i = 0;
+		$list = $this->object->getAddressItems();
+		$this->assertEquals( 2, count( $list ) );
+
+		foreach( $list as $item )
+		{
+			$this->assertEquals( $i++, $item->getPosition() );
+			$this->assertInstanceOf( \Aimeos\MShop\Customer\Item\Address\Iface::class, $item );
+		}
+	}
+
+
+	public function testAddAddressItem()
+	{
+		$this->object->addAddressItem( $this->address );
+
+		$this->assertEquals( 3, count( $this->object->getAddressItems() ) );
+	}
+
+
+	public function testDeleteAddressItem()
+	{
+		$this->object->addAddressItem( $this->address );
+		$this->object->deleteAddressItem( $this->address );
+
+		$this->assertEquals( 2, count( $this->object->getAddressItems() ) );
+		$this->assertEquals( 1, count( $this->object->getAddressItemsDeleted() ) );
+	}
+
+
+	public function testDeleteAddressItems()
+	{
+		$this->object->addAddressItem( $this->address );
+		$this->object->deleteAddressItems( [$this->address] );
+
+		$this->assertEquals( 2, count( $this->object->getAddressItems() ) );
+		$this->assertEquals( 1, count( $this->object->getAddressItemsDeleted() ) );
+	}
+
+
+	public function testGetResourceType()
+	{
+		$this->assertEquals( 'customer', $this->object->getResourceType() );
 	}
 
 
 	public function testFromArray()
 	{
-		$address = new \Aimeos\MShop\Common\Item\Address\Standard( 'common.address.' );
+		$address = new \Aimeos\MShop\Common\Item\Address\Standard( 'customer.' );
 		$item = new \Aimeos\MShop\Customer\Item\Standard( $address );
 
-		$list = array(
+		$list = $entries = array(
 			'customer.id' => 1,
 			'customer.code' => '12345ABCDEF',
 			'customer.label' => 'unitObject',
@@ -252,17 +325,20 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 			'customer.email' => 'test@example.com',
 			'customer.telefax' => '05554433222',
 			'customer.website' => 'www.example.com',
+			'customer.longitude' => '10.0',
+			'customer.latitude' => '53.5',
+			'customer.groups' => [1, 2],
 		);
 
-		$unknown = $item->fromArray( $list );
+		$item = $item->fromArray( $entries, true );
 
-		$this->assertEquals( array(), $unknown );
-
+		$this->assertEquals( [], $entries );
 		$this->assertEquals( $list['customer.id'], $item->getId() );
 		$this->assertEquals( $list['customer.code'], $item->getCode() );
 		$this->assertEquals( $list['customer.label'], $item->getLabel() );
 		$this->assertEquals( $list['customer.birthday'], $item->getBirthday() );
 		$this->assertEquals( $list['customer.status'], $item->getStatus() );
+		$this->assertEquals( $list['customer.groups'], $item->getGroups() );
 		$this->assertEquals( $list['customer.password'], $item->getPassword() );
 		$this->assertEquals( $list['customer.dateverified'], $item->getDateVerified() );
 
@@ -285,24 +361,29 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals( $list['customer.email'], $address->getEmail() );
 		$this->assertEquals( $list['customer.telefax'], $address->getTelefax() );
 		$this->assertEquals( $list['customer.website'], $address->getWebsite() );
+		$this->assertEquals( $list['customer.longitude'], $address->getLongitude() );
+		$this->assertEquals( $list['customer.latitude'], $address->getLatitude() );
 	}
 
 
 	public function testToArray()
 	{
-		$arrayObject = $this->object->toArray();
+		$arrayObject = $this->object->toArray( true );
+
 		$this->assertEquals( count( $this->values ), count( $arrayObject ) );
 
 		$this->assertEquals( $this->object->getId(), $arrayObject['customer.id'] );
 		$this->assertEquals( $this->object->getLabel(), $arrayObject['customer.label'] );
 		$this->assertEquals( $this->object->getCode(), $arrayObject['customer.code'] );
 		$this->assertEquals( $this->object->getStatus(), $arrayObject['customer.status'] );
+		$this->assertEquals( $this->object->getGroups(), $arrayObject['customer.groups'] );
 		$this->assertEquals( $this->object->getPassword(), $arrayObject['customer.password'] );
 		$this->assertEquals( $this->object->getBirthday(), $arrayObject['customer.birthday'] );
 		$this->assertEquals( $this->object->getDateVerified(), $arrayObject['customer.dateverified'] );
 		$this->assertEquals( $this->object->getTimeCreated(), $arrayObject['customer.ctime'] );
 		$this->assertEquals( $this->object->getTimeModified(), $arrayObject['customer.mtime'] );
 		$this->assertEquals( $this->object->getEditor(), $arrayObject['customer.editor'] );
+
 		$address = $this->object->getPaymentAddress();
 		$this->assertEquals( $address->getCompany(), $arrayObject['customer.company'] );
 		$this->assertEquals( $address->getVatID(), $arrayObject['customer.vatid'] );
@@ -322,10 +403,43 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals( $address->getEmail(), $arrayObject['customer.email'] );
 		$this->assertEquals( $address->getTelefax(), $arrayObject['customer.telefax'] );
 		$this->assertEquals( $address->getWebsite(), $arrayObject['customer.website'] );
+		$this->assertEquals( $address->getLongitude(), $arrayObject['customer.longitude'] );
+		$this->assertEquals( $address->getLatitude(), $arrayObject['customer.latitude'] );
 	}
+
+
+	public function testIsAvailable()
+	{
+		$this->assertTrue( $this->object->isAvailable() );
+		$this->object->setAvailable( false );
+		$this->assertFalse( $this->object->isAvailable() );
+	}
+
+
+	public function testIsAvailableOnStatus()
+	{
+		$this->assertTrue( $this->object->isAvailable() );
+		$this->object->setStatus( 0 );
+		$this->assertFalse( $this->object->isAvailable() );
+		$this->object->setStatus( -1 );
+		$this->assertFalse( $this->object->isAvailable() );
+	}
+
 
 	public function testIsModified()
 	{
+		$this->assertFalse( $this->object->isModified() );
+
+		$this->object->getPaymentAddress()->setState( 'HH' );
+		$this->assertTrue( $this->object->isModified() );
+	}
+
+
+	public function testIsModifiedUpdate()
+	{
+		$list = $this->object->toArray( true );
+		$this->object->fromArray( $list, true );
+
 		$this->assertFalse( $this->object->isModified() );
 	}
 }

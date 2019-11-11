@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Common
  */
@@ -20,7 +20,15 @@ namespace Aimeos\MW\Criteria\Expression;
  */
 abstract class Base
 {
-	private $plugins = array();
+	private $plugins = [];
+
+
+	/**
+	 * Returns the left side of the compare expression.
+	 *
+	 * @return string Name of variable or column that should be compared
+	 */
+	abstract public function getName();
 
 
 	/**
@@ -37,6 +45,19 @@ abstract class Base
 
 
 	/**
+	 * Translates the sort key into the name required by the storage
+	 *
+	 * @param array $translations Associative list of variable or column names that should be translated
+	 * @return string Translated name (with replaced parameters if the name is an expression function)
+	 */
+	public function translate( array $translations )
+	{
+		$name = $this->getName();
+		return $this->translateName( $name, $translations );
+	}
+
+
+	/**
 	 * Creates a parameter signature for compare expressions.
 	 *
 	 * @param array $params Single- or multi-dimensional list of parameters of type boolean, integer, etc.
@@ -44,20 +65,25 @@ abstract class Base
 	 */
 	protected static function createSignature( array $params )
 	{
-		$list = array();
+		$list = [];
 
 		foreach( $params as $param )
 		{
+			if( $param === null ) {
+				$list[] = 'null'; continue;
+			}
+
 			switch( gettype( $param ) )
 			{
 				case 'boolean':
 				case 'integer':
+					$list[] = (int) $param; break;
 				case 'double':
-					$list[] = $param; break;
+					$list[] = (double) $param; break;
 				case 'array':
 					$list[] = '[' . self::createSignature( $param ) . ']'; break;
 				default:
-					$list[] = '"' . $param . '"';
+					$list[] = '"' . str_replace( ['"', '[', ']'], ' ', $param ) . '"';
 			}
 		}
 
@@ -77,7 +103,9 @@ abstract class Base
 	protected function isFunction( &$name, array &$params )
 	{
 		$len = strlen( $name );
-		if( $len === 0 || $name[$len-1] !== ')' ) { return false; }
+		if( $len === 0 || $name[$len - 1] !== ')' ) {
+			return false;
+		}
 
 		if( ( $pos = strpos( $name, '(' ) ) === false ) {
 			throw new \Aimeos\MW\Common\Exception( 'Missing opening bracket for function syntax' );
@@ -91,8 +119,8 @@ abstract class Base
 			throw new \Aimeos\MW\Common\Exception( 'Unable to extract function name' );
 		}
 
-		$matches = array();
-		$pattern = '/(\[[^\]]*\]|"[^"]*"|[0-9]+\.[0-9]+|[0-9]+),?/';
+		$matches = [];
+		$pattern = '/(\[[^\]]*\]|"[^"]*"|[0-9]+\.[0-9]+|[0-9]+|null),?/';
 
 		if( preg_match_all( $pattern, $paramstr, $matches ) === false ) {
 			throw new \Aimeos\MW\Common\Exception( 'Unable to extract function parameters' );
@@ -108,39 +136,70 @@ abstract class Base
 
 
 	/**
+	 * Replaces the parameters in nested arrays
+	 *
+	 * @param array $list Multi-dimensional associative array of values including positional parameter, e.g. "$1"
+	 * @param string[] $find List of strings to search for, e.g. ['$1', '$2']
+	 * @param string[] $replace List of strings to replace by, e.g. ['val1', 'val2']
+	 * @return array Multi-dimensional associative array with parameters replaced
+	 */
+	protected function replaceParameter( array $list, array $find, array $replace )
+	{
+		foreach( $list as $key => $value )
+		{
+			if( is_array( $value ) ) {
+				$list[$key] = $this->replaceParameter( $value, $find, $replace );
+			} else {
+				$list[$key] = str_replace( $find, $replace, $value );
+			}
+		}
+
+		return $list;
+	}
+
+
+	/**
 	 * Translates an expression string and replaces the parameter if it's an expression function.
 	 *
 	 * @param string $name Expresion string or function
-	 * @param array $translations Associative list of names and their translations
-	 * (may include parameter if a name is an expression function)
+	 * @param array $translations Associative list of names and their translations (may include parameter if a name is an expression function)
+	 * @param array $funcs Associative list of item names and functions modifying the conditions
 	 * @return string Translated name (with replaced parameters if the name is an expression function)
 	 */
-	protected function translateName( &$name, array $translations = array() )
+	protected function translateName( &$name, array $translations = [], array $funcs = [] )
 	{
-		$params = array();
+		$params = [];
 
 		if( $this->isFunction( $name, $params ) === true )
 		{
-			$transname = $name;
+			$source = $name;
 			if( isset( $translations[$name] ) ) {
-				$transname = $translations[$name];
+				$source = $translations[$name];
 			}
 
-			$find = array();
+			if( isset( $funcs[$name] ) ) {
+				$params = $funcs[$name]( $source, $params );
+			}
+
+			$find = [];
 			$count = count( $params );
 
 			for( $i = 0; $i < $count; $i++ ) {
 				$find[$i] = '$' . ( $i + 1 );
 			}
 
-			return str_replace( $find, $params, $transname );
+			if( is_array( $source ) ) {
+				return $this->replaceParameter( $source, $find, $params );
+			}
+
+			return str_replace( $find, $params, $source );
 		}
 
-		if( isset( $translations[$name] ) ) {
+		if( array_key_exists( $name, $translations ) ) {
 			return $translations[$name];
-		} else {
-			return $name;
 		}
+
+		return $name;
 	}
 
 
@@ -164,13 +223,11 @@ abstract class Base
 	/**
 	 * Sets the new plugins for translating values.
 	 *
-	 * @param array $plugins Associative list of names and the plugin implementing \Aimeos\MW\Criteria\Plugin\Iface
+	 * @param \Aimeos\MW\Criteria\Plugin\Iface[] $plugins Associative list of names as keys and plugin items as values
 	 */
 	protected function setPlugins( array $plugins )
 	{
-		\Aimeos\MW\Common\Base::checkClassList('\\Aimeos\\MW\\Criteria\\Plugin\\Iface', $plugins);
-
-		$this->plugins = $plugins;
+		$this->plugins = \Aimeos\MW\Common\Base::checkClassList( \Aimeos\MW\Criteria\Plugin\Iface::class, $plugins );
 	}
 
 
@@ -201,16 +258,16 @@ abstract class Base
 	 * @param string[] $strings List of matched strings
 	 * @return array List of found parameters
 	 */
-	private function extractParams( array $strings )
+	protected function extractParams( array $strings )
 	{
-		$params = array();
+		$params = [];
 
 		foreach( $strings as $string )
 		{
 			if( isset( $string[0] ) && $string[0] == '[' )
 			{
-				$items = array();
-				$pattern = '/("[^"]*"|[0-9]+\.[0-9]+|[0-9]+),?/';
+				$items = [];
+				$pattern = '/("[^"]*"|[0-9]+\.[0-9]+|[0-9]+|null),?/';
 
 				if( preg_match_all( $pattern, $string, $items ) === false ) {
 					throw new \Aimeos\MW\Common\Exception( 'Unable to extract function parameters' );
@@ -218,7 +275,7 @@ abstract class Base
 
 				if( isset( $items[1] ) )
 				{
-					$list = array();
+					$list = [];
 
 					foreach( $items[1] as $item ) {
 						$list[] = $this->escape( '==', $this->getParamType( $item ), $item );

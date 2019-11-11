@@ -1,81 +1,39 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2013
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2013
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
+
 
 namespace Aimeos\MShop\Plugin\Provider\Order;
 
 
-/**
- * Test class for \Aimeos\MShop\Plugin\Provider\Order\PropertyMatch.
- */
-class PropertyMatchTest extends \PHPUnit_Framework_TestCase
+class PropertyMatchTest extends \PHPUnit\Framework\TestCase
 {
 	private $object;
 	private $plugin;
 	private $order;
-	private $products;
+	private $product;
 
 
-	/**
-	 * Sets up the fixture, for example, opens a network connection.
-	 * This method is called before a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function setUp()
 	{
-		$pluginManager = \Aimeos\MShop\Plugin\Manager\Factory::createManager( \TestHelper::getContext() );
-		$this->plugin = $pluginManager->createItem();
-		$this->plugin->setTypeId( 2 );
-		$this->plugin->setProvider( 'PropertyMatch' );
-		$this->plugin->setConfig( array( 'product.suppliercode' => 'unitSupplier' ) );
-		$this->plugin->setStatus( '1' );
+		$context = \TestHelperMShop::getContext();
+		$this->plugin = \Aimeos\MShop::create( $context, 'plugin' )->createItem();
+		$this->order = \Aimeos\MShop::create( $context, 'order/base' )->createItem()->off(); // remove event listeners
 
+		$product = \Aimeos\MShop::create( $context, 'product' )->findItem( 'CNC' );
+		$this->product = \Aimeos\MShop::create( $context, 'order/base/product' )->createItem()->copyFrom( $product );
 
-		$orderManager = \Aimeos\MShop\Order\Manager\Factory::createManager( \TestHelper::getContext() );
-		$orderBaseManager = $orderManager->getSubManager( 'base' );
-		$orderBaseProductManager = $orderBaseManager->getSubManager( 'product' );
-
-		$manager = \Aimeos\MShop\Product\Manager\Factory::createManager( \TestHelper::getContext() );
-		$search = $manager->createSearch();
-		$search->setConditions( $search->compare( '==', 'product.code', array( 'CNE', 'CNC' ) ) );
-
-		$products = $manager->searchItems( $search );
-
-		if( count( $products ) !== 2 ) {
-			throw new \Exception( 'Wrong number of products' );
-		}
-
-		$this->products = array();
-
-		foreach( $products as $product )
-		{
-			$item = $orderBaseProductManager->createItem();
-			$item->copyFrom( $product );
-
-			$this->products[$product->getCode()] = $item;
-		}
-
-		$this->order = $orderBaseManager->createItem();
-
-		$this->object = new \Aimeos\MShop\Plugin\Provider\Order\PropertyMatch( \TestHelper::getContext(), $this->plugin );
-
+		$this->object = new \Aimeos\MShop\Plugin\Provider\Order\PropertyMatch( $context, $this->plugin );
 	}
 
 
-	/**
-	 * Tears down the fixture, for example, closes a network connection.
-	 * This method is called after a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function tearDown()
 	{
-		unset( $this->object, $this->order, $this->plugin, $this->products );
+		unset( $this->object, $this->order, $this->plugin, $this->product );
 	}
 
 
@@ -85,56 +43,25 @@ class PropertyMatchTest extends \PHPUnit_Framework_TestCase
 	}
 
 
-	public function testUpdateOk()
+	public function testUpdate()
 	{
-		// single condition
-		$this->assertTrue( $this->object->update( $this->order, 'addProduct.before', $this->products['CNC'] ) );
-
-		$this->plugin->setConfig( array( 'product.stock.warehouse.code' => 'default' ) );
-		$this->object = new \Aimeos\MShop\Plugin\Provider\Order\PropertyMatch( \TestHelper::getContext(), $this->plugin );
-
-		$this->assertTrue( $this->object->update( $this->order, 'addProduct.before', $this->products['CNC'] ) );
+		$this->plugin->setConfig( ['values' => ['package-height' => '10.0']] );
+		$this->assertEquals( $this->product, $this->object->update( $this->order, 'addProduct.before', $this->product ) );
+	}
 
 
-		// two conditions
-		$this->plugin->setConfig( array(
-			'product.stock.warehouse.code' => 'default',
-			'product.suppliercode' => 'unitSupplier',
-		) );
-		$this->object = new \Aimeos\MShop\Plugin\Provider\Order\PropertyMatch( \TestHelper::getContext(), $this->plugin );
-
-		$this->assertTrue( $this->object->update( $this->order, 'addProduct.before', $this->products['CNC'] ) );
+	public function testUpdateTwoConditions()
+	{
+		$this->plugin->setConfig( ['values' => ['package-height' => '10.0', 'package-length' => '20.0']] );
+		$this->assertEquals( $this->product, $this->object->update( $this->order, 'addProduct.before', $this->product ) );
 	}
 
 
 	public function testUpdateFail()
 	{
-		$this->plugin->setConfig( array( 'product.suppliercode' => 'wrongSupplier' ) );
-		$this->object = new \Aimeos\MShop\Plugin\Provider\Order\PropertyMatch( \TestHelper::getContext(), $this->plugin );
+		$this->plugin->setConfig( ['values' => ['package-height' => 0]] );
 
-		$this->setExpectedException( '\\Aimeos\\MShop\\Plugin\\Exception' );
-		$this->object->update( $this->order, 'addProduct.before', $this->products['CNC'] );
-	}
-
-
-	public function testUpdateFailMultipleConditions()
-	{
-		$this->plugin->setConfig( array(
-			'product.stock.warehouse.code' => 'unit_warehouse2',
-			'product.suppliercode' => 'wrongSupplier',
-		) );
-		$this->object = new \Aimeos\MShop\Plugin\Provider\Order\PropertyMatch( \TestHelper::getContext(), $this->plugin );
-
-		$this->setExpectedException( '\\Aimeos\\MShop\\Plugin\\Exception' );
-		$this->object->update( $this->order, 'addProduct.before', $this->products['CNC'] );
-	}
-
-	public function testUpdateFailList()
-	{
-		$this->plugin->setConfig( array( 'product.lists.domain' => 'foobar' ) );
-		$this->object = new \Aimeos\MShop\Plugin\Provider\Order\PropertyMatch( \TestHelper::getContext(), $this->plugin );
-
-		$this->setExpectedException( '\\Aimeos\\MShop\\Plugin\\Exception' );
-		$this->object->update( $this->order, 'addProduct.before', $this->products['CNC'] );
+		$this->setExpectedException( \Aimeos\MShop\Plugin\Exception::class );
+		$this->object->update( $this->order, 'addProduct.before', $this->product );
 	}
 }

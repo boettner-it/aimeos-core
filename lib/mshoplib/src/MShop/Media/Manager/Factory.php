@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Media
  */
@@ -26,12 +26,12 @@ class Factory
 	 * Creates a media manager DAO object.
 	 *
 	 * @param \Aimeos\MShop\Context\Item\Iface $context Shop context instance with necessary objects
-	 * @param string $name Manager name
+	 * @param string|null $name Manager name
 	 * @return \Aimeos\MShop\Common\Manager\Iface Manager object
 	 * @throws \Aimeos\MShop\Media\Exception|\Aimeos\MShop\Exception If requested manager
 	 * implementation couldn't be found or initialisation fails
 	 */
-	public static function createManager( \Aimeos\MShop\Context\Item\Iface $context, $name = null )
+	public static function create( \Aimeos\MShop\Context\Item\Iface $context, $name = null )
 	{
 		/** mshop/media/manager/name
 		 * Class name of the used media manager implementation
@@ -72,14 +72,14 @@ class Factory
 
 		if( ctype_alnum( $name ) === false )
 		{
-			$classname = is_string( $name ) ? '\\Aimeos\\MShop\\Media\\Manager\\' . $name : '<not a string>';
+			$classname = is_string( $name ) ? '\Aimeos\MShop\Media\Manager\\' . $name : '<not a string>';
 			throw new \Aimeos\MShop\Media\Exception( sprintf( 'Invalid characters in class name "%1$s"', $classname ) );
 		}
 
-		$iface = '\\Aimeos\\MShop\\Media\\Manager\\Iface';
-		$classname = '\\Aimeos\\MShop\\Media\\Manager\\' . $name;
+		$iface = \Aimeos\MShop\Media\Manager\Iface::class;
+		$classname = '\Aimeos\MShop\Media\Manager\\' . $name;
 
-		$manager = self::createManagerBase( $context, $classname, $iface );
+		$manager = self::createManager( $context, $classname, $iface );
 
 		/** mshop/media/manager/decorators/excludes
 		 * Excludes decorators added by the "common" option from the media manager
@@ -121,7 +121,8 @@ class Factory
 		 *  mshop/media/manager/decorators/global = array( 'decorator1' )
 		 *
 		 * This would add the decorator named "decorator1" defined by
-		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator1" only to the media controller.
+		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator1" only to the media
+		 * manager.
 		 *
 		 * @param array List of decorator names
 		 * @since 2014.03
@@ -140,13 +141,13 @@ class Factory
 		 * modify what is returned to the caller.
 		 *
 		 * This option allows you to wrap local decorators
-		 * ("\Aimeos\MShop\Common\Manager\Decorator\*") around the media manager.
+		 * ("\Aimeos\MShop\Media\Manager\Decorator\*") around the media manager.
 		 *
 		 *  mshop/media/manager/decorators/local = array( 'decorator2' )
 		 *
 		 * This would add the decorator named "decorator2" defined by
-		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator2" only to the media
-		 * controller.
+		 * "\Aimeos\MShop\Media\Manager\Decorator\Decorator2" only to the media
+		 * manager.
 		 *
 		 * @param array List of decorator names
 		 * @since 2014.03

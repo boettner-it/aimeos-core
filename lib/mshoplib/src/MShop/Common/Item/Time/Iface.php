@@ -2,7 +2,7 @@
 
 /**
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Common
  */
@@ -30,7 +30,8 @@ interface Iface
 	/**
 	 * Sets the date/time, the availability of the item will start
 	 *
-	 * @return string|null ISO date in "YYYY-MM-DD hh:mm:ss" format or null for no date
+	 * @return string|null $date ISO date in "YYYY-MM-DD hh:mm:ss" format or null for no date
+	 * @return \Aimeos\MShop\Common\Item\Iface Item for chaining method calls
 	 */
 	public function setDateStart( $date );
 
@@ -46,7 +47,8 @@ interface Iface
 	/**
 	 * Sets the date/time, the availability of the item will end
 	 *
-	 * @return string|null ISO date in "YYYY-MM-DD hh:mm:ss" format or null for no date
+	 * @return string|null $date ISO date in "YYYY-MM-DD hh:mm:ss" format or null for no date
+	 * @return \Aimeos\MShop\Common\Item\Iface Item for chaining method calls
 	 */
 	public function setDateEnd( $date );
 }

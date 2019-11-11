@@ -1,25 +1,21 @@
 <?php
 
+/**
+ * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
+ * @copyright Metaways Infosystems GmbH, 2014
+ * @copyright Aimeos (aimeos.org), 2015-2018
+ */
+
+
 namespace Aimeos\MAdmin\Cache\Item;
 
 
-/**
- * @copyright Metaways Infosystems GmbH, 2014
- * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
- */
-class StandardTest extends \PHPUnit_Framework_TestCase
+class StandardTest extends \PHPUnit\Framework\TestCase
 {
 	private $object;
 	private $values;
 
 
-	/**
-	 * Sets up the fixture, for example, opens a network connection.
-	 * This method is called before a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function setUp()
 	{
 		$this->values = array(
@@ -34,12 +30,6 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	}
 
 
-	/**
-	 * Tears down the fixture, for example, closes a network connection.
-	 * This method is called after a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function tearDown()
 	{
 		$this->object = null;
@@ -109,22 +99,26 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	}
 
 
+	public function testGetResourceType()
+	{
+		$this->assertEquals( 'cache', $this->object->getResourceType() );
+	}
+
+
 	public function testFromArray()
 	{
 		$item = new \Aimeos\MAdmin\Cache\Item\Standard();
 
-		$list = array(
+		$list = $entries = array(
 			'cache.id' => 'product/id/1:detail-body',
-			'cache.siteid' => 2,
 			'cache.value' => 'test',
 			'cache.expire' => '2000-01-01 00:00:00',
 			'cache.tags' => array( 'tag1', 'tag2' ),
 		);
 
-		$unknown = $item->fromArray( $list );
+		$item = $item->fromArray( $entries, true );
 
-		$this->assertEquals( array(), $unknown );
-
+		$this->assertEquals( [], $entries );
 		$this->assertEquals( $list['cache.id'], $item->getId() );
 		$this->assertEquals( $list['cache.value'], $item->getValue() );
 		$this->assertEquals( $list['cache.expire'], $item->getTimeExpire() );
@@ -135,7 +129,7 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testToArray()
 	{
-		$list = $this->object->toArray();
+		$list = $this->object->toArray( true );
 
 		$this->assertEquals( 5, count( $list ) );
 		$this->assertEquals( 'product/id/1:detail-body', $list['cache.id'] );

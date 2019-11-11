@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Common
  */
@@ -85,16 +85,17 @@ class SQL
 	 *
 	 * @param array $types Associative list of variable or column names as keys and their corresponding types
 	 * @param array $translations Associative list of variable or column names that should be translated
-	 * @param array $plugins Associative list of item names and plugins implementing \Aimeos\MW\Criteria\Plugin\Iface
-	 * @return string Expression that evaluates to a boolean result
+	 * @param \Aimeos\MW\Criteria\Plugin\Iface[] $plugins Associative list of item names as keys and plugin objects as values
+	 * @param array $funcs Associative list of item names and functions modifying the conditions
+	 * @return mixed Expression that evaluates to a boolean result
 	 */
-	public function toString( array $types, array $translations = array(), array $plugins = array() )
+	public function toSource( array $types, array $translations = [], array $plugins = [], array $funcs = [] )
 	{
 		$this->setPlugins( $plugins );
 
 		$name = $this->name;
 
-		if( ( $transname = $this->translateName( $name, $translations ) ) === '' ) {
+		if( ( $transname = $this->translateName( $name, $translations, $funcs ) ) === '' ) {
 			return '';
 		}
 
@@ -127,10 +128,12 @@ class SQL
 			case \Aimeos\MW\DB\Statement\Base::PARAM_FLOAT:
 				$value = (float) $value; break;
 			case \Aimeos\MW\DB\Statement\Base::PARAM_STR:
-				if( $operator == '~=' ) {
-					$value = '\'%' . $this->conn->escape( $value ) . '%\''; break;
+				if( $operator == '~=' )
+				{
+					$value = '\'%' . $this->conn->escape( $value ) . '%\'';
+					break;
 				}
-			default:
+			default: // all other operators: escape in default case
 				$value = '\'' . $this->conn->escape( $value ) . '\'';
 		}
 

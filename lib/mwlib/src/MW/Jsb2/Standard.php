@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Jsb2
  */
@@ -21,10 +21,9 @@ namespace Aimeos\MW\Jsb2;
  */
 class Standard
 {
-	private $registeredPackages = array();
+	private $registeredPackages = [];
 	private $baseURL = '';
 	private $basePath = '';
-	private $deployDir = '';
 
 
 	/**
@@ -32,15 +31,14 @@ class Standard
 	 *
 	 * @param string $filename Path to manifest file
 	 * @param string $baseURL Base URL for HTML output
-	 * @param array $filter Which packages  schould NOT be returned
+	 * @param string[] $filter Which packages should NOT be returned
 	 */
-	public function __construct( $filename, $baseURL = "", $filter = array() )
+	public function __construct( $filename, $baseURL = "", $filter = [] )
 	{
 		$manifest = $this->getManifest( $filename );
 
 		$this->baseURL = rtrim( $baseURL, '/' ) . '/';
 		$this->basePath = dirname( $filename ) . '/';
-		$this->deployDir = $manifest->deployDir . '/';
 
 		$this->registeredPackages = $this->getPackages( $manifest, $filter );
 	}
@@ -50,36 +48,46 @@ class Standard
 	 * Returns the list of URLs for packages files with given filter.
 	 *
 	 * @param string $type Specific filetypes to create output
-	 * @param strig $version URL version string with %s placeholder for the file time
-	 * @return array List of URLs for the package files
+	 * @return string[] List of URLs for the package files
 	 */
-	public function getUrls( $type, $version = '?v=%s' )
+	public function getFiles( $type )
 	{
-		$files = array();
+		$files = [];
 
 		foreach( $this->registeredPackages as $filetype => $packageList )
 		{
-			if( $filetype !== $type ) {
-				continue;
-			}
-
-			foreach( $packageList as $package )
+			if( $filetype === $type )
 			{
-				$packageFile = $this->deployDir . $package->file;
-				$packageFileFilesystem = $this->basePath . $packageFile;
-				$packageFileTime = 0;
-				$timestamp = 0;
-
-				if( is_file( $packageFileFilesystem ) ) {
-					$packageFileTime = filemtime( $packageFileFilesystem );
+				foreach( $packageList as $package )
+				{
+					foreach( $package->fileIncludes as $singleFile ) {
+						$files[] = $this->basePath . $singleFile->path . $singleFile->text;
+					}
 				}
+			}
+		}
 
-				$result = $this->getFileUrls( $this->baseURL, $this->basePath, $package, $timestamp, $version );
+		return $files;
+	}
 
-				if( $packageFileTime > 0 && $packageFileTime >= $timestamp ) {
-					$files[] = $this->baseURL . $packageFile . sprintf( $version, $packageFileTime );
-				} else {
-					$files = array_merge( $files, $result );
+
+	/**
+	 * Returns the list of URLs for packages files with given filter.
+	 *
+	 * @param string $type Specific filetypes to create output
+	 * @param string $version URL version string with %s placeholder for the file time
+	 * @return string[] List of URLs for the package files
+	 */
+	public function getUrls( $type, $version = '?v=%s' )
+	{
+		$files = [];
+
+		foreach( $this->registeredPackages as $filetype => $packageList )
+		{
+			if( $filetype === $type )
+			{
+				foreach( $packageList as $package ) {
+					$files = array_merge( $files, $this->getFileUrls( $package, $version ) );
 				}
 			}
 		}
@@ -121,102 +129,30 @@ class Standard
 
 
 	/**
-	 * Creates minified packages files.
-	 *
-	 * @param string $type Specific filetypes to create output
-	 * @param boolean $debug If true no compression is applied to the files
-	 * @param integer $filepermission Set permissions for created package files
-	 * @param integer $dirpermission Set permissions for created directorys
-	 */
-	public function deploy( $type = null, $debug = true, $filepermission = 0644, $dirpermission = 0755 )
-	{
-		foreach( $this->registeredPackages as $filetype => $packageFiles )
-		{
-			if( $type !== null && $filetype !== $type ) {
-				continue;
-			}
-
-			foreach( $packageFiles as $package )
-			{
-				$packageFile = $this->basePath . $this->deployDir . $package->file;
-
-				$packageDir = dirname( $packageFile );
-
-				if( !is_dir( $packageDir ) )
-				{
-					if( mkdir( $packageDir, $dirpermission, true ) === false ) {
-						throw new \Aimeos\MW\Jsb2\Exception( sprintf( 'Unable to create path for package file "%1$s"', $packageDir ) );
-					}
-				}
-
-				$this->minify( $package, $debug, $filepermission );
-			}
-		}
-	}
-
-
-	/**
 	 * Returns the file URLs of the given package object.
 	 *
-	 * @param string $baseUrl URL the file location is relative to
-	 * @param string $basePath Absolute path to the base directory of the files
 	 * @param \stdClass $package Object with "fileIncludes" property containing a
 	 * 	list of file objects with "path" and "text" properties
-	 * @param integer &$timestamp Value/result parameter that will contain the latest file modification timestamp
+	 * @param string $version Version string that should be added to the URLs suitable for sprintf()
+	 * @return string[] List of URLs to the files from the package
 	 * @throws \Aimeos\MW\Jsb2\Exception If the file modification timestamp couldn't be determined
 	 */
-	protected function getFileUrls( $baseUrl, $basePath, \stdClass $package, &$timestamp, $version = '?v=%s' )
+	protected function getFileUrls( \stdClass $package, $version = '?v=%s' )
 	{
-		$timestamp = (int) $timestamp;
-		$filesToDisplay = array();
+		$list = [];
 
 		foreach( $package->fileIncludes as $singleFile )
 		{
-			$filename = $basePath . $singleFile->path . $singleFile->text;
+			$filename = $this->basePath . $singleFile->path . $singleFile->text;
 
 			if( !is_file( $filename ) || ( $fileTime = filemtime( $filename ) ) === false ) {
 				throw new \Aimeos\MW\Jsb2\Exception( sprintf( 'Unable to read filetime of file "%1$s"', $filename ) );
 			}
 
-			$timestamp = max( $timestamp, $fileTime );
-			$filesToDisplay[] = $baseUrl . $singleFile->path . $singleFile->text . sprintf( $version, $timestamp );
+			$list[] = $this->baseURL . $singleFile->path . $singleFile->text . sprintf( $version, $fileTime );
 		}
 
-		return $filesToDisplay;
-	}
-
-
-	/**
-	 * Creates minified file for given package using JSMin.
-	 *
-	 * @param object $package Package object from manifest to minify
-	 * @param boolean $debug Create debug files if true
-	 * @param integer $permissions File permissions to set on new files
-	 */
-	protected function minify( $package, $debug, $permissions )
-	{
-		$content = '';
-
-		foreach( $this->getFilenames( $package, $this->basePath ) as $filename )
-		{
-			if( ( $content .= file_get_contents( $filename ) ) === false ) {
-				throw new \Aimeos\MW\Jsb2\Exception( sprintf( 'Unable to get content of file "%1$s"', $filename ) );
-			}
-		}
-
-		if( $debug !== true ) {
-			$content = \JSMin::minify( $content );
-		}
-
-		$pkgFileName = $this->basePath . $this->deployDir . $package->file;
-
-		if( file_put_contents( $pkgFileName, $content ) === false ) {
-			throw new \Aimeos\MW\Jsb2\Exception( sprintf( 'Unable to create package file "%1$s"', $pkgFileName ) );
-		}
-
-		if( chmod( $pkgFileName, $permissions ) === false ) {
-			throw new \Aimeos\MW\Jsb2\Exception( sprintf( 'Unable to change permissions of file "%1$s"', $pkgFileName ) );
-		}
+		return $list;
 	}
 
 
@@ -224,11 +160,11 @@ class Standard
 	 * Get the packages from a JSON decoded manifest and validates them.
 	 *
 	 * @param object JSON decoded manifest
-	 * @param array $filter What packages should NOT be returned
+	 * @param string[] $filter What packages should NOT be returned
 	 */
-	protected function getPackages( $manifest, $filter = array() )
+	protected function getPackages( $manifest, $filter = [] )
 	{
-		$packageContainer = array();
+		$packageContainer = [];
 
 		if( !isset( $manifest->pkgs ) || !is_array( $manifest->pkgs ) ) {
 			throw new \Aimeos\MW\Jsb2\Exception( 'No packages found' );
@@ -250,36 +186,6 @@ class Standard
 		}
 
 		return $packageContainer;
-	}
-
-
-	/**
-	 * Gets files stored in package an checkes for existence.
-	 *
-	 * @param object $package Single package from manifest
-	 * @param string $prePath String added before filepaths
-	 */
-	protected function getFilenames( $package, $prePath = '' )
-	{
-		$filenames = array();
-
-		foreach( $package->fileIncludes as $include )
-		{
-			if( !is_object( $include ) ) {
-				throw new \Aimeos\MW\Jsb2\Exception( 'Invalid file inlcude' );
-			}
-
-			$filename = $include->path . $include->text;
-			$absfilename = $this->basePath . $filename;
-
-			if( !file_exists( $absfilename ) ) {
-				throw new \Aimeos\MW\Jsb2\Exception( sprintf( 'File does not exists: "%1$s"', $absfilename ) );
-			}
-
-			$filenames[] = $prePath . $filename;
-		}
-
-		return $filenames;
 	}
 
 

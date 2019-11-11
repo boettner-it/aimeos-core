@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Common
  */
@@ -24,50 +24,7 @@ namespace Aimeos\MW\Criteria\Attribute;
  */
 class Standard implements \Aimeos\MW\Criteria\Attribute\Iface
 {
-	/**
-	 * @var string Public data type used in the frontend
-	 */
-	private $type = 'string';
-
-	/**
-	 * @var mixed Internal data type, depends on the manager
-	 */
-	private $internalType = null;
-
-	/**
-	 * @var string Public code which maps to the internal code
-	 */
-	private $code = '';
-
-	/**
-	 * @var string Name of the attribute in the storage system
-	 */
-	private $internalCode = '';
-
-	/**
-	 * @var array List of internal dependencies
-	 */
-	private $internalDeps = array();
-
-	/**
-	 * @var string Human readable name of the attribute
-	 */
-	private $label = '';
-
-	/**
-	 * @var string Default value
-	 */
-	private $default = null;
-
-	/**
-	 * @var boolean Is required attribute
-	 */
-	private $required = true;
-
-	/**
-	 * @var boolean Is attribute publically available
-	 */
-	private $public = true;
+	private $values;
 
 
 	/**
@@ -75,47 +32,26 @@ class Standard implements \Aimeos\MW\Criteria\Attribute\Iface
 	 *
 	 * @param array $params Parameter to be set on initialisation
 	 *		[code] string
-	 *		[default] string (optional)
-	 *		[internalcode] string
-	 *		[internaltype] string
+	 *		[default] mixed (optional)
+	 *		[internalcode] string (optional)
+	 *		[internaltype] string (optional)
 	 *		[internaldeps] array (optional)
+	 *		[function] Closure (optional)
 	 *		[label] string
 	 *		[public] boolean (optional)
 	 *		[required] booblean (optional)
 	 *		[type] string
 	 */
-	public function  __construct( array $params = array() )
+	public function __construct( array $params = [] )
 	{
-		$required = array( 'type', 'internaltype', 'code', 'internalcode', 'label' );
-
-		foreach( $required as $entry )
+		foreach( ['type', 'code'] as $entry )
 		{
-			if ( !isset($params[$entry]) ) {
-				throw new \Aimeos\MW\Common\Exception( sprintf('Required parameter "%1$s" is missing', $entry) );
+			if( !isset( $params[$entry] ) ) {
+				throw new \Aimeos\MW\Common\Exception( sprintf( 'Required parameter "%1$s" is missing', $entry ) );
 			}
 		}
 
-		$this->code = (string) $params['code'];
-		$this->internalType = (string) $params['internaltype'];
-		$this->internalCode = (string) $params['internalcode'];
-		$this->label = (string) $params['label'];
-		$this->type = (string) $params['type'];
-
-		if( isset( $params['default'] ) ) {
-			$this->default = $params['default'];
-		}
-
-		if( isset( $params['internaldeps'] ) ) {
-			$this->internalDeps = $params['internaldeps'];
-		}
-
-		if( isset( $params['public'] ) ) {
-			$this->public = (bool) $params['public'];
-		}
-
-		if( isset( $params['required'] ) ) {
-			$this->required = (bool) $params['required'];
-		}
+		$this->values = $params;
 	}
 
 
@@ -128,18 +64,18 @@ class Standard implements \Aimeos\MW\Criteria\Attribute\Iface
 	 */
 	public function getType()
 	{
-		return $this->type;
+		return $this->values['type'];
 	}
 
 
 	/**
 	 * Returns the type internally used by the manager.
 	 *
-	 * @return mixed Type used by the manager
+	 * @re  turn mixed Type used by the manager
 	 */
 	public function getInternalType()
 	{
-		return $this->internalType;
+		return array_key_exists( 'internaltype', $this->values ) ? $this->values['internaltype'] : $this->getType();
 	}
 
 
@@ -150,18 +86,18 @@ class Standard implements \Aimeos\MW\Criteria\Attribute\Iface
 	 */
 	public function getCode()
 	{
-		return $this->code;
+		return $this->values['code'];
 	}
 
 
 	/**
 	 * Returns the internal code for the search attribute.
 	 *
-	 * @return string Internal code of the search attribute
+	 * @return mixed Internal code of the search attribute
 	 */
 	public function getInternalCode()
 	{
-		return $this->internalCode;
+		return array_key_exists( 'internalcode', $this->values ) ? $this->values['internalcode'] : $this->getCode();
 	}
 
 
@@ -172,7 +108,18 @@ class Standard implements \Aimeos\MW\Criteria\Attribute\Iface
 	 */
 	public function getInternalDeps()
 	{
-		return $this->internalDeps;
+		return isset( $this->values['internaldeps'] ) ? (array) $this->values['internaldeps'] : [];
+	}
+
+
+	/**
+	 * Returns the helper function if available
+	 *
+	 * @return \Closure|null Helper function
+	 */
+	public function getFunction()
+	{
+		return isset( $this->values['function'] ) ? $this->values['function'] : null;
 	}
 
 
@@ -183,18 +130,18 @@ class Standard implements \Aimeos\MW\Criteria\Attribute\Iface
 	 */
 	public function getLabel()
 	{
-		return $this->label;
+		return isset( $this->values['label'] ) ? $this->values['label'] : '';
 	}
 
 
 	/**
 	 * Returns the default value of the search attribute.
 	 *
-	 * @return string Default value of the search attribute
+	 * @return mixed Default value of the search attribute
 	 */
 	public function getDefault()
 	{
-		return $this->default;
+		return isset( $this->values['default'] ) ? $this->values['default'] : null;
 	}
 
 
@@ -205,7 +152,7 @@ class Standard implements \Aimeos\MW\Criteria\Attribute\Iface
 	 */
 	public function isPublic()
 	{
-		return $this->public;
+		return isset( $this->values['public'] ) ? (bool) $this->values['public'] : true;
 	}
 
 
@@ -216,6 +163,24 @@ class Standard implements \Aimeos\MW\Criteria\Attribute\Iface
 	 */
 	public function isRequired()
 	{
-		return $this->required;
+		return isset( $this->values['required'] ) ? (bool) $this->values['required'] : true;
+	}
+
+
+	/**
+	 * Returns the attribute properties as key/value pairs.
+	 *
+	 * @return array Associative list of attribute key/value pairs
+	 */
+	public function toArray()
+	{
+		return array(
+			'code' => $this->getCode(),
+			'type' => $this->getType(),
+			'label' => $this->getLabel(),
+			'public' => $this->isPublic(),
+			'default' => $this->getDefault(),
+			'required' => $this->isRequired(),
+		);
 	}
 }

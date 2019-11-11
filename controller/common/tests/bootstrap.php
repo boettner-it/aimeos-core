@@ -3,7 +3,7 @@
 /**
  * @copyright Metaways Infosystems GmbH, 2014
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 
@@ -28,5 +28,5 @@ setlocale( LC_TIME, 'POSIX' );
  */
 define( 'PATH_TESTS', __DIR__ );
 
-require_once 'TestHelper.php';
-\TestHelper::bootstrap();
+require_once 'TestHelperCntl.php';
+\TestHelperCntl::bootstrap();

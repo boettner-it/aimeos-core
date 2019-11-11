@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Template
  */
@@ -48,7 +48,7 @@ class Base implements \Aimeos\MW\Template\Iface
 	 */
 	public function enable( $name )
 	{
-		$marray = array();
+		$marray = [];
 
 		foreach( (array) $name as $item )
 		{
@@ -70,7 +70,7 @@ class Base implements \Aimeos\MW\Template\Iface
 	 */
 	public function disable( $name )
 	{
-		$list = array();
+		$list = [];
 
 		foreach( (array) $name as $item ) {
 			$list[$item] = '';
@@ -109,9 +109,14 @@ class Base implements \Aimeos\MW\Template\Iface
 	}
 
 
+	/**
+	 * Returns the marker names used in the template.
+	 *
+	 * @return array List of marker names
+	 */
 	public function getMarkerNames()
 	{
-		$matches = array();
+		$matches = [];
 		$regex = '/' . str_replace( '\$', '(.*)', preg_quote( $this->begin, '/' ) ) . '/U';
 
 		if( preg_match_all( $regex, $this->text, $matches ) === false ) {
@@ -140,7 +145,7 @@ class Base implements \Aimeos\MW\Template\Iface
 	/**
 	 * Substitutes the marker by given text.
 	 *
-	 * @param array $substitute Array of marker names (keys) and text to substitute (values)
+	 * @param string[] $substitute Array of marker names (keys) and text to substitute (values)
 	 * @return \Aimeos\MW\Template\Iface Own Instance for method chaining
 	 */
 	public function substitute( array $substitute )
@@ -178,7 +183,7 @@ class Base implements \Aimeos\MW\Template\Iface
 			return $this->text;
 		}
 
-		$matches = array();
+		$matches = [];
 		$text = $this->text;
 
 		$regex = '/' . str_replace( '\$', '(.*)', preg_quote( $this->begin, '/' ) ) . '/U';

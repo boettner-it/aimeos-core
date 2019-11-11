@@ -5,9 +5,9 @@ namespace Aimeos\MW\Container\Content;
 
 /**
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
-class GzipTest extends \PHPUnit_Framework_TestCase
+class GzipTest extends \PHPUnit\Framework\TestCase
 {
 	protected function setUp()
 	{
@@ -19,29 +19,31 @@ class GzipTest extends \PHPUnit_Framework_TestCase
 
 	public function testNewFile()
 	{
-		$filename = 'tmp' . DIRECTORY_SEPARATOR . 'tempfile';
-		$file = new \Aimeos\MW\Container\Content\Gzip( $filename, 'temp' );
+		$filename = 'tmp' . DIRECTORY_SEPARATOR . 'tempfile.gz';
+		$file = new \Aimeos\MW\Container\Content\Gzip( $filename, 'temp', ['gzip-mode' => 'wb'] );
+		$resource = $file->getResource();
+		$file->close();
 
-		$check = file_exists( $file->getResource() );
-		unlink( $file->getResource() );
-
-		$this->assertEquals( true, $check );
-		$this->assertEquals( false, file_exists( $file->getResource() ) );
+		$this->assertEquals( true, file_exists( $resource ) );
+		unlink( $resource );
 	}
 
 
 	public function testExistingFile()
 	{
-		$filename = __DIR__ . DIRECTORY_SEPARATOR . 'testfile';
+		$filename = __DIR__ . DIRECTORY_SEPARATOR . 'testfile.gz';
 		$file = new \Aimeos\MW\Container\Content\Gzip( $filename, 'test' );
 
 		$this->assertEquals( true, file_exists( $file->getResource() ) );
+
+		$file->close();
 	}
 
 
 	public function testAdd()
 	{
 		$options = array(
+			'gzip-mode' => 'wb',
 			'gzip-level' => 9,
 		);
 
@@ -50,27 +52,48 @@ class GzipTest extends \PHPUnit_Framework_TestCase
 		$file->add( 'test text' );
 		$file->close();
 
-		$expected = '1f8b080000000000';
 		$actual = file_get_contents( $file->getResource() );
+		unlink( $file->getResource() );
+
+		$this->assertStringStartsWith( '1f8b080000000000', bin2hex( $actual ) );
+		$this->assertEquals( $filename . '.gz', $file->getResource() );
+	}
+
+
+	public function testOverwrite()
+	{
+		$filename = 'tmp' . DIRECTORY_SEPARATOR . 'tempfile.gz';
+		$file = new \Aimeos\MW\Container\Content\Gzip( $filename, 'temp', ['gzip-mode' => 'wb'] );
+		$file->add( 'test text' );
+		$file->close();
+
+		$data1 = file_get_contents( $file->getResource() );
+
+		$file = new \Aimeos\MW\Container\Content\Gzip( $filename, 'temp', ['gzip-mode' => 'wb'] );
+		$file->add( 'test 2 text' );
+		$file->close();
+
+		$data2 = file_get_contents( $file->getResource() );
 
 		unlink( $file->getResource() );
 
-		$this->assertStringStartsWith( $expected, bin2hex( $actual ) );
-		$this->assertEquals( $filename . '.gz', $file->getResource() );
+		$this->assertNotEquals( $data1, $data2 );
 	}
 
 
 	public function testIterator()
 	{
-		$filename = __DIR__ . DIRECTORY_SEPARATOR . 'testfile';
+		$filename = __DIR__ . DIRECTORY_SEPARATOR . 'testfile.gz';
 		$file = new \Aimeos\MW\Container\Content\Gzip( $filename, 'test' );
 
 		$expected = array( "test data" );
 
-		$actual = array();
+		$actual = [];
 		foreach( $file as $entry ) {
 			$actual[] = $entry;
 		}
+
+		$file->close();
 
 		$this->assertEquals( $expected, $actual );
 	}

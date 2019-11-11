@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2012
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2012
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Service
  */
@@ -27,75 +27,138 @@ class PayPalExpress
 	private $beConfig = array(
 		'paypalexpress.ApiUsername' => array(
 			'code' => 'paypalexpress.ApiUsername',
-			'internalcode'=> 'paypalexpress.ApiUsername',
-			'label'=> 'Username',
-			'type'=> 'string',
-			'internaltype'=> 'string',
-			'default'=> '',
-			'required'=> true,
+			'internalcode' => 'paypalexpress.ApiUsername',
+			'label' => 'Username',
+			'type' => 'string',
+			'internaltype' => 'string',
+			'default' => '',
+			'required' => true,
 		),
 		'paypalexpress.AccountEmail' => array(
 			'code' => 'paypalexpress.AccountEmail',
-			'internalcode'=> 'paypalexpress.AccountEmail',
-			'label'=> 'Registered e-mail address of the shop owner in PayPal',
-			'type'=> 'string',
-			'internaltype'=> 'string',
-			'default'=> '',
-			'required'=> true,
+			'internalcode' => 'paypalexpress.AccountEmail',
+			'label' => 'Registered e-mail address of the shop owner in PayPal',
+			'type' => 'string',
+			'internaltype' => 'string',
+			'default' => '',
+			'required' => true,
 		),
 		'paypalexpress.ApiPassword' => array(
 			'code' => 'paypalexpress.ApiPassword',
-			'internalcode'=> 'paypalexpress.ApiPassword',
-			'label'=> 'Password',
-			'type'=> 'string',
-			'internaltype'=> 'string',
-			'default'=> '',
-			'required'=> true,
+			'internalcode' => 'paypalexpress.ApiPassword',
+			'label' => 'Password',
+			'type' => 'string',
+			'internaltype' => 'string',
+			'default' => '',
+			'required' => true,
 		),
 		'paypalexpress.ApiSignature' => array(
 			'code' => 'paypalexpress.ApiSignature',
-			'internalcode'=> 'paypalexpress.ApiSignature',
-			'label'=> 'Signature',
-			'type'=> 'string',
-			'internaltype'=> 'string',
-			'default'=> '',
-			'required'=> true,
+			'internalcode' => 'paypalexpress.ApiSignature',
+			'label' => 'Signature',
+			'type' => 'string',
+			'internaltype' => 'string',
+			'default' => '',
+			'required' => true,
 		),
 		'paypalexpress.ApiEndpoint' => array(
 			'code' => 'paypalexpress.ApiEndpoint',
-			'internalcode'=> 'paypalexpress.ApiEndpoint',
-			'label'=> 'APIEndpoint',
-			'type'=> 'string',
-			'internaltype'=> 'string',
-			'default'=> 'https://api-3t.paypal.com/nvp',
-			'required'=> false,
+			'internalcode' => 'paypalexpress.ApiEndpoint',
+			'label' => 'APIEndpoint',
+			'type' => 'string',
+			'internaltype' => 'string',
+			'default' => 'https://api-3t.paypal.com/nvp',
+			'required' => false,
 		),
 		'paypalexpress.PaypalUrl' => array(
 			'code' => 'paypalexpress.PaypalUrl',
-			'internalcode'=> 'paypalexpress.PaypalUrl',
-			'label'=> 'PaypalUrl',
-			'type'=> 'string',
-			'internaltype'=> 'string',
-			'default'=> 'https://www.paypal.com/webscr&cmd=_express-checkout&useraction=commit&token=%1$s',
-			'required'=> false,
+			'internalcode' => 'paypalexpress.PaypalUrl',
+			'label' => 'PaypalUrl',
+			'type' => 'string',
+			'internaltype' => 'string',
+			'default' => 'https://www.paypal.com/webscr&cmd=_express-checkout&useraction=commit&token=%1$s',
+			'required' => false,
 		),
 		'paypalexpress.PaymentAction' => array(
 			'code' => 'paypalexpress.PaymentAction',
-			'internalcode'=> 'paypalexpress.PaymentAction',
-			'label'=> 'PaymentAction',
-			'type'=> 'string',
-			'internaltype'=> 'string',
-			'default'=> 'Sale',
-			'required'=> false,
+			'internalcode' => 'paypalexpress.PaymentAction',
+			'label' => 'PaymentAction',
+			'type' => 'string',
+			'internaltype' => 'string',
+			'default' => 'Sale',
+			'required' => false,
+		),
+		'paypalexpress.LandingPage' => array(
+			'code' => 'paypalexpress.LandingPage',
+			'internalcode' => 'paypalexpress.LandingPage',
+			'label' => 'Landing page',
+			'type' => 'string',
+			'internaltype' => 'string',
+			'default' => 'Login',
+			'required' => false,
+		),
+		'paypalexpress.FundingSource' => array(
+			'code' => 'paypalexpress.FundingSource',
+			'internalcode' => 'paypalexpress.FundingSource',
+			'label' => 'Funding source',
+			'type' => 'string',
+			'internaltype' => 'string',
+			'default' => 'CreditCard',
+			'required' => false,
+		),
+		'paypalexpress.AddrOverride' => array(
+			'code' => 'paypalexpress.AddrOverride',
+			'internalcode' => 'paypalexpress.AddrOverride',
+			'label' => 'Customer can change address',
+			'type' => 'boolean',
+			'internaltype' => 'integer',
+			'default' => 0,
+			'required' => false,
+		),
+		'paypalexpress.NoShipping' => array(
+			'code' => 'paypalexpress.NoShipping',
+			'internalcode' => 'paypalexpress.NoShipping',
+			'label' => 'Don\'t display shipping address',
+			'type' => 'boolean',
+			'internaltype' => 'integer',
+			'default' => 1,
+			'required' => false,
+		),
+		'paypalexpress.address' => array(
+			'code' => 'paypalexpress.address',
+			'internalcode' => 'paypalexpress.address',
+			'label' => 'Pass customer address to PayPal',
+			'type' => 'boolean',
+			'internaltype' => 'integer',
+			'default' => 1,
+			'required' => false,
+		),
+		'paypalexpress.product' => array(
+			'code' => 'paypalexpress.product',
+			'internalcode' => 'paypalexpress.product',
+			'label' => 'Pass product details to PayPal',
+			'type' => 'boolean',
+			'internaltype' => 'integer',
+			'default' => 1,
+			'required' => false,
+		),
+		'paypalexpress.service' => array(
+			'code' => 'paypalexpress.service',
+			'internalcode' => 'paypalexpress.service',
+			'label' => 'Pass delivery/payment details to PayPal',
+			'type' => 'boolean',
+			'internaltype' => 'integer',
+			'default' => 1,
+			'required' => false,
 		),
 		'paypalexpress.url-validate' => array(
 			'code' => 'paypalexpress.url-validate',
-			'internalcode'=> 'paypalexpress.url-validate',
-			'label'=> 'Validation URL',
-			'type'=> 'string',
-			'internaltype'=> 'string',
-			'default'=> 'https://www.paypal.com/webscr&cmd=_notify-validate',
-			'required'=> false,
+			'internalcode' => 'paypalexpress.url-validate',
+			'label' => 'Validation URL',
+			'type' => 'string',
+			'internaltype' => 'string',
+			'default' => 'https://www.paypal.com/webscr&cmd=_notify-validate',
+			'required' => false,
 		),
 	);
 
@@ -111,22 +174,6 @@ class PayPalExpress
 	{
 		parent::__construct( $context, $serviceItem );
 
-		$configParameters = array(
-			'paypalexpress.AccountEmail',
-			'paypalexpress.ApiUsername',
-			'paypalexpress.ApiPassword',
-			'paypalexpress.ApiSignature',
-		);
-
-		$config = $serviceItem->getConfig();
-
-		foreach( $configParameters as $param )
-		{
-			if( !isset( $config[$param] ) ) {
-				throw new \Aimeos\MShop\Service\Exception( sprintf( 'Configuration for "%1$s" is missing', $param ) );
-			}
-		}
-
 		$default = 'https://api-3t.paypal.com/nvp';
 		$this->apiendpoint = $this->getConfigValue( array( 'paypalexpress.ApiEndpoint' ), $default );
 	}
@@ -140,13 +187,7 @@ class PayPalExpress
 	 */
 	public function getConfigBE()
 	{
-		$list = parent::getConfigBE();
-
-		foreach( $this->beConfig as $key => $config ) {
-			$list[$key] = new \Aimeos\MW\Criteria\Attribute\Standard( $config );
-		}
-
-		return $list;
+		return $this->getConfigItems( $this->beConfig );
 	}
 
 
@@ -171,32 +212,34 @@ class PayPalExpress
 	 *
 	 * @param \Aimeos\MShop\Order\Item\Iface $order Order invoice object
 	 * @param array $params Request parameter if available
-	 * @return \Aimeos\MShop\Common\Item\Helper\Form\Standard Form object with URL, action and parameters to redirect to
+	 * @return \Aimeos\MShop\Common\Helper\Form\Standard Form object with URL, action and parameters to redirect to
 	 * 	(e.g. to an external server of the payment provider or to a local success page)
 	 */
-	public function process( \Aimeos\MShop\Order\Item\Iface $order, array $params = array() )
+	public function process( \Aimeos\MShop\Order\Item\Iface $order, array $params = [] )
 	{
-		$orderid = $order->getId();
-		$orderBaseItem = $this->getOrderBase( $order->getBaseId(), \Aimeos\MShop\Order\Manager\Base\Base::PARTS_ALL );
+		$orderBaseItem = $this->getOrderBase( $order->getBaseId(), \Aimeos\MShop\Order\Item\Base\Base::PARTS_ALL );
 
 		$values = $this->getOrderDetails( $orderBaseItem );
 		$values['METHOD'] = 'SetExpressCheckout';
-		$values['PAYMENTREQUEST_0_INVNUM'] = $orderid;
+		$values['PAYMENTREQUEST_0_INVNUM'] = $order->getId();
 		$values['RETURNURL'] = $this->getConfigValue( array( 'payment.url-success' ) );
 		$values['CANCELURL'] = $this->getConfigValue( array( 'payment.url-cancel', 'payment.url-success' ) );
+		$values['USERSELECTEDFUNDINGSOURCE'] = $this->getConfigValue( array( 'paypalexpress.FundingSource' ), 'CreditCard' );
+		$values['LANDINGPAGE'] = $this->getConfigValue( array( 'paypalexpress.LandingPage' ), 'Login' );
 
 		$urlQuery = http_build_query( $values, '', '&' );
-		$response = $this->getCommunication()->transmit( $this->apiendpoint, 'POST', $urlQuery );
-		$rvals = $this->checkResponse( $orderid, $response, __METHOD__ );
+		$response = $this->send( $this->apiendpoint, 'POST', $urlQuery );
+		$rvals = $this->checkResponse( $order->getId(), $response, __METHOD__ );
 
 		$default = 'https://www.paypal.com/webscr&cmd=_express-checkout&useraction=commit&token=%1$s';
 		$paypalUrl = sprintf( $this->getConfigValue( array( 'paypalexpress.PaypalUrl' ), $default ), $rvals['TOKEN'] );
 
 		$type = \Aimeos\MShop\Order\Item\Base\Service\Base::TYPE_PAYMENT;
-		$this->setAttributes( $orderBaseItem->getService( $type ), array( 'TOKEN' => $rvals['TOKEN'] ), 'payment/paypal' );
+		$serviceItem = $this->getBasketService( $orderBaseItem, $type, $this->getServiceItem()->getCode() );
+		$this->setAttributes( $serviceItem, ['TOKEN' => $rvals['TOKEN']], 'payment/paypal' );
 		$this->saveOrderBase( $orderBaseItem );
 
-		return new \Aimeos\MShop\Common\Item\Helper\Form\Standard( $paypalUrl, 'POST', array() );
+		return new \Aimeos\MShop\Common\Helper\Form\Standard( $paypalUrl, 'POST', [] );
 	}
 
 
@@ -209,8 +252,8 @@ class PayPalExpress
 	{
 		if( ( $tid = $this->getOrderServiceItem( $order->getBaseId() )->getAttribute( 'TRANSACTIONID', 'payment/paypal' ) ) === null )
 		{
-			$msg = sprintf( 'PayPal Express: Payment transaction ID for order ID "%1$s" not available', $order->getId() );
-			throw new \Aimeos\MShop\Service\Exception( $msg );
+			$msg = $this->getContext()->getI18n()->dt( 'mshop', 'PayPal Express: Payment transaction ID for order ID "%1$s" not available' );
+			throw new \Aimeos\MShop\Service\Exception( sprintf( $msg, $order->getId() ) );
 		}
 
 		$values = $this->getAuthParameter();
@@ -218,7 +261,7 @@ class PayPalExpress
 		$values['TRANSACTIONID'] = $tid;
 
 		$urlQuery = http_build_query( $values, '', '&' );
-		$response = $this->getCommunication()->transmit( $this->apiendpoint, 'POST', $urlQuery );
+		$response = $this->send( $this->apiendpoint, 'POST', $urlQuery );
 		$rvals = $this->checkResponse( $order->getId(), $response, __METHOD__ );
 
 		$this->setPaymentStatus( $order, $rvals );
@@ -233,31 +276,33 @@ class PayPalExpress
 	 */
 	public function capture( \Aimeos\MShop\Order\Item\Iface $order )
 	{
-		$baseid = $order->getBaseId();
-		$baseItem = $this->getOrderBase( $baseid );
-		$serviceItem = $baseItem->getService( \Aimeos\MShop\Order\Item\Base\Service\Base::TYPE_PAYMENT );
+		$baseItem = $this->getOrderBase( $order->getBaseId() );
+		$type = \Aimeos\MShop\Order\Item\Base\Service\Base::TYPE_PAYMENT;
+		$serviceItem = $this->getBasketService( $baseItem, $type, $this->getServiceItem()->getCode() );
 
 		if( ( $tid = $serviceItem->getAttribute( 'TRANSACTIONID', 'payment/paypal' ) ) === null )
 		{
-			$msg = sprintf( 'PayPal Express: Payment transaction ID for order ID "%1$s" not available', $order->getId() );
-			throw new \Aimeos\MShop\Service\Exception( $msg );
+			$msg = $this->getContext()->getI18n()->dt( 'mshop', 'PayPal Express: Payment transaction ID for order ID "%1$s" not available' );
+			throw new \Aimeos\MShop\Service\Exception( sprintf( $msg, $order->getId() ) );
 		}
+
+		$price = $baseItem->getPrice();
 
 		$values = $this->getAuthParameter();
 		$values['METHOD'] = 'DoCapture';
 		$values['COMPLETETYPE'] = 'Complete';
 		$values['AUTHORIZATIONID'] = $tid;
 		$values['INVNUM'] = $order->getId();
-		$values['CURRENCYCODE'] = $baseItem->getPrice()->getCurrencyId();
-		$values['AMT'] = $baseItem->getPrice()->getValue() + $baseItem->getPrice()->getCosts();
+		$values['CURRENCYCODE'] = $price->getCurrencyId();
+		$values['AMT'] = $this->getAmount( $price );
 
 		$urlQuery = http_build_query( $values, '', '&' );
-		$response = $this->getCommunication()->transmit( $this->apiendpoint, 'POST', $urlQuery );
+		$response = $this->send( $this->apiendpoint, 'POST', $urlQuery );
 		$rvals = $this->checkResponse( $order->getId(), $response, __METHOD__ );
 
 		$this->setPaymentStatus( $order, $rvals );
 
-		$attributes = array();
+		$attributes = [];
 		if( isset( $rvals['PARENTTRANSACTIONID'] ) ) {
 			$attributes['PARENTTRANSACTIONID'] = $rvals['PARENTTRANSACTIONID'];
 		}
@@ -279,12 +324,13 @@ class PayPalExpress
 	public function refund( \Aimeos\MShop\Order\Item\Iface $order )
 	{
 		$baseItem = $this->getOrderBase( $order->getBaseId() );
-		$serviceItem = $baseItem->getService( \Aimeos\MShop\Order\Item\Base\Service\Base::TYPE_PAYMENT );
+		$type = \Aimeos\MShop\Order\Item\Base\Service\Base::TYPE_PAYMENT;
+		$serviceItem = $this->getBasketService( $baseItem, $type, $this->getServiceItem()->getCode() );
 
 		if( ( $tid = $serviceItem->getAttribute( 'TRANSACTIONID', 'payment/paypal' ) ) === null )
 		{
-			$msg = sprintf( 'PayPal Express: Payment transaction ID for order ID "%1$s" not available', $order->getId() );
-			throw new \Aimeos\MShop\Service\Exception( $msg );
+			$msg = $this->getContext()->getI18n()->dt( 'mshop', 'PayPal Express: Payment transaction ID for order ID "%1$s" not available' );
+			throw new \Aimeos\MShop\Service\Exception( sprintf( $msg, $order->getId() ) );
 		}
 
 		$values = $this->getAuthParameter();
@@ -295,7 +341,7 @@ class PayPalExpress
 		$values['INVOICEID'] = $order->getId();
 
 		$urlQuery = http_build_query( $values, '', '&' );
-		$response = $this->getCommunication()->transmit( $this->apiendpoint, 'POST', $urlQuery );
+		$response = $this->send( $this->apiendpoint, 'POST', $urlQuery );
 		$rvals = $this->checkResponse( $order->getId(), $response, __METHOD__ );
 
 		$attributes = array( 'REFUNDTRANSACTIONID' => $rvals['REFUNDTRANSACTIONID'] );
@@ -316,8 +362,8 @@ class PayPalExpress
 	{
 		if( ( $tid = $this->getOrderServiceItem( $order->getBaseId() )->getAttribute( 'TRANSACTIONID', 'payment/paypal' ) ) === null )
 		{
-			$msg = sprintf( 'PayPal Express: Payment transaction ID for order ID "%1$s" not available', $order->getId() );
-			throw new \Aimeos\MShop\Service\Exception( $msg );
+			$msg = $this->getContext()->getI18n()->dt( 'mshop', 'PayPal Express: Payment transaction ID for order ID "%1$s" not available' );
+			throw new \Aimeos\MShop\Service\Exception( sprintf( $msg, $order->getId() ) );
 		}
 
 		$values = $this->getAuthParameter();
@@ -325,7 +371,7 @@ class PayPalExpress
 		$values['AUTHORIZATIONID'] = $tid;
 
 		$urlQuery = http_build_query( $values, '', '&' );
-		$response = $this->getCommunication()->transmit( $this->apiendpoint, 'POST', $urlQuery );
+		$response = $this->send( $this->apiendpoint, 'POST', $urlQuery );
 		$this->checkResponse( $order->getId(), $response, __METHOD__ );
 
 		$order->setPaymentStatus( \Aimeos\MShop\Order\Item\Base::PAY_CANCELED );
@@ -334,42 +380,34 @@ class PayPalExpress
 
 
 	/**
-	 * Updates the orders for which status updates were received via direct requests (like HTTP).
+	 * Updates the order status sent by payment gateway notifications
 	 *
-	 * @param array $params Associative list of request parameters
-	 * @param string|null $body Information sent within the body of the request
-	 * @param string|null &$response Response body for notification requests
-	 * @param array &$header Response headers for notification requests
-	 * @return \Aimeos\MShop\Order\Item\Iface|null Order item if update was successful, null if the given parameters are not valid for this provider
-	 * @throws \Aimeos\MShop\Service\Exception If updating one of the orders failed
+	 * @param \Psr\Http\Message\ServerRequestInterface $request Request object
+	 * @param \Psr\Http\Message\ResponseInterface $response Response object
+	 * @return \Psr\Http\Message\ResponseInterface Response object
 	 */
-	public function updateSync( array $params = array(), $body = null, &$response = null, array &$header = array() )
+	public function updatePush( \Psr\Http\Message\ServerRequestInterface $request, \Psr\Http\Message\ResponseInterface $response )
 	{
-		if( isset( $params['token'] ) && isset( $params['PayerID'] ) && isset( $params['orderid'] ) ) {
-			return $this->doExpressCheckoutPayment( $params );
-		}
+		$params = $request->getQueryParams();
 
-		//tid from ipn
-		if( !isset( $params['txn_id'] ) ) {
-			return null;
+		if( !isset( $params['txn_id'] ) ) { //tid from ipn
+			return $response->withStatus( 400, 'PayPal Express: Parameter "txn_id" is missing' );
 		}
 
 		$urlQuery = http_build_query( $params, '', '&' );
 
 		//validation
-		$response = $this->getCommunication()->transmit( $this->getConfigValue( array( 'paypalexpress.url-validate' ) ), 'POST', $urlQuery );
+		$result = $this->send( $this->getConfigValue( array( 'paypalexpress.url-validate' ) ), 'POST', $urlQuery );
 
-
-		if( $response !== 'VERIFIED' )
-		{
-			$msg = sprintf( 'PayPal Express: Invalid request "%1$s"', $urlQuery );
-			throw new \Aimeos\MShop\Service\Exception( $msg );
+		if( $result !== 'VERIFIED' ) {
+			return $response->withStatus( 400, sprintf( 'PayPal Express: Invalid request "%1$s"', $urlQuery ) );
 		}
 
 
 		$order = $this->getOrder( $params['invoice'] );
 		$baseItem = $this->getOrderBase( $order->getBaseId() );
-		$serviceItem = $baseItem->getService( \Aimeos\MShop\Order\Item\Base\Service\Base::TYPE_PAYMENT );
+		$type = \Aimeos\MShop\Order\Item\Base\Service\Base::TYPE_PAYMENT;
+		$serviceItem = $this->getBasketService( $baseItem, $type, $this->getServiceItem()->getCode() );
 
 		$this->checkIPN( $baseItem, $params );
 
@@ -386,7 +424,67 @@ class PayPalExpress
 		$this->setPaymentStatus( $order, $status );
 		$this->saveOrder( $order );
 
-		return $order;
+		return $response->withStatus( 200 );
+	}
+
+
+	/**
+	 * Updates the orders for whose status updates have been received by the confirmation page
+	 *
+	 * @param \Psr\Http\Message\ServerRequestInterface $request Request object with parameters and request body
+	 * @param \Aimeos\MShop\Order\Item\Iface $orderItem Order item that should be updated
+	 * @return \Aimeos\MShop\Order\Item\Iface Updated order item
+	 * @throws \Aimeos\MShop\Service\Exception If updating the orders failed
+	 */
+	public function updateSync( \Psr\Http\Message\ServerRequestInterface $request, \Aimeos\MShop\Order\Item\Iface $orderItem )
+	{
+		$params = (array) $request->getAttributes() + (array) $request->getParsedBody() + (array) $request->getQueryParams();
+
+		if( !isset( $params['token'] ) )
+		{
+			$msg = sprintf( $this->getContext()->getI18n()->dt( 'mshop', 'Required parameter "%1$s" is missing' ), 'token' );
+			throw new \Aimeos\MShop\Service\Exception( $msg );
+		}
+
+		if( !isset( $params['PayerID'] ) )
+		{
+			$msg = sprintf( $this->getContext()->getI18n()->dt( 'mshop', 'Required parameter "%1$s" is missing' ), 'PayerID' );
+			throw new \Aimeos\MShop\Service\Exception( $msg );
+		}
+
+		$baseItem = $this->getOrderBase( $orderItem->getBaseId() );
+		$type = \Aimeos\MShop\Order\Item\Base\Service\Base::TYPE_PAYMENT;
+		$serviceItem = $this->getBasketService( $baseItem, $type, $this->getServiceItem()->getCode() );
+
+		$price = $baseItem->getPrice();
+
+		$values = $this->getAuthParameter();
+		$values['METHOD'] = 'DoExpressCheckoutPayment';
+		$values['TOKEN'] = $params['token'];
+		$values['PAYERID'] = $params['PayerID'];
+		$values['PAYMENTACTION'] = $this->getConfigValue( array( 'paypalexpress.PaymentAction' ), 'Sale' );
+		$values['CURRENCYCODE'] = $price->getCurrencyId();
+		$values['AMT'] = $this->getAmount( $price );
+
+		$urlQuery = http_build_query( $values, '', '&' );
+		$response = $this->send( $this->apiendpoint, 'POST', $urlQuery );
+		$rvals = $this->checkResponse( $orderItem->getId(), $response, __METHOD__ );
+
+		$attributes = array( 'PAYERID' => $params['PayerID'] );
+
+		if( isset( $rvals['TRANSACTIONID'] ) )
+		{
+			$attributes['TRANSACTIONID'] = $rvals['TRANSACTIONID'];
+			$this->setAttributes( $serviceItem, array( $rvals['TRANSACTIONID'] => $rvals['PAYMENTSTATUS'] ), 'payment/paypal/txn' );
+		}
+
+		$this->setAttributes( $serviceItem, $attributes, 'payment/paypal' );
+		$this->saveOrderBase( $baseItem );
+
+		$this->setPaymentStatus( $orderItem, $rvals );
+		$this->saveOrder( $orderItem );
+
+		return $orderItem;
 	}
 
 
@@ -410,49 +508,6 @@ class PayPalExpress
 		return false;
 	}
 
-	/**
-	 * Begins paypalexpress transaction and saves transaction id.
-	 *
-	 * @param mixed $params Update information whose format depends on the payment provider
-	 * @return \Aimeos\MShop\Order\Item\Iface|null Order item if update was successful, null if the given parameters are not valid for this provider
-	 */
-	protected function doExpressCheckoutPayment( $params )
-	{
-		$order = $this->getOrder( $params['orderid'] );
-		$baseid = $order->getBaseId();
-		$baseItem = $this->getOrderBase( $baseid );
-		$serviceItem = $baseItem->getService( \Aimeos\MShop\Order\Item\Base\Service\Base::TYPE_PAYMENT );
-
-		$values = $this->getAuthParameter();
-		$values['METHOD'] = 'DoExpressCheckoutPayment';
-		$values['TOKEN'] = $params['token'];
-		$values['PAYERID'] = $params['PayerID'];
-		$values['PAYMENTACTION'] = $this->getConfigValue( array( 'paypalexpress.PaymentAction' ), 'Sale' );
-		$values['CURRENCYCODE'] = $baseItem->getPrice()->getCurrencyId();
-		$values['NOTIFYURL'] = $this->getConfigValue( array( 'payment.url-update', 'payment.url-success' ) );
-		$values['AMT'] = ( $baseItem->getPrice()->getValue() + $baseItem->getPrice()->getCosts() );
-
-		$urlQuery = http_build_query( $values, '', '&' );
-		$response = $this->getCommunication()->transmit( $this->apiendpoint, 'POST', $urlQuery );
-		$rvals = $this->checkResponse( $order->getId(), $response, __METHOD__ );
-
-		$attributes = array( 'PAYERID' => $params['PayerID'] );
-
-		if( isset( $rvals['TRANSACTIONID'] ) )
-		{
-			$attributes['TRANSACTIONID'] = $rvals['TRANSACTIONID'];
-			$this->setAttributes( $serviceItem, array( $rvals['TRANSACTIONID'] => $rvals['PAYMENTSTATUS'] ), 'payment/paypal/txn' );
-		}
-
-		$this->setAttributes( $serviceItem, $attributes, 'payment/paypal' );
-		$this->saveOrderBase( $baseItem );
-
-		$this->setPaymentStatus( $order, $rvals );
-		$this->saveOrder( $order );
-
-		return $order;
-	}
-
 
 	/**
 	 * Checks the response from the payment server.
@@ -465,19 +520,19 @@ class PayPalExpress
 	 */
 	protected function checkResponse( $orderid, $response, $method )
 	{
-		$rvals = array();
+		$rvals = [];
 		parse_str( $response, $rvals );
 
 		if( $rvals['ACK'] !== 'Success' )
 		{
 			$msg = 'PayPal Express: method = ' . $method . ', order ID = ' . $orderid . ', response = ' . print_r( $rvals, true );
-			$this->getContext()->getLogger()->log( $msg, \Aimeos\MW\Logger\Base::INFO );
+			$this->getContext()->getLogger()->log( $msg, \Aimeos\MW\Logger\Base::WARN, 'core/service/payment' );
 
 			if( $rvals['ACK'] !== 'SuccessWithWarning' )
 			{
 				$short = ( isset( $rvals['L_SHORTMESSAGE0'] ) ? $rvals['L_SHORTMESSAGE0'] : '<none>' );
-				$msg = sprintf( 'PayPal Express: Request for order ID "%1$s" failed with "%2$s"', $orderid, $short );
-				throw new \Aimeos\MShop\Service\Exception( $msg );
+				$msg = $this->getContext()->getI18n()->dt( 'mshop', 'PayPal Express: Request for order ID "%1$s" failed with "%2$s"' );
+				throw new \Aimeos\MShop\Service\Exception( sprintf( $msg, $orderid, $short ) );
 			}
 		}
 
@@ -488,25 +543,25 @@ class PayPalExpress
 	/**
 	 * Checks if IPN message from paypal is valid.
 	 *
-	 * @param \Aimeos\MShop\Order\Item\Base\Iface $basket
-	 * @param array $params
+	 * @param \Aimeos\MShop\Order\Item\Base\Iface $basket Order base item
+	 * @param array $params List of parameters
 	 */
 	protected function checkIPN( $basket, $params )
 	{
-		$attrManager = \Aimeos\MShop\Factory::createManager( $this->getContext(), 'order/base/service/attribute' );
+		$attrManager = \Aimeos\MShop::create( $this->getContext(), 'order/base/service/attribute' );
 
 		if( $this->getConfigValue( array( 'paypalexpress.AccountEmail' ) ) !== $params['receiver_email'] )
 		{
-			$msg = sprintf( 'PayPal Express: Wrong receiver email "%1$s"', $params['receiver_email'] );
-			throw new \Aimeos\MShop\Service\Exception( $msg );
+			$msg = $this->getContext()->getI18n()->dt( 'mshop', 'PayPal Express: Wrong receiver email "%1$s"' );
+			throw new \Aimeos\MShop\Service\Exception( sprintf( $msg, $params['receiver_email'] ) );
 		}
 
 		$price = $basket->getPrice();
-		$amount = $price->getValue() + $price->getCosts();
-		if( $amount != $params['payment_amount'] )
+
+		if( $this->getAmount( $price ) != $params['payment_amount'] )
 		{
-			$msg = sprintf( 'PayPal Express: Wrong payment amount "%1$s" for order ID "%2$s"', $params['payment_amount'], $params['invoice'] );
-			throw new \Aimeos\MShop\Service\Exception( $msg );
+			$msg = $this->getContext()->getI18n()->dt( 'mshop', 'PayPal Express: Wrong payment amount "%1$s" for order ID "%2$s"' );
+			throw new \Aimeos\MShop\Service\Exception( sprintf( $msg, $params['payment_amount'], $params['invoice'] ) );
 		}
 
 		$search = $attrManager->createSearch();
@@ -518,10 +573,10 @@ class PayPalExpress
 		$search->setConditions( $search->combine( '&&', $expr ) );
 		$results = $attrManager->searchItems( $search );
 
-		if( ( $attr = reset( $results ) ) !== false )
+		if( reset( $results ) !== false )
 		{
-			$msg = sprintf( 'PayPal Express: Duplicate transaction with ID "%1$s" and status "%2$s" ', $params['txn_id'], $params['txn_status'] );
-			throw new \Aimeos\MShop\Service\Exception( $msg );
+			$msg = $this->getContext()->getI18n()->dt( 'mshop', 'PayPal Express: Duplicate transaction with ID "%1$s" and status "%2$s"' );
+			throw new \Aimeos\MShop\Service\Exception( sprintf( $msg, $params['txn_id'], $params['txn_status'] ) );
 		}
 	}
 
@@ -550,7 +605,7 @@ class PayPalExpress
 					}
 
 					$str = 'PayPal Express: order ID = ' . $invoice->getId() . ', PENDINGREASON = ' . $response['PENDINGREASON'];
-					$this->getContext()->getLogger()->log( $str, \Aimeos\MW\Logger\Base::INFO );
+					$this->getContext()->getLogger()->log( $str, \Aimeos\MW\Logger\Base::INFO, 'core/service/payment' );
 				}
 
 				$invoice->setPaymentStatus( \Aimeos\MShop\Order\Item\Base::PAY_PENDING );
@@ -584,7 +639,7 @@ class PayPalExpress
 
 			default:
 				$str = 'PayPal Express: order ID = ' . $invoice->getId() . ', response = ' . print_r( $response, true );
-				$this->getContext()->getLogger()->log( $str, \Aimeos\MW\Logger\Base::INFO );
+				$this->getContext()->getLogger()->log( $str, \Aimeos\MW\Logger\Base::INFO, 'core/service/payment' );
 		}
 	}
 
@@ -597,78 +652,95 @@ class PayPalExpress
 	 */
 	protected function getOrderDetails( \Aimeos\MShop\Order\Item\Base\Iface $orderBase )
 	{
-		$values = $this->getAuthParameter();
-
-		try
-		{
-			$orderAddressDelivery = $orderBase->getAddress( \Aimeos\MShop\Order\Item\Base\Address\Base::TYPE_DELIVERY );
-
-			/* setting up the shipping address details (ReviewOrder) */
-			$values['ADDROVERRIDE'] = 1;
-			$values['PAYMENTREQUEST_0_SHIPTONAME'] = $orderAddressDelivery->getFirstName() . ' ' . $orderAddressDelivery->getLastName();
-			$values['PAYMENTREQUEST_0_SHIPTOSTREET'] = $orderAddressDelivery->getAddress1() . ' ' . $orderAddressDelivery->getAddress2() . ' ' . $orderAddressDelivery->getAddress3();
-			$values['PAYMENTREQUEST_0_SHIPTOCITY'] = $orderAddressDelivery->getCity();
-			$values['PAYMENTREQUEST_0_SHIPTOSTATE'] = $orderAddressDelivery->getState();
-			$values['PAYMENTREQUEST_0_SHIPTOCOUNTRYCODE'] = $orderAddressDelivery->getCountryId();
-			$values['PAYMENTREQUEST_0_SHIPTOZIP'] = $orderAddressDelivery->getPostal();
-		}
-		catch( \Exception $e ) {; } // If no address is available
-
 		$lastPos = 0;
-		foreach( $orderBase->getProducts() as $product )
+		$deliveryPrices = [];
+		$values = $this->getAuthParameter();
+		$addresses = $orderBase->getAddress( \Aimeos\MShop\Order\Item\Base\Address\Base::TYPE_PAYMENT );
+
+
+		if( $this->getConfigValue( 'paypalexpress.address', true ) && ( $address = current( $addresses ) ) !== false )
 		{
-			$lastPos = $product->getPosition() - 1;
-			$values['L_PAYMENTREQUEST_0_NUMBER' . $lastPos] = $product->getId();
-			$values['L_PAYMENTREQUEST_0_NAME' . $lastPos] = $product->getName();
-			$values['L_PAYMENTREQUEST_0_QTY' . $lastPos] = $product->getQuantity();
-			$values['L_PAYMENTREQUEST_0_AMT' . $lastPos] = $product->getPrice()->getValue();
+			/* setting up the address details */
+			$values['NOSHIPPING'] = $this->getConfigValue( array( 'paypalexpress.NoShipping' ), 1 );
+			$values['ADDROVERRIDE'] = $this->getConfigValue( array( 'paypalexpress.AddrOverride' ), 0 );
+			$values['PAYMENTREQUEST_0_SHIPTONAME'] = $address->getFirstName() . ' ' . $address->getLastName();
+			$values['PAYMENTREQUEST_0_SHIPTOSTREET'] = $address->getAddress1() . ' ' . $address->getAddress2() . ' ' . $address->getAddress3();
+			$values['PAYMENTREQUEST_0_SHIPTOCITY'] = $address->getCity();
+			$values['PAYMENTREQUEST_0_SHIPTOSTATE'] = $address->getState();
+			$values['PAYMENTREQUEST_0_SHIPTOCOUNTRYCODE'] = $address->getCountryId();
+			$values['PAYMENTREQUEST_0_SHIPTOZIP'] = $address->getPostal();
 		}
 
-		foreach( $orderBase->getServices() as $service )
+
+		if( $this->getConfigValue( 'paypalexpress.product', true ) )
 		{
-			if( ( $val = $service->getPrice()->getValue() ) > '0.00' )
+			foreach( $orderBase->getProducts() as $product )
 			{
-				$lastPos++;
-				$values['L_PAYMENTREQUEST_0_NAME' . $lastPos] = $service->getName();
-				$values['L_PAYMENTREQUEST_0_QTY' . $lastPos] = '1';
-				$values['L_PAYMENTREQUEST_0_AMT' . $lastPos] = $val;
+				$price = $product->getPrice();
+				$lastPos = $product->getPosition();
+
+				$deliveryPrice = clone $price;
+				$deliveryPrices = $this->addPrice( $deliveryPrices, $deliveryPrice->setValue( '0.00' ), $product->getQuantity() );
+
+				$values['L_PAYMENTREQUEST_0_NUMBER' . $lastPos] = $product->getId();
+				$values['L_PAYMENTREQUEST_0_NAME' . $lastPos] = $product->getName();
+				$values['L_PAYMENTREQUEST_0_QTY' . $lastPos] = $product->getQuantity();
+				$values['L_PAYMENTREQUEST_0_AMT' . $lastPos] = $this->getAmount( $price, false );
 			}
 		}
 
-		$paymentItem = $orderBase->getService( 'payment' );
-		if( ( $paymentCosts = $paymentItem->getPrice()->getCosts() ) > '0.00' )
+
+		if( $this->getConfigValue( 'paypalexpress.service', true ) )
 		{
-			$lastPos++;
-			$values['L_PAYMENTREQUEST_0_NAME' . $lastPos] = $this->getContext()->getI18n()->dt( 'mshop', 'Payment costs' );
-			$values['L_PAYMENTREQUEST_0_QTY' . $lastPos] = '1';
-			$values['L_PAYMENTREQUEST_0_AMT' . $lastPos] = $paymentCosts;
+			foreach( $orderBase->getService( 'payment' ) as $service )
+			{
+				$price = $service->getPrice();
+
+				if( ( $paymentCosts = $this->getAmount( $price ) ) > '0.00' )
+				{
+					$lastPos++;
+					$values['L_PAYMENTREQUEST_0_NAME' . $lastPos] = $this->getContext()->getI18n()->dt( 'mshop', 'Payment costs' );
+					$values['L_PAYMENTREQUEST_0_QTY' . $lastPos] = '1';
+					$values['L_PAYMENTREQUEST_0_AMT' . $lastPos] = $paymentCosts;
+				}
+			}
+
+			try
+			{
+				$lastPos = 0;
+				foreach( $orderBase->getService( 'delivery' ) as $service )
+				{
+					$deliveryPrices = $this->addPrice( $deliveryPrices, $service->getPrice() );
+
+					$values['L_SHIPPINGOPTIONAMOUNT' . $lastPos] = number_format( $deliveryCosts, 2, '.', '' );
+					$values['L_SHIPPINGOPTIONLABEL' . $lastPos] = $service->getCode();
+					$values['L_SHIPPINGOPTIONNAME' . $lastPos] = $service->getName();
+					$values['L_SHIPPINGOPTIONISDEFAULT' . $lastPos] = 'true';
+
+					$lastPos++;
+				}
+			}
+			catch( \Exception $e ) { ; } // If no delivery service is available
 		}
 
-		$price = $orderBase->getPrice();
-		$amount = $price->getValue() + $price->getCosts();
 
-		$values['MAXAMT'] = $amount + 0.01; // @todo rounding error?
-		$values['PAYMENTREQUEST_0_AMT'] = number_format( $amount, 2, '.', '' );
-		$values['PAYMENTREQUEST_0_ITEMAMT'] = (string) ( $price->getValue() + $paymentCosts );
-		$values['PAYMENTREQUEST_0_SHIPPINGAMT'] = (string) ( $price->getCosts() - $paymentCosts );
+		$deliveryCosts = 0;
+		$price = $orderBase->getPrice();
+		$amount = $this->getAmount( $price );
+
+		foreach( $deliveryPrices as $priceItem ) {
+			$deliveryCosts += $this->getAmount( $priceItem, true, true, $price->getPrecision() + 2 );
+		}
+
+		$values['MAXAMT'] = $amount + 1 / pow( 10, $price->getPrecision() ); // possible rounding error
+		$values['PAYMENTREQUEST_0_AMT'] = $amount;
+		$values['PAYMENTREQUEST_0_ITEMAMT'] = number_format( $amount - $deliveryCosts, $price->getPrecision(), '.', '' );
+		$values['PAYMENTREQUEST_0_SHIPPINGAMT'] = number_format( $deliveryCosts, $price->getPrecision(), '.', '' );
 		$values['PAYMENTREQUEST_0_INSURANCEAMT'] = '0.00';
 		$values['PAYMENTREQUEST_0_INSURANCEOPTIONOFFERED'] = 'false';
 		$values['PAYMENTREQUEST_0_SHIPDISCAMT'] = '0.00';
-		$values['PAYMENTREQUEST_0_TAXAMT'] = $price->getTaxRate();
 		$values['PAYMENTREQUEST_0_CURRENCYCODE'] = $orderBase->getPrice()->getCurrencyId();
 		$values['PAYMENTREQUEST_0_PAYMENTACTION'] = $this->getConfigValue( array( 'paypalexpress.PaymentAction' ), 'sale' );
-
-		try
-		{
-			$orderServiceDeliveryItem = $orderBase->getService( 'delivery' );
-
-			$values['L_SHIPPINGOPTIONAMOUNT0'] = (string) ( $price->getCosts() - $paymentCosts );
-			$values['L_SHIPPINGOPTIONLABEL0'] = $orderServiceDeliveryItem->getName();
-			$values['L_SHIPPINGOPTIONNAME0'] = $orderServiceDeliveryItem->getCode();
-			$values['L_SHIPPINGOPTIONISDEFAULT0'] = 'true';
-		}
-		catch( \Exception $e ) {; } // If no delivery service is available
-
 
 		return $values;
 	}
@@ -682,7 +754,7 @@ class PayPalExpress
 	protected function getAuthParameter()
 	{
 		return array(
-			'VERSION' => '87.0',
+			'VERSION' => '204.0',
 			'SIGNATURE' => $this->getConfigValue( array( 'paypalexpress.ApiSignature' ) ),
 			'USER' => $this->getConfigValue( array( 'paypalexpress.ApiUsername' ) ),
 			'PWD' => $this->getConfigValue( array( 'paypalexpress.ApiPassword' ) ),
@@ -693,12 +765,83 @@ class PayPalExpress
 	/**
 	 * Returns order service item for specified base ID.
 	 *
-	 * @param integer $baseid Base ID of the order
+	 * @param string $baseid Base ID of the order
 	 * @return \Aimeos\MShop\Order\Item\Base\Service\Iface Order service item
 	 */
 	protected function getOrderServiceItem( $baseid )
 	{
-		$basket = $this->getOrderBase( $baseid, \Aimeos\MShop\Order\Manager\Base\Base::PARTS_SERVICE );
-		return $basket->getService( \Aimeos\MShop\Order\Item\Base\Service\Base::TYPE_PAYMENT );
+		$type = \Aimeos\MShop\Order\Item\Base\Service\Base::TYPE_PAYMENT;
+		$basket = $this->getOrderBase( $baseid, \Aimeos\MShop\Order\Item\Base\Base::PARTS_SERVICE );
+
+		return $this->getBasketService( $basket, $type, $this->getServiceItem()->getCode() );
+	}
+
+
+	/**
+	 * Adds the costs to the price item with the corresponding tax rate
+	 *
+	 * @param \Aimeos\MShop\Price\Item\Iface[] $prices Associative list of tax rates as key and price items as value
+	 * @param \Aimeos\MShop\Price\Item\Iface $price Price item that should be added
+	 * @param integer $quantity Product quantity
+	 * @return \Aimeos\MShop\Price\Item\Iface[] Updated list of price items
+	 */
+	protected function addPrice( array $prices, $price, $quantity = 1 )
+	{
+		$taxrate = $price->getTaxRate();
+
+		if( !isset( $prices[$taxrate] ) )
+		{
+			$prices[$taxrate] = \Aimeos\MShop::create( $this->getContext(), 'price' )->createItem();
+			$prices[$taxrate]->setTaxRate( $taxrate );
+		}
+
+		$prices[$taxrate]->addItem( $price, $quantity );
+
+		return $prices;
+	}
+
+
+	/**
+	 * Sends request parameters to the providers interface.
+	 *
+	 * @param string $target Receivers address e.g. url.
+	 * @param string $method Initial method (e.g. post or get)
+	 * @param mixed $payload Update information whose format depends on the payment provider
+	 * @return string response body of a http request
+	 */
+	public function send( $target, $method, $payload )
+	{
+		if( ( $curl = curl_init() ) === false ) {
+			throw new \Aimeos\MShop\Service\Exception( 'Could not initialize curl' );
+		}
+
+		try
+		{
+			curl_setopt( $curl, CURLOPT_URL, $target );
+
+			curl_setopt( $curl, CURLOPT_CUSTOMREQUEST, strtoupper( $method ) );
+			curl_setopt( $curl, CURLOPT_POSTFIELDS, $payload );
+			curl_setopt( $curl, CURLOPT_CONNECTTIMEOUT, 25 );
+			curl_setopt( $curl, CURLOPT_RETURNTRANSFER, true ); // return data as string
+
+			curl_setopt( $curl, CURLOPT_SSL_VERIFYPEER, true );
+
+			if( ( $response = curl_exec( $curl ) ) === false ) {
+				throw new \Aimeos\MShop\Service\Exception( sprintf( 'Sending order failed: "%1$s"', curl_error( $curl ) ) );
+			}
+
+			if( curl_errno( $curl ) ) {
+				throw new \Aimeos\MShop\Service\Exception( sprintf( 'Curl error: "%1$s" - "%2$s"', curl_errno( $curl ), curl_error( $curl ) ) );
+			}
+
+			curl_close( $curl );
+		}
+		catch( \Exception $e )
+		{
+			curl_close( $curl );
+			throw $e;
+		}
+
+		return $response;
 	}
 }

@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2013
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2013
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Media
  */
@@ -19,111 +19,113 @@ namespace Aimeos\MShop\Media\Manager\Lists;
  */
 class Standard
 	extends \Aimeos\MShop\Common\Manager\Lists\Base
-	implements \Aimeos\MShop\Media\Manager\Lists\Iface
+	implements \Aimeos\MShop\Media\Manager\Lists\Iface, \Aimeos\MShop\Common\Manager\Factory\Iface
 {
 	private $searchConfig = array(
-		'media.lists.id'=> array(
-			'code'=>'media.lists.id',
-			'internalcode'=>'mmedli."id"',
-			'internaldeps'=> array( 'LEFT JOIN "mshop_media_list" AS mmedli ON ( mmed."id" = mmedli."parentid" )' ),
-			'label'=>'Media list ID',
-			'type'=> 'integer',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_INT,
+		'media.lists.id' => array(
+			'code' => 'media.lists.id',
+			'internalcode' => 'mmedli."id"',
+			'label' => 'List ID',
+			'type' => 'integer',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 			'public' => false,
 		),
-		'media.lists.siteid'=> array(
-			'code'=>'media.lists.siteid',
-			'internalcode'=>'mmedli."siteid"',
-			'label'=>'Media list site ID',
-			'type'=> 'integer',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_INT,
+		'media.lists.siteid' => array(
+			'code' => 'media.lists.siteid',
+			'internalcode' => 'mmedli."siteid"',
+			'label' => 'List site ID',
+			'type' => 'integer',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 			'public' => false,
 		),
-		'media.lists.parentid'=> array(
-			'code'=>'media.lists.parentid',
-			'internalcode'=>'mmedli."parentid"',
-			'label'=>'Media list media ID',
-			'type'=> 'integer',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_INT,
+		'media.lists.parentid' => array(
+			'code' => 'media.lists.parentid',
+			'internalcode' => 'mmedli."parentid"',
+			'label' => 'List media ID',
+			'type' => 'integer',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 			'public' => false,
 		),
-		'media.lists.domain'=> array(
-			'code'=>'media.lists.domain',
-			'internalcode'=>'mmedli."domain"',
-			'label'=>'Media list domain',
-			'type'=> 'string',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'media.lists.type' => array(
+			'code' => 'media.lists.type',
+			'internalcode' => 'mmedli."type"',
+			'label' => 'List type',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
-		'media.lists.typeid'=> array(
-			'code'=>'media.lists.typeid',
-			'internalcode'=>'mmedli."typeid"',
-			'label'=>'Media list type ID',
-			'type'=> 'integer',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_INT,
-			'public' => false,
-		),
-		'media.lists.refid'=> array(
-			'code'=>'media.lists.refid',
-			'internalcode'=>'mmedli."refid"',
-			'label'=>'Media list reference ID',
-			'type'=> 'string',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'media.lists.refid' => array(
+			'code' => 'media.lists.refid',
+			'internalcode' => 'mmedli."refid"',
+			'label' => 'List reference ID',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
 		'media.lists.datestart' => array(
-			'code'=>'media.lists.datestart',
-			'internalcode'=>'mmedli."start"',
-			'label'=>'Media list start date',
-			'type'=> 'datetime',
+			'code' => 'media.lists.datestart',
+			'internalcode' => 'mmedli."start"',
+			'label' => 'List start date',
+			'type' => 'datetime',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
 		'media.lists.dateend' => array(
-			'code'=>'media.lists.dateend',
-			'internalcode'=>'mmedli."end"',
-			'label'=>'Media list end date',
-			'type'=> 'datetime',
+			'code' => 'media.lists.dateend',
+			'internalcode' => 'mmedli."end"',
+			'label' => 'List end date',
+			'type' => 'datetime',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
-		'media.lists.config' => array(
-			'code'=>'media.lists.config',
-			'internalcode'=>'mmedli."config"',
-			'label'=>'Media list config',
-			'type'=> 'string',
+		'media.lists.domain' => array(
+			'code' => 'media.lists.domain',
+			'internalcode' => 'mmedli."domain"',
+			'label' => 'List domain',
+			'type' => 'string',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
 		'media.lists.position' => array(
-			'code'=>'media.lists.position',
-			'internalcode'=>'mmedli."pos"',
-			'label'=>'Media list position',
-			'type'=> 'integer',
+			'code' => 'media.lists.position',
+			'internalcode' => 'mmedli."pos"',
+			'label' => 'List position',
+			'type' => 'integer',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 		),
 		'media.lists.status' => array(
-			'code'=>'media.lists.status',
-			'internalcode'=>'mmedli."status"',
-			'label'=>'Media list status',
-			'type'=> 'integer',
+			'code' => 'media.lists.status',
+			'internalcode' => 'mmedli."status"',
+			'label' => 'List status',
+			'type' => 'integer',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 		),
-		'media.lists.ctime'=> array(
-			'code'=>'media.lists.ctime',
-			'internalcode'=>'mmedli."ctime"',
-			'label'=>'Media list create date/time',
-			'type'=> 'datetime',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'media.lists.config' => array(
+			'code' => 'media.lists.config',
+			'internalcode' => 'mmedli."config"',
+			'label' => 'List config',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
-		'media.lists.mtime'=> array(
-			'code'=>'media.lists.mtime',
-			'internalcode'=>'mmedli."mtime"',
-			'label'=>'Media list modification date/time',
-			'type'=> 'datetime',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'media.lists.ctime' => array(
+			'code' => 'media.lists.ctime',
+			'internalcode' => 'mmedli."ctime"',
+			'label' => 'List create date/time',
+			'type' => 'datetime',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
-		'media.lists.editor'=> array(
-			'code'=>'media.lists.editor',
-			'internalcode'=>'mmedli."editor"',
-			'label'=>'Media list editor',
-			'type'=> 'string',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'media.lists.mtime' => array(
+			'code' => 'media.lists.mtime',
+			'internalcode' => 'mmedli."mtime"',
+			'label' => 'List modify date/time',
+			'type' => 'datetime',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
+		),
+		'media.lists.editor' => array(
+			'code' => 'media.lists.editor',
+			'internalcode' => 'mmedli."editor"',
+			'label' => 'List editor',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
 	);
 
@@ -143,16 +145,30 @@ class Standard
 	/**
 	 * Removes old entries from the storage.
 	 *
-	 * @param array $siteids List of IDs for sites whose entries should be deleted
+	 * @param string[] $siteids List of IDs for sites whose entries should be deleted
+	 * @return \Aimeos\MShop\Media\Manager\Lists\Iface Manager object for chaining method calls
 	 */
-	public function cleanup( array $siteids )
+	public function clear( array $siteids )
 	{
 		$path = 'mshop/media/manager/lists/submanagers';
-		foreach( $this->getContext()->getConfig()->get( $path, array( 'type' ) ) as $domain ) {
-			$this->getSubManager( $domain )->cleanup( $siteids );
+		foreach( $this->getContext()->getConfig()->get( $path, ['type'] ) as $domain ) {
+			$this->getObject()->getSubManager( $domain )->clear( $siteids );
 		}
 
-		$this->cleanupBase( $siteids, 'mshop/media/manager/lists/standard/delete' );
+		return $this->clearBase( $siteids, 'mshop/media/manager/lists/standard/delete' );
+	}
+
+
+	/**
+	 * Returns the available manager types
+	 *
+	 * @param boolean $withsub Return also the resource type of sub-managers if true
+	 * @return string[] Type of the manager and submanagers, subtypes are separated by slashes
+	 */
+	public function getResourceType( $withsub = true )
+	{
+		$path = 'mshop/media/manager/lists/submanagers';
+		return $this->getResourceTypeBase( 'media/lists', $path, [], $withsub );
 	}
 
 
@@ -160,7 +176,7 @@ class Standard
 	 * Returns the list attributes that can be used for searching.
 	 *
 	 * @param boolean $withsub Return also attributes of sub-managers if true
-	 * @return array List of attribute items implementing \Aimeos\MW\Criteria\Attribute\Iface
+	 * @return \Aimeos\MW\Criteria\Attribute\Iface[] List of search attribute items
 	 */
 	public function getSearchAttributes( $withsub = true )
 	{
@@ -183,7 +199,7 @@ class Standard
 		 */
 		$path = 'mshop/media/manager/lists/submanagers';
 
-		return $this->getSearchAttributesBase( $this->searchConfig, $path, array( 'type' ), $withsub );
+		return $this->getSearchAttributesBase( $this->searchConfig, $path, [], $withsub );
 	}
 
 
@@ -265,12 +281,14 @@ class Standard
 		 * modify what is returned to the caller.
 		 *
 		 * This option allows you to wrap global decorators
-		 * ("\Aimeos\MShop\Common\Manager\Decorator\*") around the media list manager.
+		 * ("\Aimeos\MShop\Common\Manager\Decorator\*") around the media list
+		 * manager.
 		 *
 		 *  mshop/media/manager/lists/decorators/global = array( 'decorator1' )
 		 *
 		 * This would add the decorator named "decorator1" defined by
-		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator1" only to the media controller.
+		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator1" only to the media
+		 * list manager.
 		 *
 		 * @param array List of decorator names
 		 * @since 2014.03
@@ -289,13 +307,14 @@ class Standard
 		 * modify what is returned to the caller.
 		 *
 		 * This option allows you to wrap local decorators
-		 * ("\Aimeos\MShop\Common\Manager\Decorator\*") around the media list manager.
+		 * ("\Aimeos\MShop\Media\Manager\Lists\Decorator\*") around the media list
+		 * manager.
 		 *
 		 *  mshop/media/manager/lists/decorators/local = array( 'decorator2' )
 		 *
 		 * This would add the decorator named "decorator2" defined by
-		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator2" only to the media
-		 * controller.
+		 * "\Aimeos\MShop\Media\Manager\Lists\Decorator\Decorator2" only to the
+		 * media list manager.
 		 *
 		 * @param array List of decorator names
 		 * @since 2014.03
@@ -316,7 +335,13 @@ class Standard
 	 */
 	protected function getConfigPath()
 	{
-		/** mshop/media/manager/lists/standard/insert
+		/** mshop/media/manager/lists/standard/insert/mysql
+		 * Inserts a new media list record into the database table
+		 *
+		 * @see mshop/media/manager/lists/standard/insert/ansi
+		 */
+
+		/** mshop/media/manager/lists/standard/insert/ansi
 		 * Inserts a new media list record into the database table
 		 *
 		 * Items with no ID yet (i.e. the ID is NULL) will be created in
@@ -339,18 +364,21 @@ class Standard
 		 * @param string SQL statement for inserting records
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/media/manager/lists/standard/update
-		 * @see mshop/media/manager/lists/standard/newid
-		 * @see mshop/media/manager/lists/standard/delete
-		 * @see mshop/media/manager/lists/standard/search
-		 * @see mshop/media/manager/lists/standard/count
-		 * @see mshop/media/manager/lists/standard/aggregate
-		 * @see mshop/media/manager/lists/standard/getposmax
-		 * @see mshop/media/manager/lists/standard/move
-		 * @see mshop/media/manager/lists/standard/updatepos
+		 * @see mshop/media/manager/lists/standard/update/ansi
+		 * @see mshop/media/manager/lists/standard/newid/ansi
+		 * @see mshop/media/manager/lists/standard/delete/ansi
+		 * @see mshop/media/manager/lists/standard/search/ansi
+		 * @see mshop/media/manager/lists/standard/count/ansi
+		 * @see mshop/media/manager/lists/standard/aggregate/ansi
 		 */
 
-		/** mshop/media/manager/lists/standard/update
+		/** mshop/media/manager/lists/standard/update/mysql
+		 * Updates an existing media list record in the database
+		 *
+		 * @see mshop/media/manager/lists/standard/update/ansi
+		 */
+
+		/** mshop/media/manager/lists/standard/update/ansi
 		 * Updates an existing media list record in the database
 		 *
 		 * Items which already have an ID (i.e. the ID is not NULL) will
@@ -370,18 +398,21 @@ class Standard
 		 * @param string SQL statement for updating records
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/media/manager/lists/standard/insert
-		 * @see mshop/media/manager/lists/standard/newid
-		 * @see mshop/media/manager/lists/standard/delete
-		 * @see mshop/media/manager/lists/standard/search
-		 * @see mshop/media/manager/lists/standard/count
-		 * @see mshop/media/manager/lists/standard/aggregate
-		 * @see mshop/media/manager/lists/standard/getposmax
-		 * @see mshop/media/manager/lists/standard/move
-		 * @see mshop/media/manager/lists/standard/updatepos
+		 * @see mshop/media/manager/lists/standard/insert/ansi
+		 * @see mshop/media/manager/lists/standard/newid/ansi
+		 * @see mshop/media/manager/lists/standard/delete/ansi
+		 * @see mshop/media/manager/lists/standard/search/ansi
+		 * @see mshop/media/manager/lists/standard/count/ansi
+		 * @see mshop/media/manager/lists/standard/aggregate/ansi
 		 */
 
-		/** mshop/media/manager/lists/standard/newid
+		/** mshop/media/manager/lists/standard/newid/mysql
+		 * Retrieves the ID generated by the database when inserting a new record
+		 *
+		 * @see mshop/media/manager/lists/standard/newid/ansi
+		 */
+
+		/** mshop/media/manager/lists/standard/newid/ansi
 		 * Retrieves the ID generated by the database when inserting a new record
 		 *
 		 * As soon as a new record is inserted into the database table,
@@ -405,18 +436,21 @@ class Standard
 		 * @param string SQL statement for retrieving the last inserted record ID
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/media/manager/lists/standard/insert
-		 * @see mshop/media/manager/lists/standard/update
-		 * @see mshop/media/manager/lists/standard/delete
-		 * @see mshop/media/manager/lists/standard/search
-		 * @see mshop/media/manager/lists/standard/count
-		 * @see mshop/media/manager/lists/standard/aggregate
-		 * @see mshop/media/manager/lists/standard/getposmax
-		 * @see mshop/media/manager/lists/standard/move
-		 * @see mshop/media/manager/lists/standard/updatepos
+		 * @see mshop/media/manager/lists/standard/insert/ansi
+		 * @see mshop/media/manager/lists/standard/update/ansi
+		 * @see mshop/media/manager/lists/standard/delete/ansi
+		 * @see mshop/media/manager/lists/standard/search/ansi
+		 * @see mshop/media/manager/lists/standard/count/ansi
+		 * @see mshop/media/manager/lists/standard/aggregate/ansi
 		 */
 
-		/** mshop/media/manager/lists/standard/delete
+		/** mshop/media/manager/lists/standard/delete/mysql
+		 * Deletes the items matched by the given IDs from the database
+		 *
+		 * @see mshop/media/manager/lists/standard/delete/ansi
+		 */
+
+		/** mshop/media/manager/lists/standard/delete/ansi
 		 * Deletes the items matched by the given IDs from the database
 		 *
 		 * Removes the records specified by the given IDs from the media database.
@@ -434,18 +468,21 @@ class Standard
 		 * @param string SQL statement for deleting items
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/media/manager/lists/standard/insert
-		 * @see mshop/media/manager/lists/standard/update
-		 * @see mshop/media/manager/lists/standard/newid
-		 * @see mshop/media/manager/lists/standard/search
-		 * @see mshop/media/manager/lists/standard/count
-		 * @see mshop/media/manager/lists/standard/aggregate
-		 * @see mshop/media/manager/lists/standard/getposmax
-		 * @see mshop/media/manager/lists/standard/move
-		 * @see mshop/media/manager/lists/standard/updatepos
+		 * @see mshop/media/manager/lists/standard/insert/ansi
+		 * @see mshop/media/manager/lists/standard/update/ansi
+		 * @see mshop/media/manager/lists/standard/newid/ansi
+		 * @see mshop/media/manager/lists/standard/search/ansi
+		 * @see mshop/media/manager/lists/standard/count/ansi
+		 * @see mshop/media/manager/lists/standard/aggregate/ansi
 		 */
 
-		/** mshop/media/manager/lists/standard/search
+		/** mshop/media/manager/lists/standard/search/mysql
+		 * Retrieves the records matched by the given criteria in the database
+		 *
+		 * @see mshop/media/manager/lists/standard/search/ansi
+		 */
+
+		/** mshop/media/manager/lists/standard/search/ansi
 		 * Retrieves the records matched by the given criteria in the database
 		 *
 		 * Fetches the records matched by the given criteria from the media
@@ -490,18 +527,21 @@ class Standard
 		 * @param string SQL statement for searching items
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/media/manager/lists/standard/insert
-		 * @see mshop/media/manager/lists/standard/update
-		 * @see mshop/media/manager/lists/standard/newid
-		 * @see mshop/media/manager/lists/standard/delete
-		 * @see mshop/media/manager/lists/standard/count
-		 * @see mshop/media/manager/lists/standard/aggregate
-		 * @see mshop/media/manager/lists/standard/getposmax
-		 * @see mshop/media/manager/lists/standard/move
-		 * @see mshop/media/manager/lists/standard/updatepos
+		 * @see mshop/media/manager/lists/standard/insert/ansi
+		 * @see mshop/media/manager/lists/standard/update/ansi
+		 * @see mshop/media/manager/lists/standard/newid/ansi
+		 * @see mshop/media/manager/lists/standard/delete/ansi
+		 * @see mshop/media/manager/lists/standard/count/ansi
+		 * @see mshop/media/manager/lists/standard/aggregate/ansi
 		 */
 
-		/** mshop/media/manager/lists/standard/count
+		/** mshop/media/manager/lists/standard/count/mysql
+		 * Counts the number of records matched by the given criteria in the database
+		 *
+		 * @see mshop/media/manager/lists/standard/count/ansi
+		 */
+
+		/** mshop/media/manager/lists/standard/count/ansi
 		 * Counts the number of records matched by the given criteria in the database
 		 *
 		 * Counts all records matched by the given criteria from the media
@@ -540,18 +580,21 @@ class Standard
 		 * @param string SQL statement for counting items
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/media/manager/lists/standard/insert
-		 * @see mshop/media/manager/lists/standard/update
-		 * @see mshop/media/manager/lists/standard/newid
-		 * @see mshop/media/manager/lists/standard/delete
-		 * @see mshop/media/manager/lists/standard/search
-		 * @see mshop/media/manager/lists/standard/aggregate
-		 * @see mshop/media/manager/lists/standard/getposmax
-		 * @see mshop/media/manager/lists/standard/move
-		 * @see mshop/media/manager/lists/standard/updatepos
+		 * @see mshop/media/manager/lists/standard/insert/ansi
+		 * @see mshop/media/manager/lists/standard/update/ansi
+		 * @see mshop/media/manager/lists/standard/newid/ansi
+		 * @see mshop/media/manager/lists/standard/delete/ansi
+		 * @see mshop/media/manager/lists/standard/search/ansi
+		 * @see mshop/media/manager/lists/standard/aggregate/ansi
 		 */
 
-		/** mshop/media/manager/lists/standard/aggregate
+		/** mshop/media/manager/lists/standard/aggregate/mysql
+		 * Counts the number of records grouped by the values in the key column and matched by the given criteria
+		 *
+		 * @see mshop/media/manager/lists/standard/aggregate/ansi
+		 */
+
+		/** mshop/media/manager/lists/standard/aggregate/ansi
 		 * Counts the number of records grouped by the values in the key column and matched by the given criteria
 		 *
 		 * Groups all records by the values in the key column and counts their
@@ -587,111 +630,12 @@ class Standard
 		 * @param string SQL statement for aggregating order items
 		 * @since 2014.07
 		 * @category Developer
-		 * @see mshop/media/manager/lists/standard/insert
-		 * @see mshop/media/manager/lists/standard/update
-		 * @see mshop/media/manager/lists/standard/newid
-		 * @see mshop/media/manager/lists/standard/delete
-		 * @see mshop/media/manager/lists/standard/search
-		 * @see mshop/media/manager/lists/standard/count
-		 * @see mshop/media/manager/lists/standard/getposmax
-		 * @see mshop/media/manager/lists/standard/move
-		 * @see mshop/media/manager/lists/standard/updatepos
-		 */
-
-		/** mshop/media/manager/lists/standard/getposmax
-		 * Retrieves the position of the list record with the highest number
-		 *
-		 * When moving or inserting records into the list, the highest position
-		 * number must be known to append records at the end. Only records from
-		 * the same site that is configured via the conmedia item are considered.
-		 *
-		 * The SQL statement must be a string suitable for being used as
-		 * prepared statement. It must include question marks for binding the
-		 * required values to the statement before they are sent to the
-		 * database server. The number of question marks must be the same as
-		 * used in the moveItem() method and their order must correspond to the
-		 * order in the same method.
-		 *
-		 * The SQL statement should conform to the ANSI standard to be
-		 * with most relational database systems. This also includes using
-		 * double quotes for table and column names.
-		 *
-		 * @param string SQL statement for determining the position with the highest number
-		 * @since 2014.07
-		 * @category Developer
-		 * @see mshop/media/manager/lists/standard/insert
-		 * @see mshop/media/manager/lists/standard/update
-		 * @see mshop/media/manager/lists/standard/newid
-		 * @see mshop/media/manager/lists/standard/delete
-		 * @see mshop/media/manager/lists/standard/search
-		 * @see mshop/media/manager/lists/standard/count
-		 * @see mshop/media/manager/lists/standard/aggregate
-		 * @see mshop/media/manager/lists/standard/move
-		 * @see mshop/media/manager/lists/standard/updatepos
-		 */
-
-		/** mshop/media/manager/lists/standard/move
-		 * Moves a list item to another position and updates the other items accordingly
-		 *
-		 * Reorders the records in the list table by updating their position
-		 * field. The records must be from the site that is configured via the
-		 * conmedia item.
-		 *
-		 * The SQL statement must be a string suitable for being used as
-		 * prepared statement. It must include question marks for binding the
-		 * required values to the statement before they are sent to the
-		 * database server. The number of question marks must be the same as
-		 * used in the moveItem() method and their order must correspond to the
-		 * order in the same method.
-		 *
-		 * The SQL statement should conform to the ANSI standard to be
-		 * with most relational database systems. This also includes using
-		 * double quotes for table and column names.
-		 *
-		 * @param string SQL statement for moving items
-		 * @since 2014.07
-		 * @category Developer
-		 * @see mshop/media/manager/lists/standard/insert
-		 * @see mshop/media/manager/lists/standard/update
-		 * @see mshop/media/manager/lists/standard/newid
-		 * @see mshop/media/manager/lists/standard/delete
-		 * @see mshop/media/manager/lists/standard/search
-		 * @see mshop/media/manager/lists/standard/count
-		 * @see mshop/media/manager/lists/standard/aggregate
-		 * @see mshop/media/manager/lists/standard/getposmax
-		 * @see mshop/media/manager/lists/standard/updatepos
-		 */
-
-		/** mshop/media/manager/lists/standard/updatepos
-		 * Updates the position value of a single list record
-		 *
-		 * The moveItem() method needs to set the position value of a sinlge
-		 * record in some cases. The records must be from the site that is
-		 * configured via the conmedia item.
-		 *
-		 * The SQL statement must be a string suitable for being used as
-		 * prepared statement. It must include question marks for binding the
-		 * required values to the statement before they are sent to the
-		 * database server. The number of question marks must be the same as
-		 * used in the moveItem() method and their order must correspond to the
-		 * order in the same method.
-		 *
-		 * The SQL statement should conform to the ANSI standard to be
-		 * with most relational database systems. This also includes using
-		 * double quotes for table and column names.
-		 *
-		 * @param string SQL statement for moving items
-		 * @since 2014.07
-		 * @category Developer
-		 * @see mshop/media/manager/lists/standard/insert
-		 * @see mshop/media/manager/lists/standard/update
-		 * @see mshop/media/manager/lists/standard/newid
-		 * @see mshop/media/manager/lists/standard/delete
-		 * @see mshop/media/manager/lists/standard/search
-		 * @see mshop/media/manager/lists/standard/count
-		 * @see mshop/media/manager/lists/standard/aggregate
-		 * @see mshop/media/manager/lists/standard/getposmax
-		 * @see mshop/media/manager/lists/standard/move
+		 * @see mshop/media/manager/lists/standard/insert/ansi
+		 * @see mshop/media/manager/lists/standard/update/ansi
+		 * @see mshop/media/manager/lists/standard/newid/ansi
+		 * @see mshop/media/manager/lists/standard/delete/ansi
+		 * @see mshop/media/manager/lists/standard/search/ansi
+		 * @see mshop/media/manager/lists/standard/count/ansi
 		 */
 
 		return 'mshop/media/manager/lists/standard/';

@@ -2,7 +2,7 @@
 
 /**
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Convert
  */
@@ -29,7 +29,7 @@ class Factory
 	{
 		if( is_array( $keys ) )
 		{
-			$list = array();
+			$list = [];
 
 			foreach( $keys as $key ) {
 				$list[] = self::createObject( $key );
@@ -38,7 +38,7 @@ class Factory
 			return new \Aimeos\MW\Convert\Compose( $list );
 		}
 
-		return self::createObject( $keys );;
+		return self::createObject( $keys ); ;
 	}
 
 
@@ -56,19 +56,19 @@ class Factory
 		{
 			if( ctype_alnum( $part ) === false )
 			{
-				$classname = is_string( $key ) ? '\\Aimeos\\MW\\Convert\\' . $key : '<not a string>';
+				$classname = is_string( $key ) ? '\Aimeos\MW\Convert\\' . $key : '<not a string>';
 				throw new \Aimeos\MW\Convert\Exception( sprintf( 'Invalid characters in class name "%1$s"', $classname ) );
 			}
 		}
 
-		$iface = '\\Aimeos\\MW\\Convert\\Iface';
-		$classname = '\\Aimeos\\MW\\Convert\\' . $key;
+		$iface = \Aimeos\MW\Convert\Iface::class;
+		$classname = '\Aimeos\MW\Convert\\' . $key;
 
 		if( class_exists( $classname ) === false ) {
 			throw new \Aimeos\MW\Convert\Exception( sprintf( 'Class "%1$s" not available', $classname ) );
 		}
 
-		$object =  new $classname();
+		$object = new $classname();
 
 		if( !( $object instanceof $iface ) ) {
 			throw new \Aimeos\MW\Convert\Exception( sprintf( 'Class "%1$s" does not implement interface "%2$s"', $classname, $iface ) );

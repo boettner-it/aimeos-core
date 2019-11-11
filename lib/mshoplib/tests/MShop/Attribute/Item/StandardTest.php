@@ -1,56 +1,40 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 namespace Aimeos\MShop\Attribute\Item;
 
 
-/**
- * Test class for \Aimeos\MShop\Attribute\Item\Example.
- */
-class StandardTest extends \PHPUnit_Framework_TestCase
+class StandardTest extends \PHPUnit\Framework\TestCase
 {
 	private $object;
 	private $values;
 
 
-	/**
-	 * Sets up the fixture, for example, opens a network connection.
-	 * This method is called before a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function setUp()
 	{
 		$this->values = array(
-			'id' => 999,
-			'domain' => 'text',
-			'code' => 'X12345',
-			'status' => 1,
-			'typeid' => 3,
-			'type' => 'unittest',
-			'pos' => 0,
-			'label' => 'size',
-			'siteid' => 99,
-			'mtime' => '2011-01-01 00:00:02',
-			'ctime' => '2011-01-01 00:00:01',
-			'editor' => 'unitTestUser'
+			'attribute.id' => 999,
+			'attribute.domain' => 'text',
+			'attribute.code' => 'X12345',
+			'attribute.status' => 1,
+			'attribute.type' => 'unittest',
+			'attribute.position' => 0,
+			'attribute.label' => 'size',
+			'attribute.siteid' => 99,
+			'attribute.mtime' => '2011-01-01 00:00:02',
+			'attribute.ctime' => '2011-01-01 00:00:01',
+			'attribute.editor' => 'unitTestUser',
 		);
 
 		$this->object = new \Aimeos\MShop\Attribute\Item\Standard( $this->values );
 	}
 
 
-	/**
-	 * Tears down the fixture, for example, closes a network connection.
-	 * This method is called after a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function tearDown()
 	{
 		unset( $this->object );
@@ -65,14 +49,23 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testSetId()
 	{
-		$this->object->setId( 999 );
+		$return = $this->object->setId( 999 );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Attribute\Item\Iface::class, $return );
 		$this->assertEquals( 999, $this->object->getId() );
 		$this->assertFalse( $this->object->isModified() );
 
-		$this->object->setId( null );
+		$return = $this->object->setId( null );
 
+		$this->assertInstanceOf( \Aimeos\MShop\Attribute\Item\Iface::class, $return );
 		$this->assertEquals( null, $this->object->getId() );
 		$this->assertEquals( true, $this->object->isModified() );
+	}
+
+
+	public function testGetKey()
+	{
+		$this->assertEquals( '012f8b3a33e1e75e84b5de3fcba4f42f', $this->object->getKey() );
 	}
 
 
@@ -82,16 +75,12 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	}
 
 
-	public function testGetTypeId()
+	public function testSetType()
 	{
-		$this->assertEquals( 3, $this->object->getTypeId() );
-	}
+		$return = $this->object->setType( 'default' );
 
-
-	public function testSetTypeId()
-	{
-		$this->object->setTypeId( 5 );
-		$this->assertEquals( 5, $this->object->getTypeId() );
+		$this->assertInstanceOf( \Aimeos\MShop\Attribute\Item\Iface::class, $return );
+		$this->assertEquals( 'default', $this->object->getType() );
 		$this->assertEquals( true, $this->object->isModified() );
 	}
 
@@ -104,7 +93,9 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testSetDomain()
 	{
-		$this->object->setDomain( 'TestDom' );
+		$return = $this->object->setDomain( 'TestDom' );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Attribute\Item\Iface::class, $return );
 		$this->assertEquals( 'TestDom', $this->object->getDomain() );
 		$this->assertTrue( $this->object->isModified() );
 	}
@@ -118,7 +109,9 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testSetCode()
 	{
-		$this->object->setCode( 'flobee' );
+		$return = $this->object->setCode( 'flobee' );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Attribute\Item\Iface::class, $return );
 		$this->assertEquals( 'flobee', $this->object->getCode() );
 		$this->assertTrue( $this->object->isModified() );
 	}
@@ -132,9 +125,10 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testSetPosition()
 	{
-		$this->object->setPosition( 1 );
-		$this->assertEquals( 1, $this->object->getPosition() );
+		$return = $this->object->setPosition( 1 );
 
+		$this->assertInstanceOf( \Aimeos\MShop\Attribute\Item\Iface::class, $return );
+		$this->assertEquals( 1, $this->object->getPosition() );
 		$this->assertTrue( $this->object->isModified() );
 	}
 
@@ -147,9 +141,10 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testSetLabel()
 	{
-		$this->object->setLabel( 'weight' );
-		$this->assertEquals( 'weight', $this->object->getLabel() );
+		$return = $this->object->setLabel( 'weight' );
 
+		$this->assertInstanceOf( \Aimeos\MShop\Attribute\Item\Iface::class, $return );
+		$this->assertEquals( 'weight', $this->object->getLabel() );
 		$this->assertTrue( $this->object->isModified() );
 	}
 
@@ -162,7 +157,9 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testSetStatus()
 	{
-		$this->object->setStatus( 4 );
+		$return = $this->object->setStatus( 4 );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Attribute\Item\Iface::class, $return );
 		$this->assertEquals( 4, $this->object->getStatus() );
 		$this->assertTrue( $this->object->isModified() );
 	}
@@ -192,51 +189,52 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	}
 
 
+	public function testGetResourceType()
+	{
+		$this->assertEquals( 'attribute', $this->object->getResourceType() );
+	}
+
+
 	public function testFromArray()
 	{
 		$item = new \Aimeos\MShop\Attribute\Item\Standard();
 
-		$list = array(
+		$list = $entries = array(
 			'attribute.id' => 1,
-			'attribute.siteid' => 2,
 			'attribute.code' => 'test',
 			'attribute.domain' => 'product',
 			'attribute.status' => '0',
-			'attribute.typeid' => 3,
+			'attribute.type' => 'unittest',
 			'attribute.type' => 'testtype',
 			'attribute.label' => 'test attribute',
 			'attribute.position' => 10,
-			'attribute.ctime' => '2000-01-01 00:00:00',
-			'attribute.mtime' => '2001-01-01 00:00:00',
-			'attribute.editor' => 'test',
 		);
 
-		$unknown = $item->fromArray( $list );
+		$item = $item->fromArray( $entries, true );
 
-		$this->assertEquals( array( 'attribute.type' => 'testtype' ), $unknown );
-
+		$this->assertEquals( [], $entries );
 		$this->assertEquals( $list['attribute.id'], $item->getId() );
 		$this->assertEquals( $list['attribute.code'], $item->getCode() );
 		$this->assertEquals( $list['attribute.domain'], $item->getDomain() );
 		$this->assertEquals( $list['attribute.status'], $item->getStatus() );
-		$this->assertEquals( $list['attribute.typeid'], $item->getTypeId() );
+		$this->assertEquals( $list['attribute.type'], $item->getType() );
 		$this->assertEquals( $list['attribute.label'], $item->getLabel() );
 		$this->assertEquals( $list['attribute.position'], $item->getPosition() );
 		$this->assertNull( $item->getSiteId() );
-		$this->assertNull( $item->getType() );
 	}
 
 
 	public function testToArray()
 	{
-		$arrayObject = $this->object->toArray();
-		$this->assertEquals( count( $this->values ), count( $arrayObject ) );
+		$arrayObject = $this->object->toArray( true );
+
+		$this->assertEquals( count( $this->values ) + 1, count( $arrayObject ) );
 
 		$this->assertEquals( $this->object->getId(), $arrayObject['attribute.id'] );
+		$this->assertEquals( $this->object->getKey(), $arrayObject['attribute.key'] );
 		$this->assertEquals( $this->object->getCode(), $arrayObject['attribute.code'] );
 		$this->assertEquals( $this->object->getDomain(), $arrayObject['attribute.domain'] );
 		$this->assertEquals( $this->object->getStatus(), $arrayObject['attribute.status'] );
-		$this->assertEquals( $this->object->getTypeId(), $arrayObject['attribute.typeid'] );
 		$this->assertEquals( $this->object->getType(), $arrayObject['attribute.type'] );
 		$this->assertEquals( $this->object->getLabel(), $arrayObject['attribute.label'] );
 		$this->assertEquals( $this->object->getPosition(), $arrayObject['attribute.position'] );
@@ -247,9 +245,26 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	}
 
 
+	public function testIsAvailable()
+	{
+		$this->assertTrue( $this->object->isAvailable() );
+		$this->object->setAvailable( false );
+		$this->assertFalse( $this->object->isAvailable() );
+	}
+
+
+	public function testIsAvailableOnStatus()
+	{
+		$this->assertTrue( $this->object->isAvailable() );
+		$this->object->setStatus( 0 );
+		$this->assertFalse( $this->object->isAvailable() );
+		$this->object->setStatus( -1 );
+		$this->assertFalse( $this->object->isAvailable() );
+	}
+
+
 	public function testIsModified()
 	{
 		$this->assertFalse( $this->object->isModified() );
 	}
-
 }

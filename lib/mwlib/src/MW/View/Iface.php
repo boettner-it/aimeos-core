@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2012
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2012
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage View
  */
@@ -15,15 +15,24 @@ namespace Aimeos\MW\View;
 /**
  * Common interface for all view classes.
  *
- * @method string|array config(string $name = null, string|array $default = null) Returns the config value for the given key
+ * @method boolean access(string|array $groups) True if the current logged in user is in one of the given groups
+ * @method \Aimeos\MW\View\Helper\Block\Iface block() Returns the block helper object
+ * @method mixed config(string $name = null, string|array $default = null) Returns the config value for the given key
+ * @method string content(string $path) Returns the URL for the given path (relative, absolute or data URL)
+ * @method \Aimeos\MW\View\Helper\Csrf\Iface csrf() Returns the CSRF helper object
  * @method string date(string $date) Returns the formatted date
- * @method \Aimeos\MW\View\Helper\Iface encoder() Returns the encoder object
+ * @method \Aimeos\MW\View\Helper\Encoder\Iface encoder() Returns the encoder helper object
  * @method string formparam(string|array $names) Returns the name for the HTML form parameter
  * @method \Aimeos\MW\Mail\Message\Iface mail() Returns the e-mail message object
- * @method string number(integer|float|decimal $number, integer $decimals = 2) Returns the formatted number
- * @method string|array param(string|null $name, string|array $default) Returns the parameter value
+ * @method string number(integer|float|decimal $number, integer $decimals = null) Returns the formatted number
+ * @method string|array param(string|null $name, string|array $default) Parameter value or associative list of key/value pairs
+ * @method string partial(string $filepath, array $params = []) Renders the rendered partial template
+ * @method \Aimeos\MW\View\Helper\Request\Iface request() Returns the request view helper object
+ * @method \Aimeos\MW\View\Helper\Response\Iface response() Returns the response view helper object
+ * @method mixed session($name, $default = null) Returns the session value for the given name
  * @method string translate(string $domain, string $singular, string $plural = '', integer $number = 1) Returns the translated string or the original one if no translation is available
- * @method string url(string|null $target, string|null $controller = null, string|null $action = null, array $params = array(), array $trailing = array(), array $config = array()) Returns the URL assembled from the given arguments
+ * @method string url(string|null $target, string|null $controller = null, string|null $action = null, array $params = [], array $trailing = [], array $config = []) Returns the URL assembled from the given arguments
+ * @method mixed value(array $values, $key, $default = null) Returns the value for the given key in the array
  *
  * @package MW
  * @subpackage View
@@ -78,7 +87,7 @@ interface Iface
 	 *
 	 * @param string $name Name of the view helper as called in the template
 	 * @param \Aimeos\MW\View\Helper\Iface $helper View helper instance
-	 * @return void
+	 * @return \Aimeos\MW\View\Iface View object for method chaining
 	 */
 	public function addHelper( $name, \Aimeos\MW\View\Helper\Iface $helper );
 
@@ -87,7 +96,7 @@ interface Iface
 	 * This method overwrites already existing key/value pairs set by the magic method.
 	 *
 	 * @param array $values Associative list of key/value pairs
-	 * @return void
+	 * @return \Aimeos\MW\View\Iface View object for method chaining
 	 */
 	public function assign( array $values );
 

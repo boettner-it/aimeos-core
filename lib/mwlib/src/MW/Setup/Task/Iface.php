@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Setup
  */
@@ -26,7 +26,7 @@ interface Iface
 	 * @param \Aimeos\MW\Setup\DBSchema\Iface $schema Database schema object
 	 * @param \Aimeos\MW\DB\Connection\Iface $conn Database connection
 	 * @param mixed $additional Additionally provided information for the setup tasks if required
-	 * @return void
+	 * @return null
 	 */
 	public function __construct( \Aimeos\MW\Setup\DBSchema\Iface $schema, \Aimeos\MW\DB\Connection\Iface $conn, $additional = null );
 
@@ -45,10 +45,37 @@ interface Iface
 	public function getPostDependencies();
 
 	/**
-	 * Executes the task for the given database type.
+	 * Updates the schema and migrates the data
 	 *
-	 * @param string $dbtype Database type (mysql)
 	 * @return void
 	 */
-	public function run( $dbtype );
+	public function migrate();
+
+	/**
+	 * Undo all schema changes and migrate data back
+	 *
+	 * @return void
+	 */
+	public function rollback();
+
+	/**
+	 * Cleans up old data required for roll back
+	 *
+	 * @return void
+	 */
+	public function clean();
+
+	/**
+	 * Sets the database manager object
+	 *
+	 * @param \Aimeos\MW\DB\Manager\Iface $dbm Database manager
+	 */
+	public function setDatabaseManager( \Aimeos\MW\DB\Manager\Iface $dbm );
+
+	/**
+	 * Sets the associative list of schemas with the resource name as key.
+	 *
+	 * @param \Aimeos\MW\Setup\DBSchema\Iface[] $schemas Associative list of schemas
+	 */
+	public function setSchemas( array $schemas );
 }

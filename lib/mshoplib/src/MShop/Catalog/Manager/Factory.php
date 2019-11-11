@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Catalog
  */
@@ -26,11 +26,11 @@ class Factory
 	 * Creates a catalog DAO object.
 	 *
 	 * @param \Aimeos\MShop\Context\Item\Iface $context Shop context instance with necessary objects
-	 * @param string $name Manager name
+	 * @param string|null $name Manager name
 	 * @return \Aimeos\MShop\Common\Manager\Iface Manager object
 	 * @throws \Aimeos\MShop\Catalog\Exception If requested manager implementation couldn't be found
 	 */
-	public static function createManager( \Aimeos\MShop\Context\Item\Iface $context, $name = null )
+	public static function create( \Aimeos\MShop\Context\Item\Iface $context, $name = null )
 	{
 		/** mshop/catalog/manager/name
 		 * Class name of the used catalog manager implementation
@@ -71,14 +71,14 @@ class Factory
 
 		if( ctype_alnum( $name ) === false )
 		{
-			$classname = is_string( $name ) ? '\\Aimeos\\MShop\\Catalog\\Manager\\' . $name : '<not a string>';
+			$classname = is_string( $name ) ? '\Aimeos\MShop\Catalog\Manager\\' . $name : '<not a string>';
 			throw new \Aimeos\MShop\Catalog\Exception( sprintf( 'Invalid characters in class name "%1$s"', $classname ) );
 		}
 
-		$iface = '\\Aimeos\\MShop\\Catalog\\Manager\\Iface';
-		$classname = '\\Aimeos\\MShop\\Catalog\\Manager\\' . $name;
+		$iface = \Aimeos\MShop\Catalog\Manager\Iface::class;
+		$classname = '\Aimeos\MShop\Catalog\Manager\\' . $name;
 
-		$manager = self::createManagerBase( $context, $classname, $iface );
+		$manager = self::createManager( $context, $classname, $iface );
 
 		/** mshop/catalog/manager/decorators/excludes
 		 * Excludes decorators added by the "common" option from the catalog manager
@@ -120,7 +120,8 @@ class Factory
 		 *  mshop/catalog/manager/decorators/global = array( 'decorator1' )
 		 *
 		 * This would add the decorator named "decorator1" defined by
-		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator1" only to the catalog controller.
+		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator1" only to the catalog
+		 * manager.
 		 *
 		 * @param array List of decorator names
 		 * @since 2014.03
@@ -139,13 +140,13 @@ class Factory
 		 * modify what is returned to the caller.
 		 *
 		 * This option allows you to wrap local decorators
-		 * ("\Aimeos\MShop\Common\Manager\Decorator\*") around the catalog manager.
+		 * ("\Aimeos\MShop\Catalog\Manager\Decorator\*") around the catalog manager.
 		 *
 		 *  mshop/catalog/manager/decorators/local = array( 'decorator2' )
 		 *
 		 * This would add the decorator named "decorator2" defined by
-		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator2" only to the catalog
-		 * controller.
+		 * "\Aimeos\MShop\Catalog\Manager\Decorator\Decorator2" only to the catalog
+		 * manager.
 		 *
 		 * @param array List of decorator names
 		 * @since 2014.03

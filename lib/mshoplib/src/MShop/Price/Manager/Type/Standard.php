@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2013
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2013
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Price
  */
@@ -19,74 +19,83 @@ namespace Aimeos\MShop\Price\Manager\Type;
  */
 class Standard
 	extends \Aimeos\MShop\Common\Manager\Type\Base
-	implements \Aimeos\MShop\Price\Manager\Type\Iface
+	implements \Aimeos\MShop\Price\Manager\Type\Iface, \Aimeos\MShop\Common\Manager\Factory\Iface
 {
 	private $searchConfig = array(
 		'price.type.id' => array(
-			'code'=>'price.type.id',
-			'internalcode'=>'mprity."id"',
-			'internaldeps'=> array( 'LEFT JOIN "mshop_price_type" AS mprity ON mpri.typeid = mprity.id' ),
-			'label'=>'Price type ID',
-			'type'=> 'integer',
+			'code' => 'price.type.id',
+			'internalcode' => 'mprity."id"',
+			'label' => 'Type ID',
+			'type' => 'integer',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 			'public' => false,
 		),
 		'price.type.siteid' => array(
-			'code'=>'price.type.siteid',
-			'internalcode'=>'mprity."siteid"',
-			'label'=>'Price type site ID',
-			'type'=> 'integer',
+			'code' => 'price.type.siteid',
+			'internalcode' => 'mprity."siteid"',
+			'label' => 'Type site ID',
+			'type' => 'integer',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 			'public' => false,
 		),
+		'price.type.label' => array(
+			'code' => 'price.type.label',
+			'internalcode' => 'mprity."label"',
+			'label' => 'Type label',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		),
 		'price.type.code' => array(
-			'code'=>'price.type.code',
-			'internalcode'=>'mprity."code"',
-			'label'=>'Price type code',
-			'type'=> 'string',
+			'code' => 'price.type.code',
+			'internalcode' => 'mprity."code"',
+			'label' => 'Type code',
+			'type' => 'string',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
 		'price.type.domain' => array(
-			'code'=>'price.type.domain',
-			'internalcode'=>'mprity."domain"',
-			'label'=>'Price type domain',
-			'type'=> 'string',
+			'code' => 'price.type.domain',
+			'internalcode' => 'mprity."domain"',
+			'label' => 'Type domain',
+			'type' => 'string',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
-		'price.type.label' => array(
-			'code'=>'price.type.label',
-			'internalcode'=>'mprity."label"',
-			'label'=>'Price type label',
-			'type'=> 'string',
-			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
-		),
-		'price.type.status' => array(
-			'code'=>'price.type.status',
-			'internalcode'=>'mprity."status"',
-			'label'=>'Price type status',
-			'type'=> 'integer',
+		'price.type.position' => array(
+			'code' => 'price.type.position',
+			'internalcode' => 'mprity."pos"',
+			'label' => 'Type position',
+			'type' => 'integer',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 		),
-		'price.type.mtime'=> array(
-			'code'=>'price.type.mtime',
-			'internalcode'=>'mprity."mtime"',
-			'label'=>'Price type modification date',
-			'type'=> 'datetime',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'price.type.status' => array(
+			'code' => 'price.type.status',
+			'internalcode' => 'mprity."status"',
+			'label' => 'Type status',
+			'type' => 'integer',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 		),
-		'price.type.ctime'=> array(
-			'code'=>'price.type.ctime',
-			'internalcode'=>'mprity."ctime"',
-			'label'=>'Price type creation date/time',
-			'type'=> 'datetime',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'price.type.mtime' => array(
+			'code' => 'price.type.mtime',
+			'internalcode' => 'mprity."mtime"',
+			'label' => 'Type modify date',
+			'type' => 'datetime',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
-		'price.type.editor'=> array(
-			'code'=>'price.type.editor',
-			'internalcode'=>'mprity."editor"',
-			'label'=>'Price type editor',
-			'type'=> 'string',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'price.type.ctime' => array(
+			'code' => 'price.type.ctime',
+			'internalcode' => 'mprity."ctime"',
+			'label' => 'Type create date/time',
+			'type' => 'datetime',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
+		),
+		'price.type.editor' => array(
+			'code' => 'price.type.editor',
+			'internalcode' => 'mprity."editor"',
+			'label' => 'Type editor',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
 	);
 
@@ -107,15 +116,29 @@ class Standard
 	 * Removes old entries from the storage.
 	 *
 	 * @param array $siteids List of IDs for sites whose entries should be deleted
+	 * @return \Aimeos\MShop\Price\Manager\Type\Iface Manager object for chaining method calls
 	 */
-	public function cleanup( array $siteids )
+	public function clear( array $siteids )
 	{
 		$path = 'mshop/price/manager/type/submanagers';
-		foreach( $this->getContext()->getConfig()->get( $path, array() ) as $domain ) {
-			$this->getSubManager( $domain )->cleanup( $siteids );
+		foreach( $this->getContext()->getConfig()->get( $path, [] ) as $domain ) {
+			$this->getObject()->getSubManager( $domain )->clear( $siteids );
 		}
 
-		$this->cleanupBase( $siteids, 'mshop/price/manager/type/standard/delete' );
+		return $this->clearBase( $siteids, 'mshop/price/manager/type/standard/delete' );
+	}
+
+
+	/**
+	 * Returns the available manager types
+	 *
+	 * @param boolean $withsub Return also the resource type of sub-managers if true
+	 * @return string[] Type of the manager and submanagers, subtypes are separated by slashes
+	 */
+	public function getResourceType( $withsub = true )
+	{
+		$path = 'mshop/price/manager/type/submanagers';
+		return $this->getResourceTypeBase( 'price/type', $path, [], $withsub );
 	}
 
 
@@ -123,7 +146,7 @@ class Standard
 	 * Returns the attributes that can be used for searching.
 	 *
 	 * @param boolean $withsub Return also attributes of sub-managers if true
-	 * @return array List of attribute items implementing \Aimeos\MW\Criteria\Attribute\Iface
+	 * @return \Aimeos\MW\Criteria\Attribute\Iface[] List of search attribute items
 	 */
 	public function getSearchAttributes( $withsub = true )
 	{
@@ -146,7 +169,7 @@ class Standard
 		 */
 		$path = 'mshop/price/manager/type/submanagers';
 
-		return $this->getSearchAttributesBase( $this->searchConfig, $path, array(), $withsub );
+		return $this->getSearchAttributesBase( $this->searchConfig, $path, [], $withsub );
 	}
 
 
@@ -228,12 +251,14 @@ class Standard
 		 * modify what is returned to the caller.
 		 *
 		 * This option allows you to wrap global decorators
-		 * ("\Aimeos\MShop\Common\Manager\Decorator\*") around the price type manager.
+		 * ("\Aimeos\MShop\Common\Manager\Decorator\*") around the price type
+		 * manager.
 		 *
 		 *  mshop/price/manager/type/decorators/global = array( 'decorator1' )
 		 *
 		 * This would add the decorator named "decorator1" defined by
-		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator1" only to the price controller.
+		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator1" only to the price
+		 * type manager.
 		 *
 		 * @param array List of decorator names
 		 * @since 2014.03
@@ -252,13 +277,14 @@ class Standard
 		 * modify what is returned to the caller.
 		 *
 		 * This option allows you to wrap local decorators
-		 * ("\Aimeos\MShop\Common\Manager\Decorator\*") around the price type manager.
+		 * ("\Aimeos\MShop\Price\Manager\Type\Decorator\*") around the price type
+		 * manager.
 		 *
 		 *  mshop/price/manager/type/decorators/local = array( 'decorator2' )
 		 *
 		 * This would add the decorator named "decorator2" defined by
-		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator2" only to the price
-		 * controller.
+		 * "\Aimeos\MShop\Price\Manager\Type\Decorator\Decorator2" only to the
+		 * price type manager.
 		 *
 		 * @param array List of decorator names
 		 * @since 2014.03
@@ -279,7 +305,13 @@ class Standard
 	 */
 	protected function getConfigPath()
 	{
-		/** mshop/price/manager/type/standard/insert
+		/** mshop/price/manager/type/standard/insert/mysql
+		 * Inserts a new price type record into the database table
+		 *
+		 * @see mshop/price/manager/type/standard/insert/ansi
+		 */
+
+		/** mshop/price/manager/type/standard/insert/ansi
 		 * Inserts a new price type record into the database table
 		 *
 		 * Items with no ID yet (i.e. the ID is NULL) will be created in
@@ -302,14 +334,20 @@ class Standard
 		 * @param string SQL statement for inserting records
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/price/manager/type/standard/update
-		 * @see mshop/price/manager/type/standard/newid
-		 * @see mshop/price/manager/type/standard/delete
-		 * @see mshop/price/manager/type/standard/search
-		 * @see mshop/price/manager/type/standard/count
+		 * @see mshop/price/manager/type/standard/update/ansi
+		 * @see mshop/price/manager/type/standard/newid/ansi
+		 * @see mshop/price/manager/type/standard/delete/ansi
+		 * @see mshop/price/manager/type/standard/search/ansi
+		 * @see mshop/price/manager/type/standard/count/ansi
 		 */
 
-		/** mshop/price/manager/type/standard/update
+		/** mshop/price/manager/type/standard/update/mysql
+		 * Updates an existing price type record in the database
+		 *
+		 * @see mshop/price/manager/type/standard/update/ansi
+		 */
+
+		/** mshop/price/manager/type/standard/update/ansi
 		 * Updates an existing price type record in the database
 		 *
 		 * Items which already have an ID (i.e. the ID is not NULL) will
@@ -329,14 +367,20 @@ class Standard
 		 * @param string SQL statement for updating records
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/price/manager/type/standard/insert
-		 * @see mshop/price/manager/type/standard/newid
-		 * @see mshop/price/manager/type/standard/delete
-		 * @see mshop/price/manager/type/standard/search
-		 * @see mshop/price/manager/type/standard/count
+		 * @see mshop/price/manager/type/standard/insert/ansi
+		 * @see mshop/price/manager/type/standard/newid/ansi
+		 * @see mshop/price/manager/type/standard/delete/ansi
+		 * @see mshop/price/manager/type/standard/search/ansi
+		 * @see mshop/price/manager/type/standard/count/ansi
 		 */
 
-		/** mshop/price/manager/type/standard/newid
+		/** mshop/price/manager/type/standard/newid/mysql
+		 * Retrieves the ID generated by the database when inserting a new record
+		 *
+		 * @see mshop/price/manager/type/standard/newid/ansi
+		 */
+
+		/** mshop/price/manager/type/standard/newid/ansi
 		 * Retrieves the ID generated by the database when inserting a new record
 		 *
 		 * As soon as a new record is inserted into the database table,
@@ -360,14 +404,20 @@ class Standard
 		 * @param string SQL statement for retrieving the last inserted record ID
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/price/manager/type/standard/insert
-		 * @see mshop/price/manager/type/standard/update
-		 * @see mshop/price/manager/type/standard/delete
-		 * @see mshop/price/manager/type/standard/search
-		 * @see mshop/price/manager/type/standard/count
+		 * @see mshop/price/manager/type/standard/insert/ansi
+		 * @see mshop/price/manager/type/standard/update/ansi
+		 * @see mshop/price/manager/type/standard/delete/ansi
+		 * @see mshop/price/manager/type/standard/search/ansi
+		 * @see mshop/price/manager/type/standard/count/ansi
 		 */
 
-		/** mshop/price/manager/type/standard/delete
+		/** mshop/price/manager/type/standard/delete/mysql
+		 * Deletes the items matched by the given IDs from the database
+		 *
+		 * @see mshop/price/manager/type/standard/delete/ansi
+		 */
+
+		/** mshop/price/manager/type/standard/delete/ansi
 		 * Deletes the items matched by the given IDs from the database
 		 *
 		 * Removes the records specified by the given IDs from the price database.
@@ -385,14 +435,20 @@ class Standard
 		 * @param string SQL statement for deleting items
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/price/manager/type/standard/insert
-		 * @see mshop/price/manager/type/standard/update
-		 * @see mshop/price/manager/type/standard/newid
-		 * @see mshop/price/manager/type/standard/search
-		 * @see mshop/price/manager/type/standard/count
+		 * @see mshop/price/manager/type/standard/insert/ansi
+		 * @see mshop/price/manager/type/standard/update/ansi
+		 * @see mshop/price/manager/type/standard/newid/ansi
+		 * @see mshop/price/manager/type/standard/search/ansi
+		 * @see mshop/price/manager/type/standard/count/ansi
 		 */
 
-		/** mshop/price/manager/type/standard/search
+		/** mshop/price/manager/type/standard/search/mysql
+		 * Retrieves the records matched by the given criteria in the database
+		 *
+		 * @see mshop/price/manager/type/standard/search/ansi
+		 */
+
+		/** mshop/price/manager/type/standard/search/ansi
 		 * Retrieves the records matched by the given criteria in the database
 		 *
 		 * Fetches the records matched by the given criteria from the price
@@ -437,14 +493,20 @@ class Standard
 		 * @param string SQL statement for searching items
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/price/manager/type/standard/insert
-		 * @see mshop/price/manager/type/standard/update
-		 * @see mshop/price/manager/type/standard/newid
-		 * @see mshop/price/manager/type/standard/delete
-		 * @see mshop/price/manager/type/standard/count
+		 * @see mshop/price/manager/type/standard/insert/ansi
+		 * @see mshop/price/manager/type/standard/update/ansi
+		 * @see mshop/price/manager/type/standard/newid/ansi
+		 * @see mshop/price/manager/type/standard/delete/ansi
+		 * @see mshop/price/manager/type/standard/count/ansi
 		 */
 
-		/** mshop/price/manager/type/standard/count
+		/** mshop/price/manager/type/standard/count/mysql
+		 * Counts the number of records matched by the given criteria in the database
+		 *
+		 * @see mshop/price/manager/type/standard/count/ansi
+		 */
+
+		/** mshop/price/manager/type/standard/count/ansi
 		 * Counts the number of records matched by the given criteria in the database
 		 *
 		 * Counts all records matched by the given criteria from the price
@@ -483,11 +545,11 @@ class Standard
 		 * @param string SQL statement for counting items
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/price/manager/type/standard/insert
-		 * @see mshop/price/manager/type/standard/update
-		 * @see mshop/price/manager/type/standard/newid
-		 * @see mshop/price/manager/type/standard/delete
-		 * @see mshop/price/manager/type/standard/search
+		 * @see mshop/price/manager/type/standard/insert/ansi
+		 * @see mshop/price/manager/type/standard/update/ansi
+		 * @see mshop/price/manager/type/standard/newid/ansi
+		 * @see mshop/price/manager/type/standard/delete/ansi
+		 * @see mshop/price/manager/type/standard/search/ansi
 		 */
 
 		return 'mshop/price/manager/type/standard/';

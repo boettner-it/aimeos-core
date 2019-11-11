@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2012
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2012
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Translation
  */
@@ -54,14 +54,14 @@ abstract class Base
 	 * If the requested file does exists (eg: de_DE) the implementation
 	 * will check for "de" and will return that location as fallback.
 	 *
-	 * @param array $paths Paths of the translation files.
+	 * @param string[] $paths Paths of the translation files
 	 * @param string $locale Locale to be used
-	 * @return array List of locations to the translation files
+	 * @return string[] List of locations to the translation files
 	 * @throws \Aimeos\MW\Translation\Exception If translation file doesn't exist
 	 */
 	protected function getTranslationFileLocations( array $paths, $locale )
 	{
-		$locations = array();
+		$locations = [];
 
 		foreach( $paths as $path )
 		{
@@ -109,7 +109,7 @@ abstract class Base
 			$locale = substr( $locale, 0, -strlen( strrchr( $locale, '_' ) ) );
 		}
 
-		switch ( $locale )
+		switch( $locale )
 		{
 			case 'af':
 			case 'az':
@@ -162,7 +162,7 @@ abstract class Base
 			case 'tk':
 			case 'ur':
 			case 'zu':
-				return ($number == 1) ? 0 : 1;
+				return ( $number == 1 ) ? 0 : 1;
 
 			case 'am':
 			case 'bh':
@@ -176,7 +176,7 @@ abstract class Base
 			case 'xbr':
 			case 'ti':
 			case 'wa':
-				return (($number == 0) || ($number == 1)) ? 0 : 1;
+				return ( ( $number == 0 ) || ( $number == 1 ) ) ? 0 : 1;
 
 			case 'be':
 			case 'bs':
@@ -184,41 +184,41 @@ abstract class Base
 			case 'ru':
 			case 'sr':
 			case 'uk':
-				return (($number % 10 == 1) && ($number % 100 != 11)) ? 0 : ((($number % 10 >= 2) && ($number % 10 <= 4) && (($number % 100 < 10) || ($number % 100 >= 20))) ? 1 : 2);
+				return ( ( $number % 10 == 1 ) && ( $number % 100 != 11 ) ) ? 0 : ( ( ( $number % 10 >= 2 ) && ( $number % 10 <= 4 ) && ( ( $number % 100 < 10 ) || ( $number % 100 >= 20 ) ) ) ? 1 : 2 );
 
 			case 'cs':
 			case 'sk':
-				return ($number == 1) ? 0 : ((($number >= 2) && ($number <= 4)) ? 1 : 2);
+				return ( $number == 1 ) ? 0 : ( ( ( $number >= 2 ) && ( $number <= 4 ) ) ? 1 : 2 );
 
 			case 'ar':
-				return ($number == 0) ? 0 : (($number == 1) ? 1 : (($number == 2) ? 2 : ((($number >= 3) && ($number <= 10)) ? 3 : ((($number >= 11) && ($number <= 99)) ? 4 : 5))));
+				return ( $number == 0 ) ? 0 : ( ( $number == 1 ) ? 1 : ( ( $number == 2 ) ? 2 : ( ( ( $number >= 3 ) && ( $number <= 10 ) ) ? 3 : ( ( ( $number >= 11 ) && ( $number <= 99 ) ) ? 4 : 5 ) ) ) );
 
 			case 'cy':
-				return ($number == 1) ? 0 : (($number == 2) ? 1 : ((($number == 8) || ($number == 11)) ? 2 : 3));
+				return ( $number == 1 ) ? 0 : ( ( $number == 2 ) ? 1 : ( ( ( $number == 8 ) || ( $number == 11 ) ) ? 2 : 3 ) );
 
 			case 'ga':
-				return ($number == 1) ? 0 : (($number == 2) ? 1 : 2);
+				return ( $number == 1 ) ? 0 : ( ( $number == 2 ) ? 1 : 2 );
 
 			case 'lt':
-				return (($number % 10 == 1) && ($number % 100 != 11)) ? 0 : ((($number % 10 >= 2) && (($number % 100 < 10) || ($number % 100 >= 20))) ? 1 : 2);
+				return ( ( $number % 10 == 1 ) && ( $number % 100 != 11 ) ) ? 0 : ( ( ( $number % 10 >= 2 ) && ( ( $number % 100 < 10 ) || ( $number % 100 >= 20 ) ) ) ? 1 : 2 );
 
 			case 'lv':
-				return ($number == 0) ? 0 : ((($number % 10 == 1) && ($number % 100 != 11)) ? 1 : 2);
+				return ( $number == 0 ) ? 0 : ( ( ( $number % 10 == 1 ) && ( $number % 100 != 11 ) ) ? 1 : 2 );
 
 			case 'mk':
-				return ($number % 10 == 1) ? 0 : 1;
+				return ( $number % 10 == 1 ) ? 0 : 1;
 
 			case 'mt':
-				return ($number == 1) ? 0 : ((($number == 0) || (($number % 100 > 1) && ($number % 100 < 11))) ? 1 : ((($number % 100 > 10) && ($number % 100 < 20)) ? 2 : 3));
+				return ( $number == 1 ) ? 0 : ( ( ( $number == 0 ) || ( ( $number % 100 > 1 ) && ( $number % 100 < 11 ) ) ) ? 1 : ( ( ( $number % 100 > 10 ) && ( $number % 100 < 20 ) ) ? 2 : 3 ) );
 
 			case 'pl':
-				return ($number == 1) ? 0 : ((($number % 10 >= 2) && ($number % 10 <= 4) && (($number % 100 < 12) || ($number % 100 > 14))) ? 1 : 2);
+				return ( $number == 1 ) ? 0 : ( ( ( $number % 10 >= 2 ) && ( $number % 10 <= 4 ) && ( ( $number % 100 < 12 ) || ( $number % 100 > 14 ) ) ) ? 1 : 2 );
 
 			case 'ro':
-				return ($number == 1) ? 0 : ((($number == 0) || (($number % 100 > 0) && ($number % 100 < 20))) ? 1 : 2);
+				return ( $number == 1 ) ? 0 : ( ( ( $number == 0 ) || ( ( $number % 100 > 0 ) && ( $number % 100 < 20 ) ) ) ? 1 : 2 );
 
 			case 'sl':
-				return ($number % 100 == 1) ? 0 : (($number % 100 == 2) ? 1 : ((($number % 100 == 3) || ($number % 100 == 4)) ? 2 : 3));
+				return ( $number % 100 == 1 ) ? 0 : ( ( $number % 100 == 2 ) ? 1 : ( ( ( $number % 100 == 3 ) || ( $number % 100 == 4 ) ) ? 2 : 3 ) );
 
 			default:
 				return 0;

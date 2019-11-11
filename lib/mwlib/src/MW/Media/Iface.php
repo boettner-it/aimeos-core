@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2014
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2014
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Media
  */
@@ -29,11 +29,11 @@ interface Iface
 
 
 	/**
-	 * Stores the media data at the given file name.
+	 * Stores the media data into the given file name.
 	 *
-	 * @param string $filename Name of the file to save the media data into
-	 * @param string $mimetype Mime type to save the image as
-	 * @return void
+	 * @param string|null $filename File name to save the data into or null to return the data
+	 * @param string|null $mimetype Mime type to save the content as or null to leave the mime type unchanged
+	 * @return string|null File content if file name is null or null if data is saved to the given file name
 	 */
-	public function save( $filename, $mimetype );
+	public function save( $filename = null, $mimetype = null );
 }

@@ -2,7 +2,7 @@
 
 /**
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 
@@ -47,7 +47,7 @@ class CatalogIndexRenameDomainTables extends \Aimeos\MW\Setup\Task\Base
 	/**
 	 * Executes the task for MySQL databases.
 	 */
-	protected function mysql()
+	public function migrate()
 	{
 		$this->process( $this->mysql );
 	}

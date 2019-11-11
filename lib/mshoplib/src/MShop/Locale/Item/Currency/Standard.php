@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Locale
  */
@@ -22,23 +22,14 @@ class Standard
 	extends \Aimeos\MShop\Common\Item\Base
 	implements \Aimeos\MShop\Locale\Item\Currency\Iface
 {
-	private $modified = false;
-	private $values;
-
 	/**
 	 * Initializes the currency object object.
 	 *
 	 * @param array $values Possible params to be set on initialization
 	 */
-	public function __construct( array $values = array( ) )
+	public function __construct( array $values = [] )
 	{
 		parent::__construct( 'locale.currency.', $values );
-
-		$this->values = $values;
-
-		if( isset( $values['id'] ) ) {
-			$this->setId( $values['id'] );
-		}
 	}
 
 
@@ -46,31 +37,11 @@ class Standard
 	 * Sets the ID of the currency.
 	 *
 	 * @param string $key ID of the currency
+	 * @return \Aimeos\MShop\Locale\Item\Currency\Iface Locale currency item for chaining method calls
 	 */
 	public function setId( $key )
 	{
-		if( $key !== null )
-		{
-			$this->setCode( $key );
-			$this->values['id'] = $this->values['code'];
-			$this->modified = false;
-		}
-		else
-		{
-			$this->values['id'] = null;
-			$this->modified = true;
-		}
-	}
-
-
-	/**
-	 * Returns the ID of the currency.
-	 *
-	 * @return string|null ID of the currency
-	 */
-	public function getId()
-	{
-		return ( isset( $this->values['id'] ) ? (string) $this->values['id'] : null );
+		return parent::setId( $this->checkCurrencyId( $key ) );
 	}
 
 
@@ -81,25 +52,19 @@ class Standard
 	 */
 	public function getCode()
 	{
-		return ( isset( $this->values['code'] ) ? (string) $this->values['code'] : '' );
+		return (string) $this->get( 'locale.currency.code', $this->get( 'locale.currency.id', '' ) );
 	}
 
 
 	/**
 	 * Sets the code of the currency.
 	 *
-	 * @param string $key Code of the currency
+	 * @param string $code Code of the currency
+	 * @return \Aimeos\MShop\Locale\Item\Currency\Iface Locale currency item for chaining method calls
 	 */
-	public function setCode( $key )
+	public function setCode( $code )
 	{
-		if( $key == $this->getCode() ) { return; }
-
-		if( strlen( $key ) != 3 || ctype_alpha( $key ) === false ) {
-			throw new \Aimeos\MShop\Locale\Exception( sprintf( 'Invalid characters in ISO currency code "%1$s"', $key ) );
-		}
-
-		$this->values['code'] = strtoupper( $key );
-		$this->modified = true;
+		return $this->set( 'locale.currency.code', $this->checkCurrencyId( $code, false ) );
 	}
 
 
@@ -110,7 +75,7 @@ class Standard
 	 */
 	public function getLabel()
 	{
-		return ( isset( $this->values['label'] ) ? (string) $this->values['label'] : '' );
+		return (string) $this->get( 'locale.currency.label', '' );
 	}
 
 
@@ -118,13 +83,11 @@ class Standard
 	 * Sets the label or symbol of the currency.
 	 *
 	 * @param string $label Label or symbol of the currency
+	 * @return \Aimeos\MShop\Locale\Item\Currency\Iface Locale currency item for chaining method calls
 	 */
 	public function setLabel( $label )
 	{
-		if( $label == $this->getLabel() ) { return; }
-
-		$this->values['label'] = (string) $label;
-		$this->setModified();
+		return $this->set( 'locale.currency.label', (string) $label );
 	}
 
 
@@ -135,7 +98,7 @@ class Standard
 	 */
 	public function getStatus()
 	{
-		return ( isset( $this->values['status'] ) ? (int) $this->values['status'] : 0 );
+		return (int) $this->get( 'locale.currency.status', 1 );
 	}
 
 
@@ -143,68 +106,78 @@ class Standard
 	 * Sets the status of the item.
 	 *
 	 * @param integer $status Status of the item
+	 * @return \Aimeos\MShop\Locale\Item\Currency\Iface Locale currency item for chaining method calls
 	 */
 	public function setStatus( $status )
 	{
-		if( $status == $this->getStatus() ) { return; }
-
-		$this->values['status'] = (int) $status;
-		$this->setModified();
+		return $this->set( 'locale.currency.status', (int) $status );
 	}
 
 
 	/**
-	 * Sets the item values from the given array.
+	 * Returns the item type
 	 *
-	 * @param array $list Associative list of item keys and their values
-	 * @return array Associative list of keys and their values that are unknown
+	 * @return string Item type, subtypes are separated by slashes
 	 */
-	public function fromArray( array $list )
+	public function getResourceType()
 	{
-		$unknown = array();
-		$list = parent::fromArray( $list );
+		return 'locale/currency';
+	}
+
+
+	/**
+	 * Tests if the item is available based on status, time, language and currency
+	 *
+	 * @return boolean True if available, false if not
+	 */
+	public function isAvailable()
+	{
+		return parent::isAvailable() && $this->getStatus() > 0;
+	}
+
+
+	/*
+	 * Sets the item values from the given array and removes that entries from the list
+	 *
+	 * @param array &$list Associative list of item keys and their values
+	 * @param boolean True to set private properties too, false for public only
+	 * @return \Aimeos\MShop\Locale\Item\Currency\Iface Currency item for chaining method calls
+	 */
+	public function fromArray( array &$list, $private = false )
+	{
+		$item = parent::fromArray( $list, $private );
 
 		foreach( $list as $key => $value )
 		{
 			switch( $key )
 			{
-				case 'locale.currency.id': $this->setId( $value ); break;
-				case 'locale.currency.code': $this->setCode( $value ); break;
-				case 'locale.currency.label': $this->setLabel( $value ); break;
-				case 'locale.currency.status': $this->setStatus( $value ); break;
-				default: $unknown[$key] = $value;
+				case 'locale.currency.code': $item = $item->setCode( $value ); break;
+				case 'locale.currency.label': $item = $item->setLabel( $value ); break;
+				case 'locale.currency.status': $item = $item->setStatus( $value ); break;
+				default: continue 2;
 			}
+
+			unset( $list[$key] );
 		}
 
-		return $unknown;
+		return $item;
 	}
 
 
 	/**
 	 * Returns the item values as array.
 	 *
-	 * @return Associative list of item properties and their values
+	 * @param boolean True to return private properties, false for public only
+	 * @return array Associative list of item properties and their values
 	 */
-	public function toArray()
+	public function toArray( $private = false )
 	{
-		$list = parent::toArray();
-		$list['locale.currency.id'] = $this->getId();
+		$list = parent::toArray( $private );
+
 		$list['locale.currency.code'] = $this->getCode();
 		$list['locale.currency.label'] = $this->getLabel();
 		$list['locale.currency.status'] = $this->getStatus();
 
 		return $list;
 	}
-
-
-	/**
-	 * Tests if the object was modified.
-	 *
-	 * @return boolean True if modified, false if not
-	 */
-	public function isModified()
-	{
-		return $this->modified || parent::isModified();
-	}
-
 }

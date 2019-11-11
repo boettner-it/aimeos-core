@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Supplier
  */
@@ -19,66 +19,85 @@ namespace Aimeos\MShop\Supplier\Manager;
  * @subpackage Supplier
  */
 class Standard
-	extends \Aimeos\MShop\Common\Manager\ListRef\Base
-	implements \Aimeos\MShop\Supplier\Manager\Iface
+	extends \Aimeos\MShop\Common\Manager\Base
+	implements \Aimeos\MShop\Supplier\Manager\Iface, \Aimeos\MShop\Common\Manager\Factory\Iface
 {
+	use \Aimeos\MShop\Common\Manager\ListRef\Traits;
+	use \Aimeos\MShop\Common\Manager\AddressRef\Traits;
+
+
 	private $searchConfig = array(
 		'supplier.id' => array(
 			'code' => 'supplier.id',
 			'internalcode' => 'msup."id"',
-			'label' => 'Supplier ID',
-			'type' => 'integer',
-			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
-		),
-		'supplier.siteid' => array(
-			'code' => 'supplier.siteid',
-			'internalcode' => 'msup."siteid"',
-			'label' => 'Supplier site ID',
+			'label' => 'ID',
 			'type' => 'integer',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 			'public' => false,
 		),
-		'supplier.code' => array(
-			'code' => 'supplier.code',
-			'internalcode' => 'msup."code"',
-			'label' => 'Supplier code',
-			'type' => 'string',
-			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'supplier.siteid' => array(
+			'code' => 'supplier.siteid',
+			'internalcode' => 'msup."siteid"',
+			'label' => 'Site ID',
+			'type' => 'integer',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
+			'public' => false,
 		),
 		'supplier.label' => array(
 			'code' => 'supplier.label',
 			'internalcode' => 'msup."label"',
-			'label' => 'Supplier label',
+			'label' => 'Label',
 			'type' => 'string',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
-		'supplier.status'=> array(
+		'supplier.code' => array(
+			'code' => 'supplier.code',
+			'internalcode' => 'msup."code"',
+			'label' => 'Code',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		),
+		'supplier.status' => array(
 			'code' => 'supplier.status',
 			'internalcode' => 'msup."status"',
-			'label' => 'Supplier status',
+			'label' => 'Status',
 			'type' => 'integer',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 		),
-		'supplier.ctime'=> array(
-			'code'=>'supplier.ctime',
-			'internalcode'=>'msup."ctime"',
-			'label'=>'Supplier create date/time',
-			'type'=> 'datetime',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'supplier.ctime' => array(
+			'code' => 'supplier.ctime',
+			'internalcode' => 'msup."ctime"',
+			'label' => 'Create date/time',
+			'type' => 'datetime',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
-		'supplier.mtime'=> array(
-			'code'=>'supplier.mtime',
-			'internalcode'=>'msup."mtime"',
-			'label'=>'Supplier modification date/time',
-			'type'=> 'datetime',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'supplier.mtime' => array(
+			'code' => 'supplier.mtime',
+			'internalcode' => 'msup."mtime"',
+			'label' => 'Modify date/time',
+			'type' => 'datetime',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
-		'supplier.editor'=> array(
-			'code'=>'supplier.editor',
-			'internalcode'=>'msup."editor"',
-			'label'=>'Supplier editor',
-			'type'=> 'string',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'supplier.editor' => array(
+			'code' => 'supplier.editor',
+			'internalcode' => 'msup."editor"',
+			'label' => 'Editor',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
+		),
+		'supplier:has' => array(
+			'code' => 'supplier:has()',
+			'internalcode' => '(
+				SELECT msupli_has."id" FROM mshop_supplier_list AS msupli_has
+				WHERE msup."id" = msupli_has."parentid" AND :site AND :key LIMIT 1
+			)',
+			'label' => 'Supplier has list item, parameter(<domain>[,<list type>[,<reference ID>)]]',
+			'type' => 'null',
+			'internaltype' => 'null',
+			'public' => false,
 		),
 	);
 
@@ -92,22 +111,69 @@ class Standard
 	{
 		parent::__construct( $context );
 		$this->setResourceName( 'db-supplier' );
+
+		$level = \Aimeos\MShop\Locale\Manager\Base::SITE_ALL;
+		$level = $context->getConfig()->get( 'mshop/supplier/manager/sitemode', $level );
+
+		$siteIds = $this->getSiteIds( $level );
+		$self = $this;
+
+
+		$this->searchConfig['supplier:has']['function'] = function( &$source, array $params ) use ( $self, $siteIds ) {
+
+			foreach( $params as $key => $param ) {
+				$params[$key] = trim( $param, '\'' );
+			}
+
+			$source = str_replace( ':site', $self->toExpression( 'msupli_has."siteid"', $siteIds ), $source );
+			$str = $self->toExpression( 'msupli_has."key"', join( '|', $params ), isset( $params[2] ) ? '==' : '=~' );
+			$source = str_replace( ':key', $str, $source );
+
+			return $params;
+		};
 	}
 
 
 	/**
 	 * Removes old entries from the storage.
 	 *
-	 * @param integer[] $siteids List of IDs for sites whose entries should be deleted
+	 * @param string[] $siteids List of IDs for sites whose entries should be deleted
+	 * @return \Aimeos\MShop\Supplier\Manager\Iface Manager object for chaining method calls
 	 */
-	public function cleanup( array $siteids )
+	public function clear( array $siteids )
 	{
 		$path = 'mshop/supplier/manager/submanagers';
 		foreach( $this->getContext()->getConfig()->get( $path, array( 'address' ) ) as $domain ) {
-			$this->getSubManager( $domain )->cleanup( $siteids );
+			$this->getObject()->getSubManager( $domain )->clear( $siteids );
 		}
 
-		$this->cleanupBase( $siteids, 'mshop/supplier/manager/standard/delete' );
+		return $this->clearBase( $siteids, 'mshop/supplier/manager/standard/delete' );
+	}
+
+
+	/**
+	 * Creates a new empty item instance
+	 *
+	 * @param array $values Values the item should be initialized with
+	 * @return \Aimeos\MShop\Supplier\Item\Iface New supplier item object
+	 */
+	public function createItem( array $values = [] )
+	{
+		$values['supplier.siteid'] = $this->getContext()->getLocale()->getSiteId();
+		return $this->createItemBase( $values );
+	}
+
+
+	/**
+	 * Returns the available manager types
+	 *
+	 * @param boolean $withsub Return also the resource type of sub-managers if true
+	 * @return string[] Type of the manager and submanagers, subtypes are separated by slashes
+	 */
+	public function getResourceType( $withsub = true )
+	{
+		$path = 'mshop/supplier/manager/submanagers';
+		return $this->getResourceTypeBase( 'supplier', $path, array( 'address', 'lists' ), $withsub );
 	}
 
 
@@ -115,7 +181,7 @@ class Standard
 	 * Returns the attributes that can be used for searching.
 	 *
 	 * @param boolean $withsub Return also attributes of sub-managers if true
-	 * @return array List of attribute items implementing \Aimeos\MW\Criteria\Attribute\Iface
+	 * @return \Aimeos\MW\Criteria\Attribute\Iface[] List of search attribute items
 	 */
 	public function getSearchAttributes( $withsub = true )
 	{
@@ -138,30 +204,25 @@ class Standard
 		 */
 		$path = 'mshop/supplier/manager/submanagers';
 
-		return $this->getSearchAttributesBase( $this->searchConfig, $path, array( 'address' ), $withsub );
+		return $this->getSearchAttributesBase( $this->searchConfig, $path, ['address'], $withsub );
 	}
 
 
 	/**
-	 * Instantiates a new supplier item object.
+	 * Removes multiple items.
 	 *
-	 * @return \Aimeos\MShop\Supplier\Item\Iface
+	 * @param \Aimeos\MShop\Common\Item\Iface[]|string[] $itemIds List of item objects or IDs of the items
+	 * @return \Aimeos\MShop\Supplier\Manager\Iface Manager object for chaining method calls
 	 */
-	public function createItem()
+	public function deleteItems( array $itemIds )
 	{
-		$values = array('siteid' => $this->getContext()->getLocale()->getSiteId());
-		return $this->createItemBase($values);
-	}
+		/** mshop/supplier/manager/standard/delete/mysql
+		 * Deletes the items matched by the given IDs from the database
+		 *
+		 * @see mshop/supplier/manager/standard/delete/ansi
+		 */
 
-
-	/**
-	 * Removes multiple items specified by ids in the array.
-	 *
-	 * @param array $ids List of IDs
-	 */
-	public function deleteItems( array $ids )
-	{
-		/** mshop/supplier/manager/standard/delete
+		/** mshop/supplier/manager/standard/delete/ansi
 		 * Deletes the items matched by the given IDs from the database
 		 *
 		 * Removes the records specified by the given IDs from the supplier database.
@@ -179,28 +240,46 @@ class Standard
 		 * @param string SQL statement for deleting items
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/supplier/manager/standard/insert
-		 * @see mshop/supplier/manager/standard/update
-		 * @see mshop/supplier/manager/standard/newid
-		 * @see mshop/supplier/manager/standard/search
-		 * @see mshop/supplier/manager/standard/count
+		 * @see mshop/supplier/manager/standard/insert/ansi
+		 * @see mshop/supplier/manager/standard/update/ansi
+		 * @see mshop/supplier/manager/standard/newid/ansi
+		 * @see mshop/supplier/manager/standard/search/ansi
+		 * @see mshop/supplier/manager/standard/count/ansi
 		 */
 		$path = 'mshop/supplier/manager/standard/delete';
-		$this->deleteItemsBase( $ids, $path );
+
+		return $this->deleteItemsBase( $itemIds, $path )->deleteRefItems( $itemIds );
+	}
+
+
+	/**
+	 * Returns the item specified by its code and domain/type if necessary
+	 *
+	 * @param string $code Code of the item
+	 * @param string[] $ref List of domains to fetch list items and referenced items for
+	 * @param string|null $domain Domain of the item if necessary to identify the item uniquely
+	 * @param string|null $type Type code of the item if necessary to identify the item uniquely
+	 * @param boolean $default True to add default criteria
+	 * @return \Aimeos\MShop\Common\Item\Iface Item object
+	 */
+	public function findItem( $code, array $ref = [], $domain = null, $type = null, $default = false )
+	{
+		return $this->findItemBase( array( 'supplier.code' => $code ), $ref, $default );
 	}
 
 
 	/**
 	 * Returns the supplier item object specificed by its ID.
 	 *
-	 * @param integer $id Unique supplier ID referencing an existing supplier
-	 * @param array $ref List of domains to fetch list items and referenced items for
+	 * @param string $id Unique supplier ID referencing an existing supplier
+	 * @param string[] $ref List of domains to fetch list items and referenced items for
+	 * @param boolean $default Add default criteria
 	 * @return \Aimeos\MShop\Supplier\Item\Iface Returns the supplier item of the given id
 	 * @throws \Aimeos\MShop\Exception If item couldn't be found
 	 */
-	public function getItem( $id, array $ref = array() )
+	public function getItem( $id, array $ref = [], $default = false )
 	{
-		return $this->getItemBase( 'supplier.id', $id, $ref );
+		return $this->getItemBase( 'supplier.id', $id, $ref, $default );
 	}
 
 
@@ -209,15 +288,15 @@ class Standard
 	 *
 	 * @param \Aimeos\MShop\Supplier\Item\Iface $item Supplier item object
 	 * @param boolean $fetch True if the new ID should be returned in the item
+	 * @return \Aimeos\MShop\Supplier\Item\Iface Updated item including the generated ID
 	 */
-	public function saveItem( \Aimeos\MShop\Common\Item\Iface $item, $fetch = true )
+	public function saveItem( \Aimeos\MShop\Supplier\Item\Iface $item, $fetch = true )
 	{
-		$iface = '\\Aimeos\\MShop\\Supplier\\Item\\Iface';
-		if( !( $item instanceof $iface ) ) {
-			throw new \Aimeos\MShop\Supplier\Exception( sprintf( 'Object is not of required type "%1$s"', $iface ) );
+		if( !$item->isModified() )
+		{
+			$item = $this->saveAddressItems( $item, 'supplier', $fetch );
+			return $this->saveListItems( $item, 'supplier', $fetch );
 		}
-
-		if( !$item->isModified() ) { return; }
 
 		$context = $this->getContext();
 
@@ -229,10 +308,17 @@ class Standard
 		{
 			$id = $item->getId();
 			$date = date( 'Y-m-d H:i:s' );
+			$columns = $this->getObject()->getSaveAttributes();
 
 			if( $id === null )
 			{
-				/** mshop/supplier/manager/standard/insert
+				/** mshop/supplier/manager/standard/insert/mysql
+				 * Inserts a new supplier record into the database table
+				 *
+				 * @see mshop/supplier/manager/standard/insert/ansi
+				 */
+
+				/** mshop/supplier/manager/standard/insert/ansi
 				 * Inserts a new supplier record into the database table
 				 *
 				 * Items with no ID yet (i.e. the ID is NULL) will be created in
@@ -255,17 +341,24 @@ class Standard
 				 * @param string SQL statement for inserting records
 				 * @since 2014.03
 				 * @category Developer
-				 * @see mshop/supplier/manager/standard/update
-				 * @see mshop/supplier/manager/standard/newid
-				 * @see mshop/supplier/manager/standard/delete
-				 * @see mshop/supplier/manager/standard/search
-				 * @see mshop/supplier/manager/standard/count
+				 * @see mshop/supplier/manager/standard/update/ansi
+				 * @see mshop/supplier/manager/standard/newid/ansi
+				 * @see mshop/supplier/manager/standard/delete/ansi
+				 * @see mshop/supplier/manager/standard/search/ansi
+				 * @see mshop/supplier/manager/standard/count/ansi
 				 */
 				$path = 'mshop/supplier/manager/standard/insert';
+				$sql = $this->addSqlColumns( array_keys( $columns ), $this->getSqlConfig( $path ) );
 			}
 			else
 			{
-				/** mshop/supplier/manager/standard/update
+				/** mshop/supplier/manager/standard/update/mysql
+				 * Updates an existing supplier record in the database
+				 *
+				 * @see mshop/supplier/manager/standard/update/ansi
+				 */
+
+				/** mshop/supplier/manager/standard/update/ansi
 				 * Updates an existing supplier record in the database
 				 *
 				 * Items which already have an ID (i.e. the ID is not NULL) will
@@ -285,35 +378,48 @@ class Standard
 				 * @param string SQL statement for updating records
 				 * @since 2014.03
 				 * @category Developer
-				 * @see mshop/supplier/manager/standard/insert
-				 * @see mshop/supplier/manager/standard/newid
-				 * @see mshop/supplier/manager/standard/delete
-				 * @see mshop/supplier/manager/standard/search
-				 * @see mshop/supplier/manager/standard/count
+				 * @see mshop/supplier/manager/standard/insert/ansi
+				 * @see mshop/supplier/manager/standard/newid/ansi
+				 * @see mshop/supplier/manager/standard/delete/ansi
+				 * @see mshop/supplier/manager/standard/search/ansi
+				 * @see mshop/supplier/manager/standard/count/ansi
 				 */
 				$path = 'mshop/supplier/manager/standard/update';
+				$sql = $this->addSqlColumns( array_keys( $columns ), $this->getSqlConfig( $path ), false );
 			}
 
-			$stmt = $this->getCachedStatement( $conn, $path );
-			$stmt->bind( 1, $context->getLocale()->getSiteId(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 2, $item->getCode() );
-			$stmt->bind( 3, $item->getLabel() );
-			$stmt->bind( 4, $item->getStatus(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 5, $date ); // mtime
-			$stmt->bind( 6, $context->getEditor() );
+			$idx = 1;
+			$stmt = $this->getCachedStatement( $conn, $path, $sql );
+
+			foreach( $columns as $name => $entry ) {
+				$stmt->bind( $idx++, $item->get( $name ), $entry->getInternalType() );
+			}
+
+			$stmt->bind( $idx++, $item->getCode() );
+			$stmt->bind( $idx++, $item->getLabel() );
+			$stmt->bind( $idx++, $item->getStatus(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmt->bind( $idx++, $date ); // mtime
+			$stmt->bind( $idx++, $context->getEditor() );
+			$stmt->bind( $idx++, $context->getLocale()->getSiteId(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 
 			if( $id !== null ) {
-				$stmt->bind( 7, $id, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+				$stmt->bind( $idx++, $id, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 				$item->setId( $id );
 			} else {
-				$stmt->bind( 7, $date ); // ctime
+				$stmt->bind( $idx++, $date ); // ctime
 			}
 
 			$stmt->execute()->finish();
 
-			if( $id === null && $fetch === true )
+			if( $id === null )
 			{
-				/** mshop/supplier/manager/standard/newid
+				/** mshop/supplier/manager/standard/newid/mysql
+				 * Retrieves the ID generated by the database when inserting a new record
+				 *
+				 * @see mshop/supplier/manager/standard/newid/ansi
+				 */
+
+				/** mshop/supplier/manager/standard/newid/ansi
 				 * Retrieves the ID generated by the database when inserting a new record
 				 *
 				 * As soon as a new record is inserted into the database table,
@@ -337,11 +443,11 @@ class Standard
 				 * @param string SQL statement for retrieving the last inserted record ID
 				 * @since 2014.03
 				 * @category Developer
-				 * @see mshop/supplier/manager/standard/insert
-				 * @see mshop/supplier/manager/standard/update
-				 * @see mshop/supplier/manager/standard/delete
-				 * @see mshop/supplier/manager/standard/search
-				 * @see mshop/supplier/manager/standard/count
+				 * @see mshop/supplier/manager/standard/insert/ansi
+				 * @see mshop/supplier/manager/standard/update/ansi
+				 * @see mshop/supplier/manager/standard/delete/ansi
+				 * @see mshop/supplier/manager/standard/search/ansi
+				 * @see mshop/supplier/manager/standard/count/ansi
 				 */
 				$path = 'mshop/supplier/manager/standard/newid';
 				$item->setId( $this->newId( $conn, $path ) );
@@ -354,6 +460,9 @@ class Standard
 			$dbm->release( $conn, $dbname );
 			throw $e;
 		}
+
+		$item = $this->saveAddressItems( $item, 'supplier', $fetch );
+		return $this->saveListItems( $item, 'supplier', $fetch );
 	}
 
 
@@ -361,13 +470,13 @@ class Standard
 	 * Returns the item objects matched by the given search criteria.
 	 *
 	 * @param \Aimeos\MW\Criteria\Iface $search Search criteria object
-	 * @param integer &$total Number of items that are available in total
-	 * @return array List of items implementing \Aimeos\MShop\Supplier\Item\Iface
-	 * @throws \Aimeos\MShop\Supplier\Exception If creating items failed
+	 * @param string[] $ref List of domains to fetch list items and referenced items for
+	 * @param integer|null &$total Number of items that are available in total
+	 * @return \Aimeos\MShop\Supplier\Item\Iface[] List of supplier items
 	 */
-	public function searchItems( \Aimeos\MW\Criteria\Iface $search, array $ref = array(), &$total = null )
+	public function searchItems( \Aimeos\MW\Criteria\Iface $search, array $ref = [], &$total = null )
 	{
-		$map = array();
+		$map = [];
 		$context = $this->getContext();
 
 		$dbm = $context->getDatabaseManager();
@@ -377,9 +486,46 @@ class Standard
 		try
 		{
 			$required = array( 'supplier' );
-			$level = \Aimeos\MShop\Locale\Manager\Base::SITE_ALL;
 
-			/** mshop/supplier/manager/standard/search
+			/** mshop/supplier/manager/sitemode
+			 * Mode how items from levels below or above in the site tree are handled
+			 *
+			 * By default, only items from the current site are fetched from the
+			 * storage. If the ai-sites extension is installed, you can create a
+			 * tree of sites. Then, this setting allows you to define for the
+			 * whole supplier domain if items from parent sites are inherited,
+			 * sites from child sites are aggregated or both.
+			 *
+			 * Available constants for the site mode are:
+			 * * 0 = only items from the current site
+			 * * 1 = inherit items from parent sites
+			 * * 2 = aggregate items from child sites
+			 * * 3 = inherit and aggregate items at the same time
+			 *
+			 * You also need to set the mode in the locale manager
+			 * (mshop/locale/manager/standard/sitelevel) to one of the constants.
+			 * If you set it to the same value, it will work as described but you
+			 * can also use different modes. For example, if inheritance and
+			 * aggregation is configured the locale manager but only inheritance
+			 * in the domain manager because aggregating items makes no sense in
+			 * this domain, then items wil be only inherited. Thus, you have full
+			 * control over inheritance and aggregation in each domain.
+			 *
+			 * @param integer Constant from Aimeos\MShop\Locale\Manager\Base class
+			 * @category Developer
+			 * @since 2018.01
+			 * @see mshop/locale/manager/standard/sitelevel
+			 */
+			$level = \Aimeos\MShop\Locale\Manager\Base::SITE_ALL;
+			$level = $context->getConfig()->get( 'mshop/supplier/manager/sitemode', $level );
+
+			/** mshop/supplier/manager/standard/search/mysql
+			 * Retrieves the records matched by the given criteria in the database
+			 *
+			 * @see mshop/supplier/manager/standard/search/ansi
+			 */
+
+			/** mshop/supplier/manager/standard/search/ansi
 			 * Retrieves the records matched by the given criteria in the database
 			 *
 			 * Fetches the records matched by the given criteria from the supplier
@@ -424,15 +570,21 @@ class Standard
 			 * @param string SQL statement for searching items
 			 * @since 2014.03
 			 * @category Developer
-			 * @see mshop/supplier/manager/standard/insert
-			 * @see mshop/supplier/manager/standard/update
-			 * @see mshop/supplier/manager/standard/newid
-			 * @see mshop/supplier/manager/standard/delete
-			 * @see mshop/supplier/manager/standard/count
+			 * @see mshop/supplier/manager/standard/insert/ansi
+			 * @see mshop/supplier/manager/standard/update/ansi
+			 * @see mshop/supplier/manager/standard/newid/ansi
+			 * @see mshop/supplier/manager/standard/delete/ansi
+			 * @see mshop/supplier/manager/standard/count/ansi
 			 */
 			$cfgPathSearch = 'mshop/supplier/manager/standard/search';
 
-			/** mshop/supplier/manager/standard/count
+			/** mshop/supplier/manager/standard/count/mysql
+			 * Counts the number of records matched by the given criteria in the database
+			 *
+			 * @see mshop/supplier/manager/standard/count/ansi
+			 */
+
+			/** mshop/supplier/manager/standard/count/ansi
 			 * Counts the number of records matched by the given criteria in the database
 			 *
 			 * Counts all records matched by the given criteria from the supplier
@@ -471,17 +623,17 @@ class Standard
 			 * @param string SQL statement for counting items
 			 * @since 2014.03
 			 * @category Developer
-			 * @see mshop/supplier/manager/standard/insert
-			 * @see mshop/supplier/manager/standard/update
-			 * @see mshop/supplier/manager/standard/newid
-			 * @see mshop/supplier/manager/standard/delete
-			 * @see mshop/supplier/manager/standard/search
+			 * @see mshop/supplier/manager/standard/insert/ansi
+			 * @see mshop/supplier/manager/standard/update/ansi
+			 * @see mshop/supplier/manager/standard/newid/ansi
+			 * @see mshop/supplier/manager/standard/delete/ansi
+			 * @see mshop/supplier/manager/standard/search/ansi
 			 */
-			$cfgPathCount =  'mshop/supplier/manager/standard/count';
+			$cfgPathCount = 'mshop/supplier/manager/standard/count';
 
 			$results = $this->searchItemsBase( $conn, $search, $cfgPathSearch, $cfgPathCount, $required, $total, $level );
 			while( ( $row = $results->fetch() ) !== false ) {
-				$map[$row['id']] = $row;
+				$map[(string) $row['supplier.id']] = $row;
 			}
 
 			$dbm->release( $conn, $dbname );
@@ -492,7 +644,12 @@ class Standard
 			throw $e;
 		}
 
-		return $this->buildItems( $map, $ref, 'supplier' );
+		$addrItems = [];
+		if( in_array( 'supplier/address', $ref, true ) ) {
+			$addrItems = $this->getAddressItems( array_keys( $map ), 'supplier' );
+		}
+
+		return $this->buildItems( $map, $ref, 'supplier', $addrItems );
 	}
 
 
@@ -511,15 +668,15 @@ class Standard
 
 
 	/**
-	 * creates a search object and sets base criteria
+	 * Creates a search critera object
 	 *
-	 * @param boolean $default
-	 * @return \Aimeos\MW\Criteria\Iface
+	 * @param boolean $default Add default criteria (optional)
+	 * @return \Aimeos\MW\Criteria\Iface New search criteria object
 	 */
-	public function createSearch($default = false)
+	public function createSearch( $default = false )
 	{
-		if ($default) {
-			return $this->createSearchBase('supplier');
+		if( $default ) {
+			return $this->createSearchBase( 'supplier' );
 		}
 
 		return parent::createSearch();
@@ -530,10 +687,13 @@ class Standard
 	 * Creates a new supplier item.
 	 *
 	 * @param array $values List of attributes for supplier item
+	 * @param \Aimeos\MShop\Common\Item\Lists\Iface[] $listitems List of list items
+	 * @param \Aimeos\MShop\Common\Item\Iface[] $refItems List of referenced items
+	 * @param \Aimeos\MShop\Common\Item\Address\Iface[] $addresses List of address items
 	 * @return \Aimeos\MShop\Supplier\Item\Iface New supplier item
 	 */
-	protected function createItemBase( array $values = array(), array $listitems = array(), array $refItems = array() )
+	protected function createItemBase( array $values = [], array $listitems = [], array $refItems = [], array $addresses = [] )
 	{
-		return new \Aimeos\MShop\Supplier\Item\Standard( $values, $listitems, $refItems );
+		return new \Aimeos\MShop\Supplier\Item\Standard( $values, $listitems, $refItems, $addresses );
 	}
 }

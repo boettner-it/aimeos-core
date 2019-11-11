@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Service
  */
@@ -20,7 +20,6 @@ namespace Aimeos\MShop\Service\Provider\Payment;
  */
 abstract class Base
 	extends \Aimeos\MShop\Service\Provider\Base
-	implements \Aimeos\MShop\Service\Provider\Payment\Iface
 {
 	/**
 	 * Feature constant if querying for status updates for an order is supported.
@@ -42,45 +41,10 @@ abstract class Base
 	 */
 	const FEAT_REFUND = 4;
 
-
-	private $beConfig = array(
-		'payment.url-success' => array(
-			'code' => 'payment.url-success',
-			'internalcode'=> 'payment.url-success',
-			'label'=> 'Shop URL customers are redirected to after successful payments',
-			'type'=> 'string',
-			'internaltype'=> 'string',
-			'default'=> '',
-			'required'=> false,
-		),
-		'payment.url-failure' => array(
-			'code' => 'payment.url-failure',
-			'internalcode'=> 'payment.url-failure',
-			'label'=> 'Shop URL customers are redirected to after failed payments',
-			'type'=> 'string',
-			'internaltype'=> 'string',
-			'default'=> '',
-			'required'=> false,
-		),
-		'payment.url-cancel' => array(
-			'code' => 'payment.url-cancel',
-			'internalcode'=> 'payment.url-cancel',
-			'label'=> 'Shop URL customers are redirected to after canceled payments',
-			'type'=> 'string',
-			'internaltype'=> 'string',
-			'default'=> '',
-			'required'=> false,
-		),
-		'payment.url-update' => array(
-			'code' => 'payment.url-update',
-			'internalcode'=> 'payment.url-update',
-			'label'=> 'Shop URL payment status updates from payment providers are sent to',
-			'type'=> 'string',
-			'internaltype'=> 'string',
-			'default'=> '',
-			'required'=> false,
-		),
-	);
+	/**
+	 * Feature constant if reoccurring payments is supported.
+	 */
+	const FEAT_REPAY = 5;
 
 
 	/**
@@ -92,16 +56,7 @@ abstract class Base
 	 */
 	public function checkConfigBE( array $attributes )
 	{
-		$error = $this->checkConfig( $this->beConfig, $attributes );
-
-		foreach( $this->beConfig as $key => $value )
-		{
-			if( isset( $attributes[$key] ) && $value['type'] != gettype( $attributes[$key] ) ) {
-				$error[$key] = sprintf( 'The type of the configuration option with key "%1$s" must be "%2$s"', $key, $value['type'] );
-			}
-		}
-
-		return $error;
+		return [];
 	}
 
 
@@ -113,13 +68,7 @@ abstract class Base
 	 */
 	public function getConfigBE()
 	{
-		$list = array();
-
-		foreach( $this->beConfig as $key => $config ) {
-			$list[$key] = new \Aimeos\MW\Criteria\Attribute\Standard( $config );
-		}
-
-		return $list;
+		return [];
 	}
 
 
@@ -151,14 +100,14 @@ abstract class Base
 	 *
 	 * @param \Aimeos\MShop\Order\Item\Iface $order Order invoice object
 	 * @param array $params Request parameter if available
-	 * @return \Aimeos\MShop\Common\Item\Helper\Form\Standard Form object with URL, action and parameters to redirect to
+	 * @return \Aimeos\MShop\Common\Helper\Form\Standard Form object with URL, action and parameters to redirect to
 	 * 	(e.g. to an external server of the payment provider or to a local success page)
 	 */
-	public function process( \Aimeos\MShop\Order\Item\Iface $order, array $params = array() )
+	public function process( \Aimeos\MShop\Order\Item\Iface $order, array $params = [] )
 	{
 		$url = $this->getConfigValue( array( 'payment.url-success' ) );
 
-		return new \Aimeos\MShop\Common\Item\Helper\Form\Standard( $url, 'POST', array() );
+		return new \Aimeos\MShop\Common\Helper\Form\Standard( $url, 'POST', [] );
 	}
 
 
@@ -174,6 +123,19 @@ abstract class Base
 
 
 	/**
+	 * Executes the payment again for the given order if supported.
+	 * This requires support of the payment gateway and token based payment
+	 *
+	 * @param \Aimeos\MShop\Order\Item\Iface $order Order invoice object
+	 * @return void
+	 */
+	public function repay( \Aimeos\MShop\Order\Item\Iface $order )
+	{
+		throw new \Aimeos\MShop\Service\Exception( sprintf( 'Method "%1$s" for provider not available', 'repay' ) );
+	}
+
+
+	/**
 	 * Sets the payment attributes in the given service.
 	 *
 	 * @param \Aimeos\MShop\Order\Item\Base\Service\Iface $orderServiceItem Order service item that will be added to the basket
@@ -181,6 +143,6 @@ abstract class Base
 	 */
 	public function setConfigFE( \Aimeos\MShop\Order\Item\Base\Service\Iface $orderServiceItem, array $attributes )
 	{
-		$this->setAttributes( $orderServiceItem, $attributes, 'payment' );
+		return $this->setAttributes( $orderServiceItem, $attributes, 'payment' );
 	}
 }

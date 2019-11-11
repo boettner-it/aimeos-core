@@ -1,37 +1,28 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 
 namespace Aimeos\MW\Criteria;
 
 
-/**
- * Test class for \Aimeos\MW\Criteria\SQL.
- */
-class SQLTest extends \PHPUnit_Framework_TestCase
+class SQLTest extends \PHPUnit\Framework\TestCase
 {
 	private $object;
 
 
-	/**
-	 * Sets up the fixture, for example, opens a network connection.
-	 * This method is called before a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function setUp()
 	{
-		if( \TestHelper::getConfig()->get( 'resource/db/adapter', false ) === false ) {
+		if( \TestHelperMw::getConfig()->get( 'resource/db/adapter', false ) === false ) {
 			$this->markTestSkipped( 'No database configured' );
 		}
 
 
-		$dbm = \TestHelper::getDBManager();
+		$dbm = \TestHelperMw::getDBManager();
 
 		$conn = $dbm->acquire();
 		$this->object = new \Aimeos\MW\Criteria\SQL( $conn );
@@ -39,12 +30,6 @@ class SQLTest extends \PHPUnit_Framework_TestCase
 	}
 
 
-	/**
-	 * Tears down the fixture, for example, closes a network connection.
-	 * This method is called after a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function tearDown()
 	{
 		$this->object = null;
@@ -53,8 +38,8 @@ class SQLTest extends \PHPUnit_Framework_TestCase
 
 	public function testCreateFunction()
 	{
-		$func = $this->object->createFunction( 'test', array( 1, 2, 3 ) );
-		$this->assertEquals( 'test(1,2,3)', $func );
+		$func = $this->object->createFunction( 'test', [1, null, 2] );
+		$this->assertEquals( 'test(1,null,2)', $func );
 	}
 
 
@@ -62,7 +47,7 @@ class SQLTest extends \PHPUnit_Framework_TestCase
 	{
 		$expected = array(
 			'combine' => array( '&&', '||', '!' ),
-			'compare' => array( '==', '!=', '~=', '>=', '<=', '>', '<', '&', '|', '=~' ),
+			'compare' => array( '=~', '~=', '==', '!=', '>', '>=', '<', '<=' ),
 			'sort' => array( '+', '-' ),
 		);
 		$actual = $this->object->getOperators();
@@ -72,97 +57,95 @@ class SQLTest extends \PHPUnit_Framework_TestCase
 
 	public function testCombine()
 	{
-		$this->assertInstanceOf( '\\Aimeos\\MW\\Criteria\\Expression\\Combine\\SQL', $this->object->combine( '||', array() ) );
+		$this->assertInstanceOf( \Aimeos\MW\Criteria\Expression\Combine\SQL::class, $this->object->combine( '||', [] ) );
 	}
 
 
 	public function testCompare()
 	{
-		$this->assertInstanceOf( '\\Aimeos\\MW\\Criteria\\Expression\\Compare\\SQL', $this->object->compare( '!=', 'name', 'value' ) );
+		$this->assertInstanceOf( \Aimeos\MW\Criteria\Expression\Compare\SQL::class, $this->object->compare( '!=', 'name', 'value' ) );
 	}
 
 
 	public function testSort()
 	{
-		$this->assertInstanceOf( '\\Aimeos\\MW\\Criteria\\Expression\\Sort\\SQL', $this->object->sort( '+', 'name' ) );
+		$this->assertInstanceOf( \Aimeos\MW\Criteria\Expression\Sort\SQL::class, $this->object->sort( '+', 'name' ) );
 	}
 
 
-	public function testGetConditionString()
+	public function testTranslate()
+	{
+		$translations = array( 'int_column' => 'int_col', 'str_column' => 'str_col' );
+
+		$this->assertEquals( ["str_col"], $this->object->translate( array( $this->object->sort( '+', 'str_column' ) ), $translations ) );
+		$this->assertEquals( ["str_col"], $this->object->translate( array( $this->object->compare( '==', 'str_column', 1 ) ), $translations ) );
+		$this->assertEquals( [], $this->object->translate( array( $this->object->combine( '&&', [] ) ), $translations ) );
+	}
+
+
+	public function testGetConditionSource()
 	{
 		$types = array( 'int_column' => \Aimeos\MW\DB\Statement\Base::PARAM_INT, 'str_column' => \Aimeos\MW\DB\Statement\Base::PARAM_STR );
 		$translations = array( 'int_column' => 'int_col', 'str_column' => 'str_col' );
 		$plugins = array( 'int_column' => new TestSQL() );
 
-		$this->assertEquals( "1 = 1", $this->object->getConditionString( $types, $translations ) );
+		$this->assertEquals( "1 = 1", $this->object->getConditionSource( $types, $translations ) );
 
 		$expr = array( $this->object->compare( '==', 'int_column', 'a' ), $this->object->compare( '==', 'str_column', 'test' ) );
 		$this->object->setConditions( $this->object->combine( '&&', $expr ) );
-		$this->assertEquals( "( int_col = 10 AND str_col = 'test' )", $this->object->getConditionString( $types, $translations, $plugins ) );
+		$this->assertEquals( "( int_col = 10 AND str_col = 'test' )", $this->object->getConditionSource( $types, $translations, $plugins ) );
 
 		$expr = array( $this->object->compare( '==', 'int_column', array( 1, 2, 4, 8 ) ), $this->object->compare( '==', 'str_column', 'test' ) );
 		$this->object->setConditions( $this->object->combine( '&&', $expr ) );
-		$this->assertEquals( "( int_col IN (1,2,4,8) AND str_col = 'test' )", $this->object->getConditionString( $types, $translations ) );
+		$this->assertEquals( "( int_col IN (1,2,4,8) AND str_col = 'test' )", $this->object->getConditionSource( $types, $translations ) );
 
 		$expr = array( $this->object->compare( '==', 'int_column', 1 ), $this->object->compare( '~=', 'str_column', array( 't1', 't2', 't3' ) ) );
 		$this->object->setConditions( $this->object->combine( '&&', $expr ) );
-		$this->assertEquals( "( int_col = 1 AND (str_col LIKE '%t1%' OR str_col LIKE '%t2%' OR str_col LIKE '%t3%') )", $this->object->getConditionString( $types, $translations ) );
+		$this->assertEquals( "( int_col = 1 AND (str_col LIKE '%t1%' ESCAPE '#' OR str_col LIKE '%t2%' ESCAPE '#' OR str_col LIKE '%t3%' ESCAPE '#') )", $this->object->getConditionSource( $types, $translations ) );
 
 		$expr = array( $this->object->compare( '==', 'int_column', 1 ), $this->object->compare( '!=', 'int_column', 2 ) );
 		$this->object->setConditions( $this->object->combine( '!', array( $this->object->combine( '&&', $expr ) ) ) );
-		$this->assertEquals( " NOT ( int_col = 1 AND int_col <> 2 )", $this->object->getConditionString( $types, $translations ) );
+		$this->assertEquals( " NOT ( int_col = 1 AND int_col <> 2 )", $this->object->getConditionSource( $types, $translations ) );
 
 		$expr = array( $this->object->compare( '==', 'int_column', null ), $this->object->compare( '!=', 'str_column', null ) );
 		$this->object->setConditions( $this->object->combine( '&&', $expr ) );
-		$this->assertEquals( "( int_col IS NULL AND str_col IS NOT NULL )", $this->object->getConditionString( $types, $translations ) );
+		$this->assertEquals( "( int_col IS NULL AND str_col IS NOT NULL )", $this->object->getConditionSource( $types, $translations ) );
 
 		$expr = array( $this->object->compare( '==', 'int_column', 1 ) );
 		$this->object->setConditions( $this->object->combine( '&&', $expr ) );
-		$this->assertEquals( "( int_col = 1 )", $this->object->getConditionString( $types, $translations ) );
+		$this->assertEquals( "( int_col = 1 )", $this->object->getConditionSource( $types, $translations ) );
 
 		$expr = array( $this->object->compare( '==', 'str_column', 'test' ) );
 		$expr = array( $this->object->compare( '==', 'int_column', 1 ), $this->object->combine( '&&', $expr ) );
 		$this->object->setConditions( $this->object->combine( '&&', $expr ) );
-		$this->assertEquals( "( int_col = 1 AND ( str_col = 'test' ) )", $this->object->getConditionString( $types, $translations ) );
+		$this->assertEquals( "( int_col = 1 AND ( str_col = 'test' ) )", $this->object->getConditionSource( $types, $translations ) );
 
-		$types = array( 'column' => \Aimeos\MW\DB\Statement\Base::PARAM_BOOL);
+		$types = array( 'column' => \Aimeos\MW\DB\Statement\Base::PARAM_BOOL );
 		$this->object->setConditions( $this->object->compare( '==', 'column', 1 ) );
-		$this->assertEquals( "column = 1", $this->object->getConditionString( $types ) );
+		$this->assertEquals( "column = 1", $this->object->getConditionSource( $types ) );
 	}
 
 
-	public function testGetConditionStringInvalidOperatorForNull()
-	{
-		// test exception in _createTerm:  'null value not allowed for operator'
-		$types = array( 'str_column' => \Aimeos\MW\DB\Statement\Base::PARAM_STR );
-
-		$this->object->setConditions( $this->object->compare( '~=', 'str_column', null ) );
-
-		$this->setExpectedException('\\Aimeos\\MW\\Common\\Exception');
-		$this->object->getConditionString( $types );
-	}
-
-
-	public function testGetConditionStringInvalidName()
+	public function testGetConditionSourceInvalidName()
 	{
 		$types = array( 'int_column' => \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 
 		$this->object->setConditions( $this->object->compare( '==', 'icol', 10 ) );
-		$this->setExpectedException('\\Aimeos\\MW\\Common\\Exception');
-		$this->object->getConditionString( $types );
+		$this->setExpectedException( \Aimeos\MW\Common\Exception::class );
+		$this->object->getConditionSource( $types );
 	}
 
 
-	public function testGetConditionStringInvalidOperator()
+	public function testGetConditionSourceInvalidOperator()
 	{
-		$this->setExpectedException('\\Aimeos\\MW\\Common\\Exception');
+		$this->setExpectedException( \Aimeos\MW\Common\Exception::class );
 		$this->object->setConditions( $this->object->compare( '?', 'int_column', 10 ) );
 	}
 
 
 	public function testGetConditions()
 	{
-		$this->assertInstanceOf( '\\Aimeos\\MW\\Criteria\\Expression\\Compare\\SQL', $this->object->getConditions() );
+		$this->assertInstanceOf( \Aimeos\MW\Criteria\Expression\Compare\SQL::class, $this->object->getConditions() );
 
 		$conditions = $this->object->compare( '==', 'int_column', 10 );
 		$this->object->setConditions( $conditions );
@@ -170,33 +153,33 @@ class SQLTest extends \PHPUnit_Framework_TestCase
 	}
 
 
-	public function testGetSortationString()
+	public function testGetSortationSource()
 	{
 		$types = array( 'asc_column' => \Aimeos\MW\DB\Statement\Base::PARAM_INT, 'desc_column' => \Aimeos\MW\DB\Statement\Base::PARAM_STR );
 		$translations = array( 'asc_column' => 'asc_int_col', 'desc_column' => 'desc_str_col' );
 
-		$sortations = array();
+		$sortations = [];
 		$sortations[] = $this->object->sort( '+', 'asc_column' );
 		$sortations[] = $this->object->sort( '-', 'desc_column' );
 		$this->object->setSortations( $sortations );
-		$this->assertEquals( 'asc_int_col ASC, desc_str_col DESC', $this->object->getSortationString( $types, $translations ) );
+		$this->assertEquals( 'asc_int_col ASC, desc_str_col DESC', $this->object->getSortationSource( $types, $translations ) );
 	}
 
 
-	public function testGetSortationStringInvalidName()
+	public function testGetSortationSourceInvalidName()
 	{
 		$types = array( 'asc_column' => \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 		$translations = array( 'asc_column' => 'asc_int_col' );
 
 		$this->object->setSortations( array( $this->object->sort( '+', 'asc_col' ) ) );
-		$this->setExpectedException('\\Aimeos\\MW\\Common\\Exception');
-		$this->object->getSortationString( $types, $translations );
+		$this->setExpectedException( \Aimeos\MW\Common\Exception::class );
+		$this->object->getSortationSource( $types, $translations );
 	}
 
 
-	public function testGetSortationStringInvalidDirection()
+	public function testGetSortationSourceInvalidDirection()
 	{
-		$this->setExpectedException('\\Aimeos\\MW\\Common\\Exception');
+		$this->setExpectedException( \Aimeos\MW\Common\Exception::class );
 		$this->object->setSortations( array( $this->object->sort( '/', 'asc_column' ) ) );
 	}
 
@@ -205,16 +188,16 @@ class SQLTest extends \PHPUnit_Framework_TestCase
 	{
 		$types = array( 'asc_column' => \Aimeos\MW\DB\Statement\Base::PARAM_INT, 'desc_column' => \Aimeos\MW\DB\Statement\Base::PARAM_STR );
 
-		$this->assertEquals('asc_column ASC', $this->object->getSortationString( $types ) );
+		$this->assertEquals( 'asc_column ASC', $this->object->getSortationSource( $types ) );
 
 		$translations = array( 'asc_column' => 'asc_int_col', 'desc_column' => 'desc_str_col' );
-		$this->assertEquals('asc_int_col ASC', $this->object->getSortationString( $types, $translations ));
+		$this->assertEquals( 'asc_int_col ASC', $this->object->getSortationSource( $types, $translations ) );
 	}
 
 
 	public function testGetSortations()
 	{
-		$this->assertEquals( array(), $this->object->getSortations() );
+		$this->assertEquals( [], $this->object->getSortations() );
 
 		$sortations = array( $this->object->sort( '+', 'asc_column' ) );
 		$this->object->setSortations( $sortations );
@@ -236,14 +219,21 @@ class SQLTest extends \PHPUnit_Framework_TestCase
 
 	public function testToConditionsEmptyArray()
 	{
-		$condition = $this->object->toConditions( array() );
-		$this->assertInstanceOf( '\\Aimeos\\MW\\Criteria\\Expression\\Compare\\SQL', $condition );
+		$condition = $this->object->toConditions( [] );
+		$this->assertInstanceOf( \Aimeos\MW\Criteria\Expression\Compare\SQL::class, $condition );
+	}
+
+
+	public function testToConditionsInvalid()
+	{
+		$this->setExpectedException( \Aimeos\MW\Common\Exception::class );
+		$this->object->toConditions( ['=][attribute.id]=15'] );
 	}
 
 
 	public function testToConditionsInvalidOperator()
 	{
-		$this->setExpectedException( '\\Aimeos\\MW\\Common\\Exception' );
+		$this->setExpectedException( \Aimeos\MW\Common\Exception::class );
 		$this->object->toConditions( array( '><' => array( 'name', 'value' ) ) );
 	}
 
@@ -256,7 +246,7 @@ class SQLTest extends \PHPUnit_Framework_TestCase
 
 		$condition = $this->object->toConditions( $array );
 
-		$this->assertInstanceOf( '\\Aimeos\\MW\\Criteria\\Expression\\Compare\\Iface', $condition );
+		$this->assertInstanceOf( \Aimeos\MW\Criteria\Expression\Compare\Iface::class, $condition );
 		$this->assertEquals( '==', $condition->getOperator() );
 		$this->assertEquals( 'name', $condition->getName() );
 		$this->assertEquals( 'value', $condition->getValue() );
@@ -277,13 +267,13 @@ class SQLTest extends \PHPUnit_Framework_TestCase
 		);
 
 		$condition = $this->object->toConditions( $array );
-		$this->assertInstanceOf( '\\Aimeos\\MW\\Criteria\\Expression\\Combine\\Iface', $condition );
+		$this->assertInstanceOf( \Aimeos\MW\Criteria\Expression\Combine\Iface::class, $condition );
 		$this->assertEquals( '&&', $condition->getOperator() );
 		$this->assertEquals( 2, count( $condition->getExpressions() ) );
 
 		foreach( $condition->getExpressions() as $expr )
 		{
-			$this->assertInstanceOf( '\\Aimeos\\MW\\Criteria\\Expression\\Compare\\Iface', $expr );
+			$this->assertInstanceOf( \Aimeos\MW\Criteria\Expression\Compare\Iface::class, $expr );
 			$this->assertEquals( '==', $expr->getOperator() );
 			$this->assertEquals( 'name', $expr->getName() );
 			$this->assertEquals( 'value', $expr->getValue() );
@@ -302,7 +292,7 @@ class SQLTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals( 2, count( $sortations ) );
 
 		foreach( $sortations as $sort ) {
-			$this->assertInstanceOf( '\\Aimeos\\MW\\Criteria\\Expression\\Sort\\Iface', $sort );
+			$this->assertInstanceOf( \Aimeos\MW\Criteria\Expression\Sort\Iface::class, $sort );
 		}
 
 		$this->assertEquals( '+', $sortations[0]->getOperator() );

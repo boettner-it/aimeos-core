@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2014
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2014
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MAdmin
  * @subpackage Cache
  */
@@ -31,7 +31,7 @@ interface Iface extends \Aimeos\MShop\Common\Item\Iface
 	 * Sets the new value of the item.
 	 *
 	 * @param string $value Value of the item
-	 * @return void
+	 * @return \Aimeos\MAdmin\Cache\Item\Iface Cache item for chaining method calls
 	 */
 	public function setValue( $value );
 
@@ -45,8 +45,8 @@ interface Iface extends \Aimeos\MShop\Common\Item\Iface
 	/**
 	 * Sets the new expiration time of the item.
 	 *
-	 * @param string|null Expiration time of the item or null for no expiration
-	 * @return void
+	 * @param string|null $timestamp Expiration time of the item or null for no expiration
+	 * @return \Aimeos\MAdmin\Cache\Item\Iface Cache item for chaining method calls
 	 */
 	public function setTimeExpire( $timestamp );
 
@@ -60,8 +60,8 @@ interface Iface extends \Aimeos\MShop\Common\Item\Iface
 	/**
 	 * Sets the new tags associated to the item.
 	 *
-	 * @param array Tags associated to the item
-	 * @return void
+	 * @param array $tags Tags associated to the item
+	 * @return \Aimeos\MAdmin\Cache\Item\Iface Cache item for chaining method calls
 	 */
 	public function setTags( array $tags );
 }

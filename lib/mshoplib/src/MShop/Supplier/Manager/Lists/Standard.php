@@ -2,7 +2,7 @@
 
 /**
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Supplier
  */
@@ -12,117 +12,127 @@ namespace Aimeos\MShop\Supplier\Manager\Lists;
 
 
 /**
- * Default Supplier list manager for creating and handling Supplier list items.
+ * Default supplier list manager for creating and handling supplier list items.
  * @package MShop
  * @subpackage Supplier
  */
 class Standard
 	extends \Aimeos\MShop\Common\Manager\Lists\Base
-	implements \Aimeos\MShop\Supplier\Manager\Lists\Iface
+	implements \Aimeos\MShop\Supplier\Manager\Lists\Iface, \Aimeos\MShop\Common\Manager\Factory\Iface
 {
 	private $searchConfig = array(
-		'supplier.lists.id'=> array(
-			'code'=>'supplier.lists.id',
-			'internalcode'=>'msupli."id"',
-			'internaldeps' => array( 'LEFT JOIN "mshop_supplier_list" AS msupli ON ( msup."id" = msupli."parentid" )' ),
-			'label'=>'Supplier list ID',
-			'type'=> 'integer',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_INT,
-			'public' => false,
-		),
-		'supplier.lists.siteid'=> array(
-			'code'=>'supplier.lists.siteid',
-			'internalcode'=>'msupli."siteid"',
-			'label'=>'Supplier list site ID',
-			'type'=> 'integer',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_INT,
-			'public' => false,
-		),
-		'supplier.lists.parentid'=> array(
-			'code'=>'supplier.lists.parentid',
-			'internalcode'=>'msupli."parentid"',
-			'label'=>'Supplier list parent ID',
-			'type'=> 'integer',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_INT,
-			'public' => false,
-		),
-		'supplier.lists.domain'=> array(
-			'code'=>'supplier.lists.domain',
-			'internalcode'=>'msupli."domain"',
-			'label'=>'Supplier list domain',
-			'type'=> 'string',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
-		),
-		'supplier.lists.typeid' => array(
-			'code'=>'supplier.lists.typeid',
-			'internalcode'=>'msupli."typeid"',
-			'label'=>'Supplier list type ID',
-			'type'=> 'integer',
+		'supplier.lists.id' => array(
+			'code' => 'supplier.lists.id',
+			'internalcode' => 'msupli."id"',
+			'label' => 'List ID',
+			'type' => 'integer',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 			'public' => false,
 		),
-		'supplier.lists.refid'=> array(
-			'code'=>'supplier.lists.refid',
-			'internalcode'=>'msupli."refid"',
-			'label'=>'Supplier list reference ID',
-			'type'=> 'string',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'supplier.lists.siteid' => array(
+			'code' => 'supplier.lists.siteid',
+			'internalcode' => 'msupli."siteid"',
+			'label' => 'List site ID',
+			'type' => 'integer',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
+			'public' => false,
+		),
+		'supplier.lists.parentid' => array(
+			'code' => 'supplier.lists.parentid',
+			'internalcode' => 'msupli."parentid"',
+			'label' => 'List parent ID',
+			'type' => 'integer',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
+			'public' => false,
+		),
+		'supplier.lists.type' => array(
+			'code' => 'supplier.lists.type',
+			'internalcode' => 'msupli."type"',
+			'label' => 'List type',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		),
+		'supplier.lists.refid' => array(
+			'code' => 'supplier.lists.refid',
+			'internalcode' => 'msupli."refid"',
+			'label' => 'List reference ID',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
 		'supplier.lists.datestart' => array(
-			'code'=>'supplier.lists.datestart',
-			'internalcode'=>'msupli."start"',
-			'label'=>'Supplier list start date/time',
-			'type'=> 'datetime',
+			'code' => 'supplier.lists.datestart',
+			'internalcode' => 'msupli."start"',
+			'label' => 'List start date/time',
+			'type' => 'datetime',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
 		'supplier.lists.dateend' => array(
-			'code'=>'supplier.lists.dateend',
-			'internalcode'=>'msupli."end"',
-			'label'=>'Supplier list end date/time',
-			'type'=> 'datetime',
+			'code' => 'supplier.lists.dateend',
+			'internalcode' => 'msupli."end"',
+			'label' => 'List end date/time',
+			'type' => 'datetime',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
-		'supplier.lists.config' => array(
-			'code'=>'supplier.lists.config',
-			'internalcode'=>'msupli."config"',
-			'label'=>'Supplier list config',
-			'type'=> 'string',
+		'supplier.lists.domain' => array(
+			'code' => 'supplier.lists.domain',
+			'internalcode' => 'msupli."domain"',
+			'label' => 'List domain',
+			'type' => 'string',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
 		'supplier.lists.position' => array(
-			'code'=>'supplier.lists.position',
-			'internalcode'=>'msupli."pos"',
-			'label'=>'Supplier list position',
-			'type'=> 'integer',
+			'code' => 'supplier.lists.position',
+			'internalcode' => 'msupli."pos"',
+			'label' => 'List position',
+			'type' => 'integer',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 		),
 		'supplier.lists.status' => array(
-			'code'=>'supplier.lists.status',
-			'internalcode'=>'msupli."status"',
-			'label'=>'Supplier list status',
-			'type'=> 'integer',
+			'code' => 'supplier.lists.status',
+			'internalcode' => 'msupli."status"',
+			'label' => 'List status',
+			'type' => 'integer',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 		),
-		'supplier.lists.ctime'=> array(
-			'code'=>'supplier.lists.ctime',
-			'internalcode'=>'msupli."ctime"',
-			'label'=>'Supplier list create date/time',
-			'type'=> 'datetime',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'supplier.lists.config' => array(
+			'code' => 'supplier.lists.config',
+			'internalcode' => 'msupli."config"',
+			'label' => 'List config',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
-		'supplier.lists.mtime'=> array(
-			'code'=>'supplier.lists.mtime',
-			'internalcode'=>'msupli."mtime"',
-			'label'=>'Supplier list modification date/time',
-			'type'=> 'datetime',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'supplier.lists.ctime' => array(
+			'code' => 'supplier.lists.ctime',
+			'internalcode' => 'msupli."ctime"',
+			'label' => 'List create date/time',
+			'type' => 'datetime',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
-		'supplier.lists.editor'=> array(
-			'code'=>'supplier.lists.editor',
-			'internalcode'=>'msupli."editor"',
-			'label'=>'Supplier list editor',
-			'type'=> 'string',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'supplier.lists.mtime' => array(
+			'code' => 'supplier.lists.mtime',
+			'internalcode' => 'msupli."mtime"',
+			'label' => 'List modify date/time',
+			'type' => 'datetime',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
+		),
+		'supplier.lists.editor' => array(
+			'code' => 'supplier.lists.editor',
+			'internalcode' => 'msupli."editor"',
+			'label' => 'List editor',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
+		),
+		'supplier.lists.key' => array(
+			'code' => 'supplier.lists.key',
+			'internalcode' => 'msupli."key"',
+			'label' => 'List key',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
 	);
 
@@ -142,16 +152,30 @@ class Standard
 	/**
 	 * Removes old entries from the storage.
 	 *
-	 * @param array $siteids List of IDs for sites whose entries should be deleted
+	 * @param string[] $siteids List of IDs for sites whose entries should be deleted
+	 * @return \Aimeos\MShop\Supplier\Manager\Lists\Iface Manager object for chaining method calls
 	 */
-	public function cleanup( array $siteids )
+	public function clear( array $siteids )
 	{
 		$path = 'mshop/supplier/manager/lists/submanagers';
-		foreach( $this->getContext()->getConfig()->get( $path, array( 'type' ) ) as $domain ) {
-			$this->getSubManager( $domain )->cleanup( $siteids );
+		foreach( $this->getContext()->getConfig()->get( $path, ['type'] ) as $domain ) {
+			$this->getObject()->getSubManager( $domain )->clear( $siteids );
 		}
 
-		$this->cleanupBase( $siteids, 'mshop/supplier/manager/lists/standard/delete' );
+		return $this->clearBase( $siteids, 'mshop/supplier/manager/lists/standard/delete' );
+	}
+
+
+	/**
+	 * Returns the available manager types
+	 *
+	 * @param boolean $withsub Return also the resource type of sub-managers if true
+	 * @return string[] Type of the manager and submanagers, subtypes are separated by slashes
+	 */
+	public function getResourceType( $withsub = true )
+	{
+		$path = 'mshop/supplier/manager/lists/submanagers';
+		return $this->getResourceTypeBase( 'supplier/lists', $path, [], $withsub );
 	}
 
 
@@ -159,12 +183,12 @@ class Standard
 	 * Returns the list attributes that can be used for searching.
 	 *
 	 * @param boolean $withsub Return also attributes of sub-managers if true
-	 * @return array List of attribute items implementing \Aimeos\MW\Criteria\Attribute\Iface
+	 * @return \Aimeos\MW\Criteria\Attribute\Iface[] List of search attribute items
 	 */
 	public function getSearchAttributes( $withsub = true )
 	{
 		/** mshop/supplier/manager/lists/submanagers
-		 * List of manager names that can be instantiated by the Supplier list manager
+		 * List of manager names that can be instantiated by the supplier list manager
 		 *
 		 * Managers provide a generic interface to the underlying storage.
 		 * Each manager has or can have sub-managers caring about particular
@@ -182,12 +206,12 @@ class Standard
 		 */
 		$path = 'mshop/supplier/manager/lists/submanagers';
 
-		return $this->getSearchAttributesBase( $this->searchConfig, $path, array( 'type' ), $withsub );
+		return $this->getSearchAttributesBase( $this->searchConfig, $path, [], $withsub );
 	}
 
 
 	/**
-	 * Returns a new manager for Supplier list extensions.
+	 * Returns a new manager for supplier list extensions.
 	 *
 	 * @param string $manager Name of the sub manager type in lower case
 	 * @param string|null $name Name of the implementation, will be from configuration (or Default) if null
@@ -196,9 +220,9 @@ class Standard
 	public function getSubManager( $manager, $name = null )
 	{
 		/** mshop/supplier/manager/lists/name
-		 * Class name of the used Supplier list manager implementation
+		 * Class name of the used supplier list manager implementation
 		 *
-		 * Each default Supplier list manager can be replaced by an alternative imlementation.
+		 * Each default supplier list manager can be replaced by an alternative imlementation.
 		 * To use this implementation, you have to set the last part of the class
 		 * name as configuration value so the manager factory knows which class it
 		 * has to instantiate.
@@ -230,7 +254,7 @@ class Standard
 		 */
 
 		/** mshop/supplier/manager/lists/decorators/excludes
-		 * Excludes decorators added by the "common" option from the Supplier list manager
+		 * Excludes decorators added by the "common" option from the supplier list manager
 		 *
 		 * Decorators extend the functionality of a class by adding new aspects
 		 * (e.g. log what is currently done), executing the methods of the underlying
@@ -239,13 +263,13 @@ class Standard
 		 *
 		 * This option allows you to remove a decorator added via
 		 * "mshop/common/manager/decorators/default" before they are wrapped
-		 * around the Supplier list manager.
+		 * around the supplier list manager.
 		 *
 		 *  mshop/supplier/manager/lists/decorators/excludes = array( 'decorator1' )
 		 *
 		 * This would remove the decorator named "decorator1" from the list of
 		 * common decorators ("\Aimeos\MShop\Common\Manager\Decorator\*") added via
-		 * "mshop/common/manager/decorators/default" for the Supplier list manager.
+		 * "mshop/common/manager/decorators/default" for the supplier list manager.
 		 *
 		 * @param array List of decorator names
 		 * @since 2014.03
@@ -256,7 +280,7 @@ class Standard
 		 */
 
 		/** mshop/supplier/manager/lists/decorators/global
-		 * Adds a list of globally available decorators only to the Supplier list manager
+		 * Adds a list of globally available decorators only to the supplier list manager
 		 *
 		 * Decorators extend the functionality of a class by adding new aspects
 		 * (e.g. log what is currently done), executing the methods of the underlying
@@ -264,12 +288,14 @@ class Standard
 		 * modify what is returned to the caller.
 		 *
 		 * This option allows you to wrap global decorators
-		 * ("\Aimeos\MShop\Common\Manager\Decorator\*") around the Supplier list manager.
+		 * ("\Aimeos\MShop\Common\Manager\Decorator\*") around the supplier list
+		 * manager.
 		 *
 		 *  mshop/supplier/manager/lists/decorators/global = array( 'decorator1' )
 		 *
 		 * This would add the decorator named "decorator1" defined by
-		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator1" only to the supplier controller.
+		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator1" only to the supplier
+		 * list manager.
 		 *
 		 * @param array List of decorator names
 		 * @since 2014.03
@@ -280,7 +306,7 @@ class Standard
 		 */
 
 		/** mshop/supplier/manager/lists/decorators/local
-		 * Adds a list of local decorators only to the Supplier list manager
+		 * Adds a list of local decorators only to the supplier list manager
 		 *
 		 * Decorators extend the functionality of a class by adding new aspects
 		 * (e.g. log what is currently done), executing the methods of the underlying
@@ -288,13 +314,14 @@ class Standard
 		 * modify what is returned to the caller.
 		 *
 		 * This option allows you to wrap local decorators
-		 * ("\Aimeos\MShop\Common\Manager\Decorator\*") around the Supplier list manager.
+		 * ("\Aimeos\MShop\Supplier\Manager\Lists\Decorator\*") around the supplier
+		 * list manager.
 		 *
 		 *  mshop/supplier/manager/lists/decorators/local = array( 'decorator2' )
 		 *
 		 * This would add the decorator named "decorator2" defined by
-		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator2" only to the supplier
-		 * controller.
+		 * "\Aimeos\MShop\Supplier\Manager\Lists\Decorator\Decorator2" only to the
+		 * supplier list manager.
 		 *
 		 * @param array List of decorator names
 		 * @since 2014.03
@@ -315,8 +342,14 @@ class Standard
 	 */
 	protected function getConfigPath()
 	{
-		/** mshop/supplier/manager/lists/standard/insert
-		 * Inserts a new Supplier list record into the database table
+		/** mshop/supplier/manager/lists/standard/insert/mysql
+		 * Inserts a new supplier list record into the database table
+		 *
+		 * @see mshop/supplier/manager/lists/standard/insert/ansi
+		 */
+
+		/** mshop/supplier/manager/lists/standard/insert/ansi
+		 * Inserts a new supplier list record into the database table
 		 *
 		 * Items with no ID yet (i.e. the ID is NULL) will be created in
 		 * the database and the newly created ID retrieved afterwards
@@ -324,7 +357,7 @@ class Standard
 		 *
 		 * The SQL statement must be a string suitable for being used as
 		 * prepared statement. It must include question marks for binding
-		 * the values from the Supplier list item to the statement before they are
+		 * the values from the supplier list item to the statement before they are
 		 * sent to the database server. The number of question marks must
 		 * be the same as the number of columns listed in the INSERT
 		 * statement. The order of the columns must correspond to the
@@ -338,26 +371,29 @@ class Standard
 		 * @param string SQL statement for inserting records
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/supplier/manager/lists/standard/update
-		 * @see mshop/supplier/manager/lists/standard/newid
-		 * @see mshop/supplier/manager/lists/standard/delete
-		 * @see mshop/supplier/manager/lists/standard/search
-		 * @see mshop/supplier/manager/lists/standard/count
-		 * @see mshop/supplier/manager/lists/standard/aggregate
-		 * @see mshop/supplier/manager/lists/standard/getposmax
-		 * @see mshop/supplier/manager/lists/standard/move
-		 * @see mshop/supplier/manager/lists/standard/updatepos
+		 * @see mshop/supplier/manager/lists/standard/update/ansi
+		 * @see mshop/supplier/manager/lists/standard/newid/ansi
+		 * @see mshop/supplier/manager/lists/standard/delete/ansi
+		 * @see mshop/supplier/manager/lists/standard/search/ansi
+		 * @see mshop/supplier/manager/lists/standard/count/ansi
+		 * @see mshop/supplier/manager/lists/standard/aggregate/ansi
 		 */
 
-		/** mshop/supplier/manager/lists/standard/update
-		 * Updates an existing Supplier list record in the database
+		/** mshop/supplier/manager/lists/standard/update/mysql
+		 * Updates an existing supplier list record in the database
+		 *
+		 * @see mshop/supplier/manager/lists/standard/update/ansi
+		 */
+
+		/** mshop/supplier/manager/lists/standard/update/ansi
+		 * Updates an existing supplier list record in the database
 		 *
 		 * Items which already have an ID (i.e. the ID is not NULL) will
 		 * be updated in the database.
 		 *
 		 * The SQL statement must be a string suitable for being used as
 		 * prepared statement. It must include question marks for binding
-		 * the values from the Supplier list item to the statement before they are
+		 * the values from the supplier list item to the statement before they are
 		 * sent to the database server. The order of the columns must
 		 * correspond to the order in the saveItems() method, so the
 		 * correct values are bound to the columns.
@@ -369,18 +405,21 @@ class Standard
 		 * @param string SQL statement for updating records
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/supplier/manager/lists/standard/insert
-		 * @see mshop/supplier/manager/lists/standard/newid
-		 * @see mshop/supplier/manager/lists/standard/delete
-		 * @see mshop/supplier/manager/lists/standard/search
-		 * @see mshop/supplier/manager/lists/standard/count
-		 * @see mshop/supplier/manager/lists/standard/aggregate
-		 * @see mshop/supplier/manager/lists/standard/getposmax
-		 * @see mshop/supplier/manager/lists/standard/move
-		 * @see mshop/supplier/manager/lists/standard/updatepos
+		 * @see mshop/supplier/manager/lists/standard/insert/ansi
+		 * @see mshop/supplier/manager/lists/standard/newid/ansi
+		 * @see mshop/supplier/manager/lists/standard/delete/ansi
+		 * @see mshop/supplier/manager/lists/standard/search/ansi
+		 * @see mshop/supplier/manager/lists/standard/count/ansi
+		 * @see mshop/supplier/manager/lists/standard/aggregate/ansi
 		 */
 
-		/** mshop/supplier/manager/lists/standard/newid
+		/** mshop/supplier/manager/lists/standard/newid/mysql
+		 * Retrieves the ID generated by the database when inserting a new record
+		 *
+		 * @see mshop/supplier/manager/lists/standard/newid/ansi
+		 */
+
+		/** mshop/supplier/manager/lists/standard/newid/ansi
 		 * Retrieves the ID generated by the database when inserting a new record
 		 *
 		 * As soon as a new record is inserted into the database table,
@@ -404,18 +443,21 @@ class Standard
 		 * @param string SQL statement for retrieving the last inserted record ID
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/supplier/manager/lists/standard/insert
-		 * @see mshop/supplier/manager/lists/standard/update
-		 * @see mshop/supplier/manager/lists/standard/delete
-		 * @see mshop/supplier/manager/lists/standard/search
-		 * @see mshop/supplier/manager/lists/standard/count
-		 * @see mshop/supplier/manager/lists/standard/aggregate
-		 * @see mshop/supplier/manager/lists/standard/getposmax
-		 * @see mshop/supplier/manager/lists/standard/move
-		 * @see mshop/supplier/manager/lists/standard/updatepos
+		 * @see mshop/supplier/manager/lists/standard/insert/ansi
+		 * @see mshop/supplier/manager/lists/standard/update/ansi
+		 * @see mshop/supplier/manager/lists/standard/delete/ansi
+		 * @see mshop/supplier/manager/lists/standard/search/ansi
+		 * @see mshop/supplier/manager/lists/standard/count/ansi
+		 * @see mshop/supplier/manager/lists/standard/aggregate/ansi
 		 */
 
-		/** mshop/supplier/manager/lists/standard/delete
+		/** mshop/supplier/manager/lists/standard/delete/mysql
+		 * Deletes the items matched by the given IDs from the database
+		 *
+		 * @see mshop/supplier/manager/lists/standard/delete/ansi
+		 */
+
+		/** mshop/supplier/manager/lists/standard/delete/ansi
 		 * Deletes the items matched by the given IDs from the database
 		 *
 		 * Removes the records specified by the given IDs from the supplier database.
@@ -433,18 +475,21 @@ class Standard
 		 * @param string SQL statement for deleting items
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/supplier/manager/lists/standard/insert
-		 * @see mshop/supplier/manager/lists/standard/update
-		 * @see mshop/supplier/manager/lists/standard/newid
-		 * @see mshop/supplier/manager/lists/standard/search
-		 * @see mshop/supplier/manager/lists/standard/count
-		 * @see mshop/supplier/manager/lists/standard/aggregate
-		 * @see mshop/supplier/manager/lists/standard/getposmax
-		 * @see mshop/supplier/manager/lists/standard/move
-		 * @see mshop/supplier/manager/lists/standard/updatepos
+		 * @see mshop/supplier/manager/lists/standard/insert/ansi
+		 * @see mshop/supplier/manager/lists/standard/update/ansi
+		 * @see mshop/supplier/manager/lists/standard/newid/ansi
+		 * @see mshop/supplier/manager/lists/standard/search/ansi
+		 * @see mshop/supplier/manager/lists/standard/count/ansi
+		 * @see mshop/supplier/manager/lists/standard/aggregate/ansi
 		 */
 
-		/** mshop/supplier/manager/lists/standard/search
+		/** mshop/supplier/manager/lists/standard/search/mysql
+		 * Retrieves the records matched by the given criteria in the database
+		 *
+		 * @see mshop/supplier/manager/lists/standard/search/ansi
+		 */
+
+		/** mshop/supplier/manager/lists/standard/search/ansi
 		 * Retrieves the records matched by the given criteria in the database
 		 *
 		 * Fetches the records matched by the given criteria from the supplier
@@ -489,18 +534,21 @@ class Standard
 		 * @param string SQL statement for searching items
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/supplier/manager/lists/standard/insert
-		 * @see mshop/supplier/manager/lists/standard/update
-		 * @see mshop/supplier/manager/lists/standard/newid
-		 * @see mshop/supplier/manager/lists/standard/delete
-		 * @see mshop/supplier/manager/lists/standard/count
-		 * @see mshop/supplier/manager/lists/standard/aggregate
-		 * @see mshop/supplier/manager/lists/standard/getposmax
-		 * @see mshop/supplier/manager/lists/standard/move
-		 * @see mshop/supplier/manager/lists/standard/updatepos
+		 * @see mshop/supplier/manager/lists/standard/insert/ansi
+		 * @see mshop/supplier/manager/lists/standard/update/ansi
+		 * @see mshop/supplier/manager/lists/standard/newid/ansi
+		 * @see mshop/supplier/manager/lists/standard/delete/ansi
+		 * @see mshop/supplier/manager/lists/standard/count/ansi
+		 * @see mshop/supplier/manager/lists/standard/aggregate/ansi
 		 */
 
-		/** mshop/supplier/manager/lists/standard/count
+		/** mshop/supplier/manager/lists/standard/count/mysql
+		 * Counts the number of records matched by the given criteria in the database
+		 *
+		 * @see mshop/supplier/manager/lists/standard/count/ansi
+		 */
+
+		/** mshop/supplier/manager/lists/standard/count/ansi
 		 * Counts the number of records matched by the given criteria in the database
 		 *
 		 * Counts all records matched by the given criteria from the supplier
@@ -539,18 +587,21 @@ class Standard
 		 * @param string SQL statement for counting items
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/supplier/manager/lists/standard/insert
-		 * @see mshop/supplier/manager/lists/standard/update
-		 * @see mshop/supplier/manager/lists/standard/newid
-		 * @see mshop/supplier/manager/lists/standard/delete
-		 * @see mshop/supplier/manager/lists/standard/search
-		 * @see mshop/supplier/manager/lists/standard/aggregate
-		 * @see mshop/supplier/manager/lists/standard/getposmax
-		 * @see mshop/supplier/manager/lists/standard/move
-		 * @see mshop/supplier/manager/lists/standard/updatepos
+		 * @see mshop/supplier/manager/lists/standard/insert/ansi
+		 * @see mshop/supplier/manager/lists/standard/update/ansi
+		 * @see mshop/supplier/manager/lists/standard/newid/ansi
+		 * @see mshop/supplier/manager/lists/standard/delete/ansi
+		 * @see mshop/supplier/manager/lists/standard/search/ansi
+		 * @see mshop/supplier/manager/lists/standard/aggregate/ansi
 		 */
 
-		/** mshop/supplier/manager/lists/standard/aggregate
+		/** mshop/supplier/manager/lists/standard/aggregate/mysql
+		 * Counts the number of records grouped by the values in the key column and matched by the given criteria
+		 *
+		 * @see mshop/supplier/manager/lists/standard/aggregate/ansi
+		 */
+
+		/** mshop/supplier/manager/lists/standard/aggregate/ansi
 		 * Counts the number of records grouped by the values in the key column and matched by the given criteria
 		 *
 		 * Groups all records by the values in the key column and counts their
@@ -586,111 +637,12 @@ class Standard
 		 * @param string SQL statement for aggregating order items
 		 * @since 2014.07
 		 * @category Developer
-		 * @see mshop/supplier/manager/lists/standard/insert
-		 * @see mshop/supplier/manager/lists/standard/update
-		 * @see mshop/supplier/manager/lists/standard/newid
-		 * @see mshop/supplier/manager/lists/standard/delete
-		 * @see mshop/supplier/manager/lists/standard/search
-		 * @see mshop/supplier/manager/lists/standard/count
-		 * @see mshop/supplier/manager/lists/standard/getposmax
-		 * @see mshop/supplier/manager/lists/standard/move
-		 * @see mshop/supplier/manager/lists/standard/updatepos
-		 */
-
-		/** mshop/supplier/manager/lists/standard/getposmax
-		 * Retrieves the position of the list record with the highest number
-		 *
-		 * When moving or inserting records into the list, the highest position
-		 * number must be known to append records at the end. Only records from
-		 * the same site that is configured via the consupplier item are considered.
-		 *
-		 * The SQL statement must be a string suitable for being used as
-		 * prepared statement. It must include question marks for binding the
-		 * required values to the statement before they are sent to the
-		 * database server. The number of question marks must be the same as
-		 * used in the moveItem() method and their order must correspond to the
-		 * order in the same method.
-		 *
-		 * The SQL statement should conform to the ANSI standard to be
-		 * with most relational database systems. This also includes using
-		 * double quotes for table and column names.
-		 *
-		 * @param string SQL statement for determining the position with the highest number
-		 * @since 2014.07
-		 * @category Developer
-		 * @see mshop/supplier/manager/lists/standard/insert
-		 * @see mshop/supplier/manager/lists/standard/update
-		 * @see mshop/supplier/manager/lists/standard/newid
-		 * @see mshop/supplier/manager/lists/standard/delete
-		 * @see mshop/supplier/manager/lists/standard/search
-		 * @see mshop/supplier/manager/lists/standard/count
-		 * @see mshop/supplier/manager/lists/standard/aggregate
-		 * @see mshop/supplier/manager/lists/standard/move
-		 * @see mshop/supplier/manager/lists/standard/updatepos
-		 */
-
-		/** mshop/supplier/manager/lists/standard/move
-		 * Moves a list item to another position and updates the other items accordingly
-		 *
-		 * Reorders the records in the list table by updating their position
-		 * field. The records must be from the site that is configured via the
-		 * consupplier item.
-		 *
-		 * The SQL statement must be a string suitable for being used as
-		 * prepared statement. It must include question marks for binding the
-		 * required values to the statement before they are sent to the
-		 * database server. The number of question marks must be the same as
-		 * used in the moveItem() method and their order must correspond to the
-		 * order in the same method.
-		 *
-		 * The SQL statement should conform to the ANSI standard to be
-		 * with most relational database systems. This also includes using
-		 * double quotes for table and column names.
-		 *
-		 * @param string SQL statement for moving items
-		 * @since 2014.07
-		 * @category Developer
-		 * @see mshop/supplier/manager/lists/standard/insert
-		 * @see mshop/supplier/manager/lists/standard/update
-		 * @see mshop/supplier/manager/lists/standard/newid
-		 * @see mshop/supplier/manager/lists/standard/delete
-		 * @see mshop/supplier/manager/lists/standard/search
-		 * @see mshop/supplier/manager/lists/standard/count
-		 * @see mshop/supplier/manager/lists/standard/aggregate
-		 * @see mshop/supplier/manager/lists/standard/getposmax
-		 * @see mshop/supplier/manager/lists/standard/updatepos
-		 */
-
-		/** mshop/supplier/manager/lists/standard/updatepos
-		 * Updates the position value of a single list record
-		 *
-		 * The moveItem() method needs to set the position value of a sinlge
-		 * record in some cases. The records must be from the site that is
-		 * configured via the consupplier item.
-		 *
-		 * The SQL statement must be a string suitable for being used as
-		 * prepared statement. It must include question marks for binding the
-		 * required values to the statement before they are sent to the
-		 * database server. The number of question marks must be the same as
-		 * used in the moveItem() method and their order must correspond to the
-		 * order in the same method.
-		 *
-		 * The SQL statement should conform to the ANSI standard to be
-		 * with most relational database systems. This also includes using
-		 * double quotes for table and column names.
-		 *
-		 * @param string SQL statement for moving items
-		 * @since 2014.07
-		 * @category Developer
-		 * @see mshop/supplier/manager/lists/standard/insert
-		 * @see mshop/supplier/manager/lists/standard/update
-		 * @see mshop/supplier/manager/lists/standard/newid
-		 * @see mshop/supplier/manager/lists/standard/delete
-		 * @see mshop/supplier/manager/lists/standard/search
-		 * @see mshop/supplier/manager/lists/standard/count
-		 * @see mshop/supplier/manager/lists/standard/aggregate
-		 * @see mshop/supplier/manager/lists/standard/getposmax
-		 * @see mshop/supplier/manager/lists/standard/move
+		 * @see mshop/supplier/manager/lists/standard/insert/ansi
+		 * @see mshop/supplier/manager/lists/standard/update/ansi
+		 * @see mshop/supplier/manager/lists/standard/newid/ansi
+		 * @see mshop/supplier/manager/lists/standard/delete/ansi
+		 * @see mshop/supplier/manager/lists/standard/search/ansi
+		 * @see mshop/supplier/manager/lists/standard/count/ansi
 		 */
 
 		return 'mshop/supplier/manager/lists/standard/';

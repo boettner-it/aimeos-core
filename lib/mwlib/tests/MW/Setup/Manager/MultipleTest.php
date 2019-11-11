@@ -1,65 +1,68 @@
 <?php
 
+/**
+ * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
+ * @copyright Metaways Infosystems GmbH, 2014
+ * @copyright Aimeos (aimeos.org), 2015-2018
+ */
+
 namespace Aimeos\MW\Setup\Manager;
 
 
-/**
- * Test class for \Aimeos\MW\Setup\Manager\Multiple.
- *
- * @copyright Metaways Infosystems GmbH, 2014
- * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
- */
-class MultipleTest extends \PHPUnit_Framework_TestCase
+class MultipleTest extends \PHPUnit\Framework\TestCase
 {
 	private $config;
 	private $dbm;
 
 
-	/**
-	 * Sets up the fixture, for example, opens a network connection.
-	 * This method is called before a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function setUp()
 	{
-		$this->config = \TestHelper::getConfig();
+		$this->config = \TestHelperMw::getConfig();
 
 		if( $this->config->get( 'resource/db/adapter', false ) === false ) {
 			$this->markTestSkipped( 'No database configured' );
 		}
 
-		$this->dbm = \TestHelper::getDBManager();
+		$this->dbm = \TestHelperMw::getDBManager();
 	}
 
-	/**
-	 * Tears down the fixture, for example, closes a network connection.
-	 * This method is called after a test is executed.
-	 *
-	 * @access protected
-	 */
+
 	protected function tearDown()
 	{
+		unset( $this->dbm );
 	}
 
-	public function testRun()
+
+	public function testMigrate()
 	{
-		$expected = '
-Executing OneTask                                                     OK
-Executing TwoTask                                                     OK
-';
-
-		$conn = $this->dbm->acquire();
-
 		$taskPath = __DIR__ . DIRECTORY_SEPARATOR . 'tasks';
-		$object = new \Aimeos\MW\Setup\Manager\Standard( $conn, $this->config->get( 'resource/db', array() ), $taskPath );
-
-		$this->dbm->release( $conn );
+		$conf = array( 'db' => $this->config->get( 'resource/db', [] ) );
+		$object = new \Aimeos\MW\Setup\Manager\Multiple( $this->dbm, $conf, $taskPath );
 
 		ob_start();
 
-		$object->run( 'mysql' );
+		$object->migrate();
+
+		$result = ob_get_contents();
+		ob_end_clean();
+
+		$this->assertContains( 'OneTask', $result );
+		$this->assertContains( 'TwoTask', $result );
+	}
+
+
+	public function testRollback()
+	{
+		$expected = 'Executing TwoTask                                                     OK
+';
+
+		$taskPath = __DIR__ . DIRECTORY_SEPARATOR . 'tasks';
+		$conf = array( 'db' => $this->config->get( 'resource/db', [] ) );
+		$object = new \Aimeos\MW\Setup\Manager\Multiple( $this->dbm, $conf, $taskPath );
+
+		ob_start();
+
+		$object->rollback( 'TwoTask' );
 
 		$result = ob_get_contents();
 		ob_end_clean();
@@ -67,28 +70,19 @@ Executing TwoTask                                                     OK
 		$this->assertEquals( $expected, $result );
 	}
 
-	public function testRun2()
+
+	public function testClean()
 	{
-		$expected = '
-Executing OneTask                                                     OK
-Executing TwoTask                                                     OK
-Executing ThreeTask                                                   OK
+		$expected = 'Executing TwoTask                                                     OK
 ';
 
-		$conn = $this->dbm->acquire();
-
-		$taskPath =  array(
-			__DIR__ . DIRECTORY_SEPARATOR . 'tasks',
-			__DIR__ . DIRECTORY_SEPARATOR . 'tasks2',
-		);
-
-		$object = new \Aimeos\MW\Setup\Manager\Standard( $conn, $this->config->get( 'resource/db', array() ), $taskPath );
-
-		$this->dbm->release( $conn );
+		$taskPath = __DIR__ . DIRECTORY_SEPARATOR . 'tasks';
+		$conf = array( 'db' => $this->config->get( 'resource/db', [] ) );
+		$object = new \Aimeos\MW\Setup\Manager\Multiple( $this->dbm, $conf, $taskPath );
 
 		ob_start();
 
-		$object->run( 'mysql' );
+		$object->clean( 'TwoTask' );
 
 		$result = ob_get_contents();
 		ob_end_clean();

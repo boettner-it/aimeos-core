@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Service
  */
@@ -78,6 +78,24 @@ interface Iface
 
 
 	/**
+	 * Injects additional global configuration for the backend.
+	 *
+	 * It's used for adding additional backend configuration from the application
+	 * like the URLs to redirect to.
+	 *
+	 * Supported redirect URLs are:
+	 * - payment.url-success
+	 * - payment.url-failure
+	 * - payment.url-cancel
+	 * - payment.url-update
+	 *
+	 * @param array $config Associative list of config keys and their value
+	 * @return \Aimeos\MShop\Service\Provider\Iface Provider object for chaining method calls
+	 */
+	public function injectGlobalConfigBE( array $config );
+
+
+	/**
 	 * Checks if payment provider can be used based on the basket content.
 	 * Checks for country, currency, address, scoring, etc. should be implemented in separate decorators
 	 *
@@ -100,7 +118,7 @@ interface Iface
 	 * Queries for status updates for the given order if supported.
 	 *
 	 * @param \Aimeos\MShop\Order\Item\Iface $order Order invoice object
-	 * @return void
+	 * @return null
 	 */
 	public function query( \Aimeos\MShop\Order\Item\Iface $order );
 
@@ -110,17 +128,18 @@ interface Iface
 	 *
 	 * @param \Aimeos\MShop\Order\Item\Base\Service\Iface $orderServiceItem Order service item that will be added to the basket
 	 * @param array $attributes Attribute key/value pairs entered by the customer during the checkout process
+	 * @return \Aimeos\MShop\Order\Item\Base\Service\Iface Order service item with attributes added
 	 */
 	public function setConfigFE( \Aimeos\MShop\Order\Item\Base\Service\Iface $orderServiceItem, array $attributes );
 
 
 	/**
-	 * Sets the communication object for a service provider.
+	 * Injects the outer object into the decorator stack
 	 *
-	 * @param \Aimeos\MW\Communication\Iface $communication Object of communication
-	 * @return void
+	 * @param \Aimeos\MShop\Plugin\Provider\Iface $object First object of the decorator stack
+	 * @return \Aimeos\MShop\Plugin\Provider\Iface Plugin object for chaining method calls
 	 */
-	public function setCommunication( \Aimeos\MW\Communication\Iface $communication );
+	public function setObject( \Aimeos\MShop\Plugin\Provider\Iface $object );
 
 
 	/**
@@ -134,14 +153,22 @@ interface Iface
 
 
 	/**
-	 * Updates the orders for which status updates were received via direct requests (like HTTP).
+	 * Updates the order status sent by payment gateway notifications
 	 *
-	 * @param array $params Associative list of request parameters
-	 * @param string|null $body Information sent within the body of the request
-	 * @param string|null &$response Response body for notification requests
-	 * @param array &$header Response headers for notification requests
-	 * @return \Aimeos\MShop\Order\Item\Iface|null Order item if update was successful, null if the given parameters are not valid for this provider
-	 * @throws \Aimeos\MShop\Service\Exception If updating one of the orders failed
+	 * @param \Psr\Http\Message\ServerRequestInterface $request Request object
+	 * @param \Psr\Http\Message\ResponseInterface $response Request object
+	 * @return \Psr\Http\Message\ResponseInterface Response object
 	 */
-	public function updateSync( array $params = array(), $body = null, &$response = null, array &$header = array() );
+	public function updatePush( \Psr\Http\Message\ServerRequestInterface $request, \Psr\Http\Message\ResponseInterface $response );
+
+
+	/**
+	 * Updates the orders for whose status updates have been received by the confirmation page
+	 *
+	 * @param \Psr\Http\Message\ServerRequestInterface $request Request object with parameters and request body
+	 * @param \Aimeos\MShop\Order\Item\Iface $orderItem Order item that should be updated
+	 * @return \Aimeos\MShop\Order\Item\Iface Updated order item
+	 * @throws \Aimeos\MShop\Service\Exception If updating the orders failed
+	 */
+	public function updateSync( \Psr\Http\Message\ServerRequestInterface $request, \Aimeos\MShop\Order\Item\Iface $orderItem );
 }

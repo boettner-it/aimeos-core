@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2012
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2012
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Coupon
  */
@@ -20,88 +20,95 @@ namespace Aimeos\MShop\Coupon\Manager;
  */
 class Standard
 	extends \Aimeos\MShop\Coupon\Manager\Base
-	implements \Aimeos\MShop\Coupon\Manager\Iface
+	implements \Aimeos\MShop\Coupon\Manager\Iface, \Aimeos\MShop\Common\Manager\Factory\Iface
 {
 	private $searchConfig = array(
-		'coupon.id'=> array(
-			'code'=>'coupon.id',
-			'internalcode'=>'mcou."id"',
-			'label'=>'Coupon ID',
-			'type'=> 'integer',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_INT,
-		),
-		'coupon.siteid'=> array(
-			'code'=>'coupon.siteid',
-			'internalcode'=>'mcou."siteid"',
-			'label'=>'Coupon site ID',
-			'type'=> 'integer',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_INT,
+		'coupon.id' => array(
+			'code' => 'coupon.id',
+			'internalcode' => 'mcou."id"',
+			'label' => 'ID',
+			'type' => 'integer',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 			'public' => false,
 		),
-		'coupon.label'=> array(
-			'code'=>'coupon.label',
-			'internalcode'=>'mcou."label"',
-			'label'=>'Coupon label',
-			'type'=> 'string',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'coupon.siteid' => array(
+			'code' => 'coupon.siteid',
+			'internalcode' => 'mcou."siteid"',
+			'label' => 'Site ID',
+			'type' => 'integer',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
+			'public' => false,
 		),
-		'coupon.provider'=> array(
-			'code'=>'coupon.provider',
-			'internalcode'=>'mcou."provider"',
-			'label'=>'Coupon method',
-			'type'=> 'string',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'coupon.label' => array(
+			'code' => 'coupon.label',
+			'internalcode' => 'mcou."label"',
+			'label' => 'Label',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
-		'coupon.config'=> array(
-			'code'=>'coupon.config',
-			'internalcode'=>'mcou."config"',
-			'label'=>'Coupon config',
-			'type'=> 'string',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'coupon.provider' => array(
+			'code' => 'coupon.provider',
+			'internalcode' => 'mcou."provider"',
+			'label' => 'Provider',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
-		'coupon.datestart'=> array(
-			'code'=>'coupon.datestart',
-			'internalcode'=>'mcou."start"',
-			'label'=>'Coupon start date/time',
-			'type'=> 'datetime',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'coupon.datestart' => array(
+			'code' => 'coupon.datestart',
+			'internalcode' => 'mcou."start"',
+			'label' => 'Start date/time',
+			'type' => 'datetime',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
-		'coupon.dateend'=> array(
-			'code'=>'coupon.dateend',
-			'internalcode'=>'mcou."end"',
-			'label'=>'Coupon end date/time',
-			'type'=> 'datetime',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'coupon.dateend' => array(
+			'code' => 'coupon.dateend',
+			'internalcode' => 'mcou."end"',
+			'label' => 'End date/time',
+			'type' => 'datetime',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
-		'coupon.status'=> array(
-			'code'=>'coupon.status',
-			'internalcode'=>'mcou."status"',
-			'label'=>'Coupon status',
-			'type'=> 'integer',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_INT,
+		'coupon.status' => array(
+			'code' => 'coupon.status',
+			'internalcode' => 'mcou."status"',
+			'label' => 'Status',
+			'type' => 'integer',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 		),
-		'coupon.ctime'=> array(
-			'code'=>'coupon.ctime',
-			'internalcode'=>'mcou."ctime"',
-			'label'=>'Coupon create date/time',
-			'type'=> 'datetime',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'coupon.config' => array(
+			'code' => 'coupon.config',
+			'internalcode' => 'mcou."config"',
+			'label' => 'Configuration',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
-		'coupon.mtime'=> array(
-			'code'=>'coupon.mtime',
-			'internalcode'=>'mcou."mtime"',
-			'label'=>'Coupon modification date/time',
-			'type'=> 'datetime',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'coupon.ctime' => array(
+			'code' => 'coupon.ctime',
+			'internalcode' => 'mcou."ctime"',
+			'label' => 'Create date/time',
+			'type' => 'datetime',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
-		'coupon.editor'=> array(
-			'code'=>'coupon.editor',
-			'internalcode'=>'mcou."editor"',
-			'label'=>'Coupon editor',
-			'type'=> 'string',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'coupon.mtime' => array(
+			'code' => 'coupon.mtime',
+			'internalcode' => 'mcou."mtime"',
+			'label' => 'Modification date/time',
+			'type' => 'datetime',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
+		),
+		'coupon.editor' => array(
+			'code' => 'coupon.editor',
+			'internalcode' => 'mcou."editor"',
+			'label' => 'Editor',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
 	);
+
+	private $date;
 
 
 	/**
@@ -113,22 +120,52 @@ class Standard
 	{
 		parent::__construct( $context );
 		$this->setResourceName( 'db-coupon' );
+
+		$this->date = $context->getDateTime();
 	}
 
 
 	/**
 	 * Removes old entries from the storage.
 	 *
-	 * @param array $siteids List of IDs for sites whose entries should be deleted
+	 * @param string[] $siteids List of IDs for sites whose entries should be deleted
+	 * @return \Aimeos\MShop\Coupon\Manager\Iface Manager object for chaining method calls
 	 */
-	public function cleanup( array $siteids )
+	public function clear( array $siteids )
 	{
 		$path = 'mshop/coupon/manager/submanagers';
 		foreach( $this->getContext()->getConfig()->get( $path, array( 'code' ) ) as $domain ) {
-			$this->getSubManager( $domain )->cleanup( $siteids );
+			$this->getObject()->getSubManager( $domain )->clear( $siteids );
 		}
 
-		$this->cleanupBase( $siteids, 'mshop/coupon/manager/standard/delete' );
+		return $this->clearBase( $siteids, 'mshop/coupon/manager/standard/delete' );
+	}
+
+
+	/**
+	 * Creates a new empty item instance
+	 *
+	 * @param array $values Values the item should be initialized with
+	 * @return \Aimeos\MShop\Coupon\Item\Iface New coupon item object
+	 */
+	public function createItem( array $values = [] )
+	{
+		$values['coupon.siteid'] = $this->getContext()->getLocale()->getSiteId();
+		return $this->createItemBase( $values );
+	}
+
+
+	/**
+	 * Returns the available manager types
+	 *
+	 * @param boolean $withsub Return also the resource type of sub-managers if true
+	 * @return string[] Type of the manager and submanagers, subtypes are separated by slashes
+	 */
+	public function getResourceType( $withsub = true )
+	{
+		$path = 'mshop/coupon/manager/submanagers';
+
+		return $this->getResourceTypeBase( 'coupon', $path, array( 'code' ), $withsub );
 	}
 
 
@@ -136,7 +173,7 @@ class Standard
 	 * Returns the attributes that can be used for searching.
 	 *
 	 * @param boolean $withsub Return also attributes of sub-managers if true
-	 * @return array List of attribute items implementing \Aimeos\MW\Criteria\Attribute\Iface
+	 * @return \Aimeos\MW\Criteria\Attribute\Iface[] List of search attribute items
 	 */
 	public function getSearchAttributes( $withsub = true )
 	{
@@ -164,28 +201,17 @@ class Standard
 
 
 	/**
-	 * Creates a new empty coupon item instance
-	 *
-	 * @return \Aimeos\MShop\Coupon\Item\Iface Creates a blank coupon item
-	 */
-	public function createItem()
-	{
-		$values = array( 'siteid'=> $this->getContext()->getLocale()->getSiteId() );
-		return $this->createItemBase( $values );
-	}
-
-
-	/**
 	 * Returns the coupons item specified by its ID.
 	 *
 	 * @param string $id Unique ID of the coupon item in the storage
-	 * @param array $ref List of domains to fetch list items and referenced items for
+	 * @param string[] $ref List of domains to fetch list items and referenced items for
+	 * @param boolean $default Add default criteria
 	 * @return \Aimeos\MShop\Coupon\Item\Iface Returns the coupon item of the given ID
 	 * @throws \Aimeos\MShop\Exception If coupon couldn't be found
 	 */
-	public function getItem( $id, array $ref = array() )
+	public function getItem( $id, array $ref = [], $default = false )
 	{
-		return $this->getItemBase( 'coupon.id', $id, $ref );
+		return $this->getItemBase( 'coupon.id', $id, $ref, $default );
 	}
 
 
@@ -194,16 +220,13 @@ class Standard
 	 *
 	 * @param \Aimeos\MShop\Coupon\Item\Iface $item Coupon implementing the coupon interface
 	 * @param boolean $fetch True if the new ID should be returned in the item
-	 * @throws \Aimeos\MShop\Coupon\Exception If coupon couldn't be saved
+	 * @return \Aimeos\MShop\Coupon\Item\Iface $item Updated item including the generated ID
 	 */
-	public function saveItem( \Aimeos\MShop\Common\Item\Iface $item, $fetch = true )
+	public function saveItem( \Aimeos\MShop\Coupon\Item\Iface $item, $fetch = true )
 	{
-		$iface = '\\Aimeos\\MShop\\Coupon\\Item\\Iface';
-		if( !( $item instanceof $iface ) ) {
-			throw new \Aimeos\MShop\Coupon\Exception( sprintf( 'Object is not of required type "%1$s"', $iface ) );
+		if( !$item->isModified() ) {
+			return $item;
 		}
-
-		if( !$item->isModified() ) { return; }
 
 		$context = $this->getContext();
 
@@ -215,10 +238,17 @@ class Standard
 		{
 			$id = $item->getId();
 			$date = date( 'Y-m-d H:i:s' );
+			$columns = $this->getObject()->getSaveAttributes();
 
 			if( $id === null )
 			{
-				/** mshop/coupon/manager/standard/insert
+				/** mshop/coupon/manager/standard/insert/mysql
+				 * Inserts a new coupon record into the database table
+				 *
+				 * @see mshop/coupon/manager/standard/insert/ansi
+				 */
+
+				/** mshop/coupon/manager/standard/insert/ansi
 				 * Inserts a new coupon record into the database table
 				 *
 				 * Items with no ID yet (i.e. the ID is NULL) will be created in
@@ -241,17 +271,24 @@ class Standard
 				 * @param string SQL statement for inserting records
 				 * @since 2014.03
 				 * @category Developer
-				 * @see mshop/coupon/manager/standard/update
-				 * @see mshop/coupon/manager/standard/newid
-				 * @see mshop/coupon/manager/standard/delete
-				 * @see mshop/coupon/manager/standard/search
-				 * @see mshop/coupon/manager/standard/count
+				 * @see mshop/coupon/manager/standard/update/ansi
+				 * @see mshop/coupon/manager/standard/newid/ansi
+				 * @see mshop/coupon/manager/standard/delete/ansi
+				 * @see mshop/coupon/manager/standard/search/ansi
+				 * @see mshop/coupon/manager/standard/count/ansi
 				 */
 				$path = 'mshop/coupon/manager/standard/insert';
+				$sql = $this->addSqlColumns( array_keys( $columns ), $this->getSqlConfig( $path ) );
 			}
 			else
 			{
-				/** mshop/coupon/manager/standard/update
+				/** mshop/coupon/manager/standard/update/mysql
+				 * Updates an existing coupon record in the database
+				 *
+				 * @see mshop/coupon/manager/standard/update/ansi
+				 */
+
+				/** mshop/coupon/manager/standard/update/ansi
 				 * Updates an existing coupon record in the database
 				 *
 				 * Items which already have an ID (i.e. the ID is not NULL) will
@@ -271,39 +308,51 @@ class Standard
 				 * @param string SQL statement for updating records
 				 * @since 2014.03
 				 * @category Developer
-				 * @see mshop/coupon/manager/standard/insert
-				 * @see mshop/coupon/manager/standard/newid
-				 * @see mshop/coupon/manager/standard/delete
-				 * @see mshop/coupon/manager/standard/search
-				 * @see mshop/coupon/manager/standard/count
+				 * @see mshop/coupon/manager/standard/insert/ansi
+				 * @see mshop/coupon/manager/standard/newid/ansi
+				 * @see mshop/coupon/manager/standard/delete/ansi
+				 * @see mshop/coupon/manager/standard/search/ansi
+				 * @see mshop/coupon/manager/standard/count/ansi
 				 */
 				$path = 'mshop/coupon/manager/standard/update';
+				$sql = $this->addSqlColumns( array_keys( $columns ), $this->getSqlConfig( $path ), false );
 			}
 
-			$stmt = $this->getCachedStatement( $conn, $path );
+			$idx = 1;
+			$stmt = $this->getCachedStatement( $conn, $path, $sql );
 
-			$stmt->bind( 1, $context->getLocale()->getSiteId() );
-			$stmt->bind( 2, $item->getLabel() );
-			$stmt->bind( 3, $item->getProvider() );
-			$stmt->bind( 4, json_encode( $item->getConfig() ) );
-			$stmt->bind( 5, $item->getDateStart() );
-			$stmt->bind( 6, $item->getDateEnd() );
-			$stmt->bind( 7, $item->getStatus(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 8, $date ); // mtime
-			$stmt->bind( 9, $context->getEditor() );
+			foreach( $columns as $name => $entry ) {
+				$stmt->bind( $idx++, $item->get( $name ), $entry->getInternalType() );
+			}
+
+			$stmt->bind( $idx++, $item->getLabel() );
+			$stmt->bind( $idx++, $item->getProvider() );
+			$stmt->bind( $idx++, json_encode( $item->getConfig() ) );
+			$stmt->bind( $idx++, $item->getDateStart() );
+			$stmt->bind( $idx++, $item->getDateEnd() );
+			$stmt->bind( $idx++, $item->getStatus(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmt->bind( $idx++, $date ); // mtime
+			$stmt->bind( $idx++, $context->getEditor() );
+			$stmt->bind( $idx++, $context->getLocale()->getSiteId(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 
 			if( $id !== null ) {
-				$stmt->bind( 10, $id, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+				$stmt->bind( $idx, $id, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 				$item->setId( $id );
 			} else {
-				$stmt->bind( 10, $date ); // ctime
+				$stmt->bind( $idx, $date ); // ctime
 			}
 
 			$stmt->execute()->finish();
 
 			if( $id === null && $fetch === true )
 			{
-				/** mshop/coupon/manager/standard/newid
+				/** mshop/coupon/manager/standard/newid/mysql
+				 * Retrieves the ID generated by the database when inserting a new record
+				 *
+				 * @see mshop/coupon/manager/standard/newid/ansi
+				 */
+
+				/** mshop/coupon/manager/standard/newid/ansi
 				 * Retrieves the ID generated by the database when inserting a new record
 				 *
 				 * As soon as a new record is inserted into the database table,
@@ -327,11 +376,11 @@ class Standard
 				 * @param string SQL statement for retrieving the last inserted record ID
 				 * @since 2014.03
 				 * @category Developer
-				 * @see mshop/coupon/manager/standard/insert
-				 * @see mshop/coupon/manager/standard/update
-				 * @see mshop/coupon/manager/standard/delete
-				 * @see mshop/coupon/manager/standard/search
-				 * @see mshop/coupon/manager/standard/count
+				 * @see mshop/coupon/manager/standard/insert/ansi
+				 * @see mshop/coupon/manager/standard/update/ansi
+				 * @see mshop/coupon/manager/standard/delete/ansi
+				 * @see mshop/coupon/manager/standard/search/ansi
+				 * @see mshop/coupon/manager/standard/count/ansi
 				 */
 				$path = 'mshop/coupon/manager/standard/newid';
 				$item->setId( $this->newId( $conn, $path ) );
@@ -344,17 +393,26 @@ class Standard
 			$dbm->release( $conn, $dbname );
 			throw $e;
 		}
+
+		return $item;
 	}
 
 
 	/**
-	 * Removes multiple items specified by ids in the array.
+	 * Removes multiple items.
 	 *
-	 * @param array $ids List of IDs
+	 * @param \Aimeos\MShop\Common\Item\Iface[]|string[] $itemIds List of item objects or IDs of the items
+	 * @return \Aimeos\MShop\Coupon\Manager\Iface Manager object for chaining method calls
 	 */
-	public function deleteItems( array $ids )
+	public function deleteItems( array $itemIds )
 	{
-		/** mshop/coupon/manager/standard/delete
+		/** mshop/coupon/manager/standard/delete/mysql
+		 * Deletes the items matched by the given IDs from the database
+		 *
+		 * @see mshop/coupon/manager/standard/delete/ansi
+		 */
+
+		/** mshop/coupon/manager/standard/delete/ansi
 		 * Deletes the items matched by the given IDs from the database
 		 *
 		 * Removes the records specified by the given IDs from the coupon database.
@@ -372,42 +430,77 @@ class Standard
 		 * @param string SQL statement for deleting items
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/coupon/manager/standard/insert
-		 * @see mshop/coupon/manager/standard/update
-		 * @see mshop/coupon/manager/standard/newid
-		 * @see mshop/coupon/manager/standard/search
-		 * @see mshop/coupon/manager/standard/count
+		 * @see mshop/coupon/manager/standard/insert/ansi
+		 * @see mshop/coupon/manager/standard/update/ansi
+		 * @see mshop/coupon/manager/standard/newid/ansi
+		 * @see mshop/coupon/manager/standard/search/ansi
+		 * @see mshop/coupon/manager/standard/count/ansi
 		 */
 		$path = 'mshop/coupon/manager/standard/delete';
-		$this->deleteItemsBase( $ids, $path );
+
+		return $this->deleteItemsBase( $itemIds, $path );
 	}
 
 
 	/**
 	 * Searchs for coupon items based on the given criteria.
 	 *
-	 * @param \Aimeos\MW\Criteria\Iface $search Search object containing the conditions
-	 * @param array $ref List of domains to fetch list items and referenced items for
-	 * @param integer &$total Number of items that are available in total
+	 * @param \Aimeos\MW\Criteria\Iface $search Search criteria object
+	 * @param string[] $ref List of domains to fetch list items and referenced items for
+	 * @param integer|null &$total Number of items that are available in total
 	 * @return array Returns a list of coupon items implementing \Aimeos\MShop\Coupon\Item\Iface
-	 *
-	 * @throws \Aimeos\MW\DB\Exception On failures with the db object
-	 * @throws \Aimeos\MShop\Common\Exception On failures with the \Aimeos\MW\Criteria\ object
-	 * @throws \Aimeos\MShop\Coupon\Exception On failures with the coupon items
 	 */
-	public function searchItems( \Aimeos\MW\Criteria\Iface $search, array $ref = array(), &$total = null )
+	public function searchItems( \Aimeos\MW\Criteria\Iface $search, array $ref = [], &$total = null )
 	{
-		$dbm = $this->getContext()->getDatabaseManager();
+		$context = $this->getContext();
+		$dbm = $context->getDatabaseManager();
 		$dbname = $this->getResourceName();
 		$conn = $dbm->acquire( $dbname );
-		$items = array();
+		$items = [];
 
 		try
 		{
 			$required = array( 'coupon' );
-			$level = \Aimeos\MShop\Locale\Manager\Base::SITE_PATH;
 
-			/** mshop/coupon/manager/standard/search
+			/** mshop/coupon/manager/sitemode
+			 * Mode how items from levels below or above in the site tree are handled
+			 *
+			 * By default, only items from the current site are fetched from the
+			 * storage. If the ai-sites extension is installed, you can create a
+			 * tree of sites. Then, this setting allows you to define for the
+			 * whole coupon domain if items from parent sites are inherited,
+			 * sites from child sites are aggregated or both.
+			 *
+			 * Available constants for the site mode are:
+			 * * 0 = only items from the current site
+			 * * 1 = inherit items from parent sites
+			 * * 2 = aggregate items from child sites
+			 * * 3 = inherit and aggregate items at the same time
+			 *
+			 * You also need to set the mode in the locale manager
+			 * (mshop/locale/manager/standard/sitelevel) to one of the constants.
+			 * If you set it to the same value, it will work as described but you
+			 * can also use different modes. For example, if inheritance and
+			 * aggregation is configured the locale manager but only inheritance
+			 * in the domain manager because aggregating items makes no sense in
+			 * this domain, then items wil be only inherited. Thus, you have full
+			 * control over inheritance and aggregation in each domain.
+			 *
+			 * @param integer Constant from Aimeos\MShop\Locale\Manager\Base class
+			 * @category Developer
+			 * @since 2018.01
+			 * @see mshop/locale/manager/standard/sitelevel
+			 */
+			$level = \Aimeos\MShop\Locale\Manager\Base::SITE_PATH;
+			$level = $context->getConfig()->get( 'mshop/coupon/manager/sitemode', $level );
+
+			/** mshop/coupon/manager/standard/search/mysql
+			 * Retrieves the records matched by the given criteria in the database
+			 *
+			 * @see mshop/coupon/manager/standard/search/ansi
+			 */
+
+			/** mshop/coupon/manager/standard/search/ansi
 			 * Retrieves the records matched by the given criteria in the database
 			 *
 			 * Fetches the records matched by the given criteria from the coupon
@@ -452,15 +545,21 @@ class Standard
 			 * @param string SQL statement for searching items
 			 * @since 2014.03
 			 * @category Developer
-			 * @see mshop/coupon/manager/standard/insert
-			 * @see mshop/coupon/manager/standard/update
-			 * @see mshop/coupon/manager/standard/newid
-			 * @see mshop/coupon/manager/standard/delete
-			 * @see mshop/coupon/manager/standard/count
+			 * @see mshop/coupon/manager/standard/insert/ansi
+			 * @see mshop/coupon/manager/standard/update/ansi
+			 * @see mshop/coupon/manager/standard/newid/ansi
+			 * @see mshop/coupon/manager/standard/delete/ansi
+			 * @see mshop/coupon/manager/standard/count/ansi
 			 */
 			$cfgPathSearch = 'mshop/coupon/manager/standard/search';
 
-			/** mshop/coupon/manager/standard/count
+			/** mshop/coupon/manager/standard/count/mysql
+			 * Counts the number of records matched by the given criteria in the database
+			 *
+			 * @see mshop/coupon/manager/standard/count/ansi
+			 */
+
+			/** mshop/coupon/manager/standard/count/ansi
 			 * Counts the number of records matched by the given criteria in the database
 			 *
 			 * Counts all records matched by the given criteria from the coupon
@@ -499,11 +598,11 @@ class Standard
 			 * @param string SQL statement for counting items
 			 * @since 2014.03
 			 * @category Developer
-			 * @see mshop/coupon/manager/standard/insert
-			 * @see mshop/coupon/manager/standard/update
-			 * @see mshop/coupon/manager/standard/newid
-			 * @see mshop/coupon/manager/standard/delete
-			 * @see mshop/coupon/manager/standard/search
+			 * @see mshop/coupon/manager/standard/insert/ansi
+			 * @see mshop/coupon/manager/standard/update/ansi
+			 * @see mshop/coupon/manager/standard/newid/ansi
+			 * @see mshop/coupon/manager/standard/delete/ansi
+			 * @see mshop/coupon/manager/standard/search/ansi
 			 */
 			$cfgPathCount = 'mshop/coupon/manager/standard/count';
 
@@ -513,15 +612,13 @@ class Standard
 			{
 				while( ( $row = $results->fetch() ) !== false )
 				{
-					$config = $row['config'];
-
-					if( ( $row['config'] = json_decode( $row['config'], true ) ) === null )
+					if( ( $row['coupon.config'] = json_decode( $config = $row['coupon.config'], true ) ) === null )
 					{
-						$msg = sprintf( 'Invalid JSON as result of search for ID "%2$s" in "%1$s": %3$s', 'mshop_locale.config', $row['id'], $config );
-						$this->getContext()->getLogger()->log( $msg, \Aimeos\MW\Logger\Base::WARN );
+						$msg = sprintf( 'Invalid JSON as result of search for ID "%2$s" in "%1$s": %3$s', 'mshop_coupon.config', $row['id'], $config );
+						$context->getLogger()->log( $msg, \Aimeos\MW\Logger\Base::WARN );
 					}
 
-					$items[$row['id']] = $this->createItemBase( $row );
+					$items[(string) $row['coupon.id']] = $this->createItemBase( $row );
 				}
 			}
 			catch( \Exception $e )
@@ -556,98 +653,28 @@ class Standard
 
 
 	/**
-	 * Returns the coupon model which belongs to the given code.
+	 * Creates a search critera object
 	 *
-	 * @param \Aimeos\MShop\Coupon\Item\Iface $item Coupon item interface
-	 * @return \Aimeos\MShop\Coupon\Provider\Iface Returns a coupon provider instance
-	 * @throws \Aimeos\MShop\Coupon\Exception If coupon couldn't be found
-	 */
-	public function getProvider( \Aimeos\MShop\Coupon\Item\Iface $item, $code )
-	{
-		$names = explode( ',', $item->getProvider() );
-
-		if( ( $providername = array_shift( $names ) ) === null ) {
-			throw new \Aimeos\MShop\Coupon\Exception( sprintf( 'Provider in "%1$s" not available', $item->getProvider() ) );
-		}
-
-		if( ctype_alnum( $providername ) === false ) {
-			throw new \Aimeos\MShop\Coupon\Exception( sprintf( 'Invalid characters in provider name "%1$s"', $providername ) );
-		}
-
-		$interface = '\\Aimeos\\MShop\\Coupon\\Provider\\Factory\\Iface';
-		$classname = '\\Aimeos\\MShop\\Coupon\\Provider\\' . $providername;
-
-		if( class_exists( $classname ) === false ) {
-			throw new \Aimeos\MShop\Coupon\Exception( sprintf( 'Class "%1$s" not available', $classname ) );
-		}
-
-		$context = $this->getContext();
-		$provider = new $classname( $context, $item, $code );
-
-		if( ( $provider instanceof $interface ) === false )
-		{
-			$msg = sprintf( 'Class "%1$s" does not implement interface "%2$s"', $classname, $interface );
-			throw new \Aimeos\MShop\Coupon\Exception( $msg );
-		}
-
-		/** mshop/coupon/provider/decorators
-		 * Adds a list of decorators to all coupon provider objects automatcally
-		 *
-		 * Decorators extend the functionality of a class by adding new aspects
-		 * (e.g. log what is currently done), executing the methods of the underlying
-		 * class only in certain conditions (e.g. only for logged in users) or
-		 * modify what is returned to the caller.
-		 *
-		 * This option allows you to wrap decorators
-		 * ("\Aimeos\MShop\Coupon\Provider\Decorator\*") around the coupon provider.
-		 *
-		 *  mshop/coupon/provider/decorators = array( 'decorator1' )
-		 *
-		 * This would add the decorator named "decorator1" defined by
-		 * "\Aimeos\MShop\Coupon\Provider\Decorator\Decorator1" to all coupon provider
-		 * objects.
-		 *
-		 * @param array List of decorator names
-		 * @since 2014.05
-		 * @category Developer
-		 * @see client/html/common/decorators/default
-		 * @see client/html/account/favorite/decorators/excludes
-		 * @see client/html/account/favorite/decorators/local
-		 */
-		$decorators = $context->getConfig()->get( 'mshop/coupon/provider/decorators', array() );
-
-		$object = $this->addCouponDecorators( $item, $code, $provider, $names );
-		$object = $this->addCouponDecorators( $item, $code, $object, $decorators );
-		$object->setObject( $object );
-
-		return $object;
-	}
-
-
-	/**
-	 * Creates a search object and sets base criteria
-	 *
-	 * @param boolean $default
-	 * @return \Aimeos\MW\Criteria\Iface
+	 * @param boolean $default Add default criteria (optional)
+	 * @return \Aimeos\MW\Criteria\Iface New search criteria object
 	 */
 	public function createSearch( $default = false )
 	{
 		if( $default === true )
 		{
 			$object = $this->createSearchBase( 'coupon' );
-			$curDate = date( 'Y-m-d H:i:00', time() );
 
-			$expr = array();
+			$expr = [];
 			$expr[] = $object->getConditions();
 
-			$temp = array();
+			$temp = [];
 			$temp[] = $object->compare( '==', 'coupon.datestart', null );
-			$temp[] = $object->compare( '<=', 'coupon.datestart', $curDate );
+			$temp[] = $object->compare( '<=', 'coupon.datestart', $this->date );
 			$expr[] = $object->combine( '||', $temp );
 
-			$temp = array();
+			$temp = [];
 			$temp[] = $object->compare( '==', 'coupon.dateend', null );
-			$temp[] = $object->compare( '>=', 'coupon.dateend', $curDate );
+			$temp[] = $object->compare( '>=', 'coupon.dateend', $this->date );
 			$expr[] = $object->combine( '||', $temp );
 
 			$object->setConditions( $object->combine( '&&', $expr ) );
@@ -663,10 +690,12 @@ class Standard
 	 * Creates a new coupon item instance
 	 *
 	 * @param array $values Values of the coupon item from the storage
-	 * @return \Aimeos\MShop\Coupon\Item\Standard Returns a new created coupon item instance
+	 * @return \Aimeos\MShop\Coupon\Item\Iface Returns a new created coupon item instance
 	 */
-	protected function createItemBase( array $values = array() )
+	protected function createItemBase( array $values = [] )
 	{
+		$values['.date'] = $this->date;
+
 		return new \Aimeos\MShop\Coupon\Item\Standard( $values );
 	}
 }

@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2013
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2013
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Translation
  */
@@ -29,11 +29,11 @@ class Memory
 	 * Initializes the decorator.
 	 *
 	 * @param \Aimeos\MW\Translation\Iface $object Translation object or decorator
-	 * @param array $translations Associative list of domains and singular
+	 * @param string[] $translations Associative list of domains and singular
 	 * 	strings as key and list of translation number and translations as value:
 	 * 	array( <domain> => array( <singular> => array( <index> => <translations> ) ) )
 	 */
-	public function __construct( \Aimeos\MW\Translation\Iface $object, array $translations = array() )
+	public function __construct( \Aimeos\MW\Translation\Iface $object, array $translations = [] )
 	{
 		parent::__construct( $object );
 		$this->translations = $translations;

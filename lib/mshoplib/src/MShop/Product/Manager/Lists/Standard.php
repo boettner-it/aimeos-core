@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2013
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2013
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Product
  */
@@ -19,111 +19,113 @@ namespace Aimeos\MShop\Product\Manager\Lists;
  */
 class Standard
 	extends \Aimeos\MShop\Common\Manager\Lists\Base
-	implements \Aimeos\MShop\Product\Manager\Lists\Iface
+	implements \Aimeos\MShop\Product\Manager\Lists\Iface, \Aimeos\MShop\Common\Manager\Factory\Iface
 {
 	private $searchConfig = array(
-		'product.lists.id'=> array(
-			'code'=>'product.lists.id',
-			'internalcode'=>'mproli."id"',
-			'internaldeps' => array( 'LEFT JOIN "mshop_product_list" AS mproli ON ( mpro."id" = mproli."parentid" )' ),
-			'label'=>'Product list ID',
-			'type'=> 'integer',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_INT,
-			'public' => false,
-		),
-		'product.lists.siteid'=> array(
-			'code'=>'product.lists.siteid',
-			'internalcode'=>'mproli."siteid"',
-			'label'=>'Product list site ID',
-			'type'=> 'integer',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_INT,
-			'public' => false,
-		),
-		'product.lists.parentid'=> array(
-			'code'=>'product.lists.parentid',
-			'internalcode'=>'mproli."parentid"',
-			'label'=>'Product list parent ID',
-			'type'=> 'integer',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_INT,
-			'public' => false,
-		),
-		'product.lists.domain'=> array(
-			'code'=>'product.lists.domain',
-			'internalcode'=>'mproli."domain"',
-			'label'=>'Product list domain',
-			'type'=> 'string',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
-		),
-		'product.lists.typeid' => array(
-			'code'=>'product.lists.typeid',
-			'internalcode'=>'mproli."typeid"',
-			'label'=>'Product list type ID',
-			'type'=> 'integer',
+		'product.lists.id' => array(
+			'code' => 'product.lists.id',
+			'internalcode' => 'mproli."id"',
+			'label' => 'List ID',
+			'type' => 'integer',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 			'public' => false,
 		),
-		'product.lists.refid'=> array(
-			'code'=>'product.lists.refid',
-			'internalcode'=>'mproli."refid"',
-			'label'=>'Product list reference ID',
-			'type'=> 'string',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'product.lists.siteid' => array(
+			'code' => 'product.lists.siteid',
+			'internalcode' => 'mproli."siteid"',
+			'label' => 'List site ID',
+			'type' => 'integer',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
+			'public' => false,
+		),
+		'product.lists.parentid' => array(
+			'code' => 'product.lists.parentid',
+			'internalcode' => 'mproli."parentid"',
+			'label' => 'List parent ID',
+			'type' => 'integer',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
+			'public' => false,
+		),
+		'product.lists.type' => array(
+			'code' => 'product.lists.type',
+			'internalcode' => 'mproli."type"',
+			'label' => 'List type',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		),
+		'product.lists.refid' => array(
+			'code' => 'product.lists.refid',
+			'internalcode' => 'mproli."refid"',
+			'label' => 'List reference ID',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
 		'product.lists.datestart' => array(
-			'code'=>'product.lists.datestart',
-			'internalcode'=>'mproli."start"',
-			'label'=>'Product list start date/time',
-			'type'=> 'datetime',
+			'code' => 'product.lists.datestart',
+			'internalcode' => 'mproli."start"',
+			'label' => 'List start date/time',
+			'type' => 'datetime',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
 		'product.lists.dateend' => array(
-			'code'=>'product.lists.dateend',
-			'internalcode'=>'mproli."end"',
-			'label'=>'Product list end date/time',
-			'type'=> 'datetime',
+			'code' => 'product.lists.dateend',
+			'internalcode' => 'mproli."end"',
+			'label' => 'List end date/time',
+			'type' => 'datetime',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
-		'product.lists.config' => array(
-			'code'=>'product.lists.config',
-			'internalcode'=>'mproli."config"',
-			'label'=>'Product list config',
-			'type'=> 'string',
+		'product.lists.domain' => array(
+			'code' => 'product.lists.domain',
+			'internalcode' => 'mproli."domain"',
+			'label' => 'List domain',
+			'type' => 'string',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
 		'product.lists.position' => array(
-			'code'=>'product.lists.position',
-			'internalcode'=>'mproli."pos"',
-			'label'=>'Product list position',
-			'type'=> 'integer',
+			'code' => 'product.lists.position',
+			'internalcode' => 'mproli."pos"',
+			'label' => 'List position',
+			'type' => 'integer',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 		),
 		'product.lists.status' => array(
-			'code'=>'product.lists.status',
-			'internalcode'=>'mproli."status"',
-			'label'=>'Product list status',
-			'type'=> 'integer',
+			'code' => 'product.lists.status',
+			'internalcode' => 'mproli."status"',
+			'label' => 'List status',
+			'type' => 'integer',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 		),
-		'product.lists.ctime'=> array(
-			'code'=>'product.lists.ctime',
-			'internalcode'=>'mproli."ctime"',
-			'label'=>'Product list create date/time',
-			'type'=> 'datetime',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'product.lists.config' => array(
+			'code' => 'product.lists.config',
+			'internalcode' => 'mproli."config"',
+			'label' => 'List config',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
-		'product.lists.mtime'=> array(
-			'code'=>'product.lists.mtime',
-			'internalcode'=>'mproli."mtime"',
-			'label'=>'Product list modification date/time',
-			'type'=> 'datetime',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'product.lists.ctime' => array(
+			'code' => 'product.lists.ctime',
+			'internalcode' => 'mproli."ctime"',
+			'label' => 'List create date/time',
+			'type' => 'datetime',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
-		'product.lists.editor'=> array(
-			'code'=>'product.lists.editor',
-			'internalcode'=>'mproli."editor"',
-			'label'=>'Product list editor',
-			'type'=> 'string',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'product.lists.mtime' => array(
+			'code' => 'product.lists.mtime',
+			'internalcode' => 'mproli."mtime"',
+			'label' => 'List modify date/time',
+			'type' => 'datetime',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
+		),
+		'product.lists.editor' => array(
+			'code' => 'product.lists.editor',
+			'internalcode' => 'mproli."editor"',
+			'label' => 'List editor',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
 	);
 
@@ -143,16 +145,30 @@ class Standard
 	/**
 	 * Removes old entries from the storage.
 	 *
-	 * @param array $siteids List of IDs for sites whose entries should be deleted
+	 * @param string[] $siteids List of IDs for sites whose entries should be deleted
+	 * @return \Aimeos\MShop\Product\Manager\Lists\Iface Manager object for chaining method calls
 	 */
-	public function cleanup( array $siteids )
+	public function clear( array $siteids )
 	{
 		$path = 'mshop/product/manager/lists/submanagers';
-		foreach( $this->getContext()->getConfig()->get( $path, array( 'type' ) ) as $domain ) {
-			$this->getSubManager( $domain )->cleanup( $siteids );
+		foreach( $this->getContext()->getConfig()->get( $path, ['type'] ) as $domain ) {
+			$this->getObject()->getSubManager( $domain )->clear( $siteids );
 		}
 
-		$this->cleanupBase( $siteids, 'mshop/product/manager/lists/standard/delete' );
+		return $this->clearBase( $siteids, 'mshop/product/manager/lists/standard/delete' );
+	}
+
+
+	/**
+	 * Returns the available manager types
+	 *
+	 * @param boolean $withsub Return also the resource type of sub-managers if true
+	 * @return string[] Type of the manager and submanagers, subtypes are separated by slashes
+	 */
+	public function getResourceType( $withsub = true )
+	{
+		$path = 'mshop/product/manager/lists/submanagers';
+		return $this->getResourceTypeBase( 'product/lists', $path, [], $withsub );
 	}
 
 
@@ -160,7 +176,7 @@ class Standard
 	 * Returns the list attributes that can be used for searching.
 	 *
 	 * @param boolean $withsub Return also attributes of sub-managers if true
-	 * @return array List of attribute items implementing \Aimeos\MW\Criteria\Attribute\Iface
+	 * @return \Aimeos\MW\Criteria\Attribute\Iface[] List of search attribute items
 	 */
 	public function getSearchAttributes( $withsub = true )
 	{
@@ -183,7 +199,7 @@ class Standard
 		 */
 		$path = 'mshop/product/manager/lists/submanagers';
 
-		return $this->getSearchAttributesBase( $this->searchConfig, $path, array( 'type' ), $withsub );
+		return $this->getSearchAttributesBase( $this->searchConfig, $path, [], $withsub );
 	}
 
 
@@ -265,12 +281,14 @@ class Standard
 		 * modify what is returned to the caller.
 		 *
 		 * This option allows you to wrap global decorators
-		 * ("\Aimeos\MShop\Common\Manager\Decorator\*") around the product list manager.
+		 * ("\Aimeos\MShop\Common\Manager\Decorator\*") around the product list
+		 * manager.
 		 *
 		 *  mshop/product/manager/lists/decorators/global = array( 'decorator1' )
 		 *
 		 * This would add the decorator named "decorator1" defined by
-		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator1" only to the product controller.
+		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator1" only to the product
+		 * list manager.
 		 *
 		 * @param array List of decorator names
 		 * @since 2014.03
@@ -289,13 +307,14 @@ class Standard
 		 * modify what is returned to the caller.
 		 *
 		 * This option allows you to wrap local decorators
-		 * ("\Aimeos\MShop\Common\Manager\Decorator\*") around the product list manager.
+		 * ("\Aimeos\MShop\Product\Manager\Lists\Decorator\*") around the product
+		 * list manager.
 		 *
 		 *  mshop/product/manager/lists/decorators/local = array( 'decorator2' )
 		 *
 		 * This would add the decorator named "decorator2" defined by
-		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator2" only to the product
-		 * controller.
+		 * "\Aimeos\MShop\Product\Manager\Lists\Decorator\Decorator2" only to the
+		 * product list manager.
 		 *
 		 * @param array List of decorator names
 		 * @since 2014.03
@@ -316,7 +335,13 @@ class Standard
 	 */
 	protected function getConfigPath()
 	{
-		/** mshop/product/manager/lists/standard/insert
+		/** mshop/product/manager/lists/standard/insert/mysql
+		 * Inserts a new product list record into the database table
+		 *
+		 * @see mshop/product/manager/lists/standard/insert/ansi
+		 */
+
+		/** mshop/product/manager/lists/standard/insert/ansi
 		 * Inserts a new product list record into the database table
 		 *
 		 * Items with no ID yet (i.e. the ID is NULL) will be created in
@@ -339,18 +364,21 @@ class Standard
 		 * @param string SQL statement for inserting records
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/product/manager/lists/standard/update
-		 * @see mshop/product/manager/lists/standard/newid
-		 * @see mshop/product/manager/lists/standard/delete
-		 * @see mshop/product/manager/lists/standard/search
-		 * @see mshop/product/manager/lists/standard/count
-		 * @see mshop/product/manager/lists/standard/aggregate
-		 * @see mshop/product/manager/lists/standard/getposmax
-		 * @see mshop/product/manager/lists/standard/move
-		 * @see mshop/product/manager/lists/standard/updatepos
+		 * @see mshop/product/manager/lists/standard/update/ansi
+		 * @see mshop/product/manager/lists/standard/newid/ansi
+		 * @see mshop/product/manager/lists/standard/delete/ansi
+		 * @see mshop/product/manager/lists/standard/search/ansi
+		 * @see mshop/product/manager/lists/standard/count/ansi
+		 * @see mshop/product/manager/lists/standard/aggregate/ansi
 		 */
 
-		/** mshop/product/manager/lists/standard/update
+		/** mshop/product/manager/lists/standard/update/mysql
+		 * Updates an existing product list record in the database
+		 *
+		 * @see mshop/product/manager/lists/standard/update/ansi
+		 */
+
+		/** mshop/product/manager/lists/standard/update/ansi
 		 * Updates an existing product list record in the database
 		 *
 		 * Items which already have an ID (i.e. the ID is not NULL) will
@@ -370,18 +398,21 @@ class Standard
 		 * @param string SQL statement for updating records
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/product/manager/lists/standard/insert
-		 * @see mshop/product/manager/lists/standard/newid
-		 * @see mshop/product/manager/lists/standard/delete
-		 * @see mshop/product/manager/lists/standard/search
-		 * @see mshop/product/manager/lists/standard/count
-		 * @see mshop/product/manager/lists/standard/aggregate
-		 * @see mshop/product/manager/lists/standard/getposmax
-		 * @see mshop/product/manager/lists/standard/move
-		 * @see mshop/product/manager/lists/standard/updatepos
+		 * @see mshop/product/manager/lists/standard/insert/ansi
+		 * @see mshop/product/manager/lists/standard/newid/ansi
+		 * @see mshop/product/manager/lists/standard/delete/ansi
+		 * @see mshop/product/manager/lists/standard/search/ansi
+		 * @see mshop/product/manager/lists/standard/count/ansi
+		 * @see mshop/product/manager/lists/standard/aggregate/ansi
 		 */
 
-		/** mshop/product/manager/lists/standard/newid
+		/** mshop/product/manager/lists/standard/newid/mysql
+		 * Retrieves the ID generated by the database when inserting a new record
+		 *
+		 * @see mshop/product/manager/lists/standard/newid/ansi
+		 */
+
+		/** mshop/product/manager/lists/standard/newid/ansi
 		 * Retrieves the ID generated by the database when inserting a new record
 		 *
 		 * As soon as a new record is inserted into the database table,
@@ -405,18 +436,21 @@ class Standard
 		 * @param string SQL statement for retrieving the last inserted record ID
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/product/manager/lists/standard/insert
-		 * @see mshop/product/manager/lists/standard/update
-		 * @see mshop/product/manager/lists/standard/delete
-		 * @see mshop/product/manager/lists/standard/search
-		 * @see mshop/product/manager/lists/standard/count
-		 * @see mshop/product/manager/lists/standard/aggregate
-		 * @see mshop/product/manager/lists/standard/getposmax
-		 * @see mshop/product/manager/lists/standard/move
-		 * @see mshop/product/manager/lists/standard/updatepos
+		 * @see mshop/product/manager/lists/standard/insert/ansi
+		 * @see mshop/product/manager/lists/standard/update/ansi
+		 * @see mshop/product/manager/lists/standard/delete/ansi
+		 * @see mshop/product/manager/lists/standard/search/ansi
+		 * @see mshop/product/manager/lists/standard/count/ansi
+		 * @see mshop/product/manager/lists/standard/aggregate/ansi
 		 */
 
-		/** mshop/product/manager/lists/standard/delete
+		/** mshop/product/manager/lists/standard/delete/mysql
+		 * Deletes the items matched by the given IDs from the database
+		 *
+		 * @see mshop/product/manager/lists/standard/delete/ansi
+		 */
+
+		/** mshop/product/manager/lists/standard/delete/ansi
 		 * Deletes the items matched by the given IDs from the database
 		 *
 		 * Removes the records specified by the given IDs from the product database.
@@ -434,18 +468,21 @@ class Standard
 		 * @param string SQL statement for deleting items
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/product/manager/lists/standard/insert
-		 * @see mshop/product/manager/lists/standard/update
-		 * @see mshop/product/manager/lists/standard/newid
-		 * @see mshop/product/manager/lists/standard/search
-		 * @see mshop/product/manager/lists/standard/count
-		 * @see mshop/product/manager/lists/standard/aggregate
-		 * @see mshop/product/manager/lists/standard/getposmax
-		 * @see mshop/product/manager/lists/standard/move
-		 * @see mshop/product/manager/lists/standard/updatepos
+		 * @see mshop/product/manager/lists/standard/insert/ansi
+		 * @see mshop/product/manager/lists/standard/update/ansi
+		 * @see mshop/product/manager/lists/standard/newid/ansi
+		 * @see mshop/product/manager/lists/standard/search/ansi
+		 * @see mshop/product/manager/lists/standard/count/ansi
+		 * @see mshop/product/manager/lists/standard/aggregate/ansi
 		 */
 
-		/** mshop/product/manager/lists/standard/search
+		/** mshop/product/manager/lists/standard/search/mysql
+		 * Retrieves the records matched by the given criteria in the database
+		 *
+		 * @see mshop/product/manager/lists/standard/search/ansi
+		 */
+
+		/** mshop/product/manager/lists/standard/search/ansi
 		 * Retrieves the records matched by the given criteria in the database
 		 *
 		 * Fetches the records matched by the given criteria from the product
@@ -490,18 +527,21 @@ class Standard
 		 * @param string SQL statement for searching items
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/product/manager/lists/standard/insert
-		 * @see mshop/product/manager/lists/standard/update
-		 * @see mshop/product/manager/lists/standard/newid
-		 * @see mshop/product/manager/lists/standard/delete
-		 * @see mshop/product/manager/lists/standard/count
-		 * @see mshop/product/manager/lists/standard/aggregate
-		 * @see mshop/product/manager/lists/standard/getposmax
-		 * @see mshop/product/manager/lists/standard/move
-		 * @see mshop/product/manager/lists/standard/updatepos
+		 * @see mshop/product/manager/lists/standard/insert/ansi
+		 * @see mshop/product/manager/lists/standard/update/ansi
+		 * @see mshop/product/manager/lists/standard/newid/ansi
+		 * @see mshop/product/manager/lists/standard/delete/ansi
+		 * @see mshop/product/manager/lists/standard/count/ansi
+		 * @see mshop/product/manager/lists/standard/aggregate/ansi
 		 */
 
-		/** mshop/product/manager/lists/standard/count
+		/** mshop/product/manager/lists/standard/count/mysql
+		 * Counts the number of records matched by the given criteria in the database
+		 *
+		 * @see mshop/product/manager/lists/standard/count/ansi
+		 */
+
+		/** mshop/product/manager/lists/standard/count/ansi
 		 * Counts the number of records matched by the given criteria in the database
 		 *
 		 * Counts all records matched by the given criteria from the product
@@ -540,18 +580,21 @@ class Standard
 		 * @param string SQL statement for counting items
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/product/manager/lists/standard/insert
-		 * @see mshop/product/manager/lists/standard/update
-		 * @see mshop/product/manager/lists/standard/newid
-		 * @see mshop/product/manager/lists/standard/delete
-		 * @see mshop/product/manager/lists/standard/search
-		 * @see mshop/product/manager/lists/standard/aggregate
-		 * @see mshop/product/manager/lists/standard/getposmax
-		 * @see mshop/product/manager/lists/standard/move
-		 * @see mshop/product/manager/lists/standard/updatepos
+		 * @see mshop/product/manager/lists/standard/insert/ansi
+		 * @see mshop/product/manager/lists/standard/update/ansi
+		 * @see mshop/product/manager/lists/standard/newid/ansi
+		 * @see mshop/product/manager/lists/standard/delete/ansi
+		 * @see mshop/product/manager/lists/standard/search/ansi
+		 * @see mshop/product/manager/lists/standard/aggregate/ansi
 		 */
 
-		/** mshop/product/manager/lists/standard/aggregate
+		/** mshop/product/manager/lists/standard/aggregate/mysql
+		 * Counts the number of records grouped by the values in the key column and matched by the given criteria
+		 *
+		 * @see mshop/product/manager/lists/standard/aggregate/ansi
+		 */
+
+		/** mshop/product/manager/lists/standard/aggregate/ansi
 		 * Counts the number of records grouped by the values in the key column and matched by the given criteria
 		 *
 		 * Groups all records by the values in the key column and counts their
@@ -587,111 +630,12 @@ class Standard
 		 * @param string SQL statement for aggregating order items
 		 * @since 2014.07
 		 * @category Developer
-		 * @see mshop/product/manager/lists/standard/insert
-		 * @see mshop/product/manager/lists/standard/update
-		 * @see mshop/product/manager/lists/standard/newid
-		 * @see mshop/product/manager/lists/standard/delete
-		 * @see mshop/product/manager/lists/standard/search
-		 * @see mshop/product/manager/lists/standard/count
-		 * @see mshop/product/manager/lists/standard/getposmax
-		 * @see mshop/product/manager/lists/standard/move
-		 * @see mshop/product/manager/lists/standard/updatepos
-		 */
-
-		/** mshop/product/manager/lists/standard/getposmax
-		 * Retrieves the position of the list record with the highest number
-		 *
-		 * When moving or inserting records into the list, the highest position
-		 * number must be known to append records at the end. Only records from
-		 * the same site that is configured via the conproduct item are considered.
-		 *
-		 * The SQL statement must be a string suitable for being used as
-		 * prepared statement. It must include question marks for binding the
-		 * required values to the statement before they are sent to the
-		 * database server. The number of question marks must be the same as
-		 * used in the moveItem() method and their order must correspond to the
-		 * order in the same method.
-		 *
-		 * The SQL statement should conform to the ANSI standard to be
-		 * with most relational database systems. This also includes using
-		 * double quotes for table and column names.
-		 *
-		 * @param string SQL statement for determining the position with the highest number
-		 * @since 2014.07
-		 * @category Developer
-		 * @see mshop/product/manager/lists/standard/insert
-		 * @see mshop/product/manager/lists/standard/update
-		 * @see mshop/product/manager/lists/standard/newid
-		 * @see mshop/product/manager/lists/standard/delete
-		 * @see mshop/product/manager/lists/standard/search
-		 * @see mshop/product/manager/lists/standard/count
-		 * @see mshop/product/manager/lists/standard/aggregate
-		 * @see mshop/product/manager/lists/standard/move
-		 * @see mshop/product/manager/lists/standard/updatepos
-		 */
-
-		/** mshop/product/manager/lists/standard/move
-		 * Moves a list item to another position and updates the other items accordingly
-		 *
-		 * Reorders the records in the list table by updating their position
-		 * field. The records must be from the site that is configured via the
-		 * conproduct item.
-		 *
-		 * The SQL statement must be a string suitable for being used as
-		 * prepared statement. It must include question marks for binding the
-		 * required values to the statement before they are sent to the
-		 * database server. The number of question marks must be the same as
-		 * used in the moveItem() method and their order must correspond to the
-		 * order in the same method.
-		 *
-		 * The SQL statement should conform to the ANSI standard to be
-		 * with most relational database systems. This also includes using
-		 * double quotes for table and column names.
-		 *
-		 * @param string SQL statement for moving items
-		 * @since 2014.07
-		 * @category Developer
-		 * @see mshop/product/manager/lists/standard/insert
-		 * @see mshop/product/manager/lists/standard/update
-		 * @see mshop/product/manager/lists/standard/newid
-		 * @see mshop/product/manager/lists/standard/delete
-		 * @see mshop/product/manager/lists/standard/search
-		 * @see mshop/product/manager/lists/standard/count
-		 * @see mshop/product/manager/lists/standard/aggregate
-		 * @see mshop/product/manager/lists/standard/getposmax
-		 * @see mshop/product/manager/lists/standard/updatepos
-		 */
-
-		/** mshop/product/manager/lists/standard/updatepos
-		 * Updates the position value of a single list record
-		 *
-		 * The moveItem() method needs to set the position value of a sinlge
-		 * record in some cases. The records must be from the site that is
-		 * configured via the conproduct item.
-		 *
-		 * The SQL statement must be a string suitable for being used as
-		 * prepared statement. It must include question marks for binding the
-		 * required values to the statement before they are sent to the
-		 * database server. The number of question marks must be the same as
-		 * used in the moveItem() method and their order must correspond to the
-		 * order in the same method.
-		 *
-		 * The SQL statement should conform to the ANSI standard to be
-		 * with most relational database systems. This also includes using
-		 * double quotes for table and column names.
-		 *
-		 * @param string SQL statement for moving items
-		 * @since 2014.07
-		 * @category Developer
-		 * @see mshop/product/manager/lists/standard/insert
-		 * @see mshop/product/manager/lists/standard/update
-		 * @see mshop/product/manager/lists/standard/newid
-		 * @see mshop/product/manager/lists/standard/delete
-		 * @see mshop/product/manager/lists/standard/search
-		 * @see mshop/product/manager/lists/standard/count
-		 * @see mshop/product/manager/lists/standard/aggregate
-		 * @see mshop/product/manager/lists/standard/getposmax
-		 * @see mshop/product/manager/lists/standard/move
+		 * @see mshop/product/manager/lists/standard/insert/ansi
+		 * @see mshop/product/manager/lists/standard/update/ansi
+		 * @see mshop/product/manager/lists/standard/newid/ansi
+		 * @see mshop/product/manager/lists/standard/delete/ansi
+		 * @see mshop/product/manager/lists/standard/search/ansi
+		 * @see mshop/product/manager/lists/standard/count/ansi
 		 */
 
 		return 'mshop/product/manager/lists/standard/';

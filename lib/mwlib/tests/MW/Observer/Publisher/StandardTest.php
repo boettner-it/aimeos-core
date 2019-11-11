@@ -1,88 +1,78 @@
 <?php
 
+/**
+ * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
+ */
+
+
 namespace Aimeos\MW\Observer\Publisher;
 
 
-/**
- * Test class for \Aimeos\MW\Session\CMSLite.
- *
- * @copyright Metaways Infosystems GmbH, 2011
- * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
- */
-class StandardTest extends \PHPUnit_Framework_TestCase
+class StandardTest extends \PHPUnit\Framework\TestCase
 {
 	private $object;
 
 
-	/**
-	 * Sets up the fixture, for example, opens a network connection.
-	 * This method is called before a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function setUp()
 	{
 		$this->object = new TestPublisher();
 	}
 
-	/**
-	 * Tears down the fixture, for example, closes a network connection.
-	 * This method is called after a test is executed.
-	 *
-	 * @access protected
-	 */
+
 	protected function tearDown()
 	{
+		unset( $this->object );
 	}
 
 
-	public function testaddListener()
+	public function testAttach()
+	{
+		$this->object->attach( new TestListener(), 'test' );
+	}
+
+	public function testDetach()
 	{
 		$l = new TestListener();
 
-		$this->object->addListener($l, 'test');
+		$this->object->attach( $l, 'test' );
+		$this->object->detach( $l, 'test' );
 	}
 
-	public function testRemoveListener()
+
+	public function testOff()
 	{
+		$this->object->off();
+	}
+
+
+	public function testNotify()
+	{
+		$value = 'something';
 		$l = new TestListener();
 
-		$this->object->addListener($l, 'test');
-		$this->object->removeListener($l, 'test');
-	}
+		$this->object->attach( $l, 'test' );
+		$this->object->attach( $l, 'testagain' );
 
-	public function testclearListeners()
-	{
-		$this->object->clearListenersPublic();
-	}
-
-	public function testnotifyListeners()
-	{
-		$l = new TestListener();
-		$this->object->addListener($l, 'test');
-		$this->object->addListener($l, 'testagain');
-
-		$this->object->notifyListenersPublic('test', 'warn');
-		$this->object->notifyListenersPublic('testagain', 'warn');
+		$this->object->notifyPublic( 'test', $value );
+		$this->object->notifyPublic( 'testagain', $value );
 	}
 }
 
 
-class TestPublisher extends \Aimeos\MW\Observer\Publisher\Base
+class TestPublisher implements \Aimeos\MW\Observer\Publisher\Iface
 {
+	use \Aimeos\MW\Observer\Publisher\Traits;
+
 	/**
 	 * @param string $action
-	 * @param string $value
+	 * @param string|null $value
+	 * @return mixed Modified value parameter
 	 */
-	public function notifyListenersPublic($action, $value = null)
+	public function notifyPublic( $action, $value = null )
 	{
-		$this->notifyListeners($action, $value);
-	}
-
-	public function clearListenersPublic()
-	{
-		$this->clearListeners();
+		return $this->notify( $action, $value );
 	}
 }
 
@@ -95,8 +85,6 @@ class TestListener implements \Aimeos\MW\Observer\Listener\Iface
 
 	public function update( \Aimeos\MW\Observer\Publisher\Iface $p, $action, $value = null )
 	{
-		if ($action == 'test') {
-			return false;
-		}
+		return $value;
 	}
 }

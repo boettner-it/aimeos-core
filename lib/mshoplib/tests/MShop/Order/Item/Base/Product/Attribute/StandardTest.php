@@ -1,56 +1,42 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 
 namespace Aimeos\MShop\Order\Item\Base\Product\Attribute;
 
 
-/**
- * Test class for \Aimeos\MShop\Order\Item\Base\Product\Attribute\Standard.
- */
-class StandardTest extends \PHPUnit_Framework_TestCase
+class StandardTest extends \PHPUnit\Framework\TestCase
 {
 	private $object;
 	private $values;
 
 
-	/**
-	 * Sets up the fixture, for example, opens a network connection.
-	 * This method is called before a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function setUp()
 	{
 		$this->values = array(
-			'id' => 4,
-			'siteid' => 99,
-			'attrid' => 22,
-			'ordprodid' => 11,
-			'type' => 'UnitType',
-			'code' => 'size',
-			'value' => '30',
-			'name' => 'small',
-			'mtime' => '2011-01-06 13:20:34',
-			'ctime' => '2011-01-01 00:00:01',
-			'editor' => 'unitTestUser'
+			'order.base.product.attribute.id' => 4,
+			'order.base.product.attribute.siteid' => 99,
+			'order.base.product.attribute.attributeid' => 22,
+			'order.base.product.attribute.parentid' => 11,
+			'order.base.product.attribute.type' => 'UnitType',
+			'order.base.product.attribute.code' => 'size',
+			'order.base.product.attribute.value' => '30',
+			'order.base.product.attribute.name' => 'small',
+			'order.base.product.attribute.quantity' => 2,
+			'order.base.product.attribute.mtime' => '2011-01-06 13:20:34',
+			'order.base.product.attribute.ctime' => '2011-01-01 00:00:01',
+			'order.base.product.attribute.editor' => 'unitTestUser'
 		);
 
 		$this->object = new \Aimeos\MShop\Order\Item\Base\Product\Attribute\Standard( $this->values );
 	}
 
 
-	/**
-	 * Tears down the fixture, for example, closes a network connection.
-	 * This method is called after a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function tearDown()
 	{
 		unset( $this->object );
@@ -59,22 +45,23 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testGetId()
 	{
-		$this->assertEquals( $this->values['id'], $this->object->getId() );
+		$this->assertEquals( 4, $this->object->getId() );
 	}
 
 
 	public function testSetId()
 	{
-		$this->object->setId( null );
+		$return = $this->object->setId( null );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Order\Item\Base\Product\Attribute\Iface::class, $return );
 		$this->assertEquals( null, $this->object->getId() );
 		$this->assertTrue( $this->object->isModified() );
 
-		$this->object->setId( 8 );
+		$return = $this->object->setId( 8 );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Order\Item\Base\Product\Attribute\Iface::class, $return );
 		$this->assertEquals( 8, $this->object->getId() );
 		$this->assertFalse( $this->object->isModified() );
-
-		$this->setExpectedException( '\\Aimeos\\MShop\\Exception' );
-		$this->object->setId( 3 );
 	}
 
 
@@ -84,43 +71,57 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	}
 
 
+	public function testSetSiteId()
+	{
+		$this->object->setSiteId( 100 );
+		$this->assertEquals( 100, $this->object->getSiteId() );
+		$this->assertTrue( $this->object->isModified() );
+	}
+
+
 	public function testGetAttributeId()
 	{
-		$this->assertEquals( $this->values['attrid'], $this->object->getAttributeId() );
+		$this->assertEquals( 22, $this->object->getAttributeId() );
 	}
 
 
 	public function testSetAttributeId()
 	{
-		$this->object->setAttributeId( 44 );
+		$return = $this->object->setAttributeId( 44 );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Order\Item\Base\Product\Attribute\Iface::class, $return );
 		$this->assertEquals( 44, $this->object->getAttributeId() );
 		$this->assertTrue( $this->object->isModified() );
 	}
 
 
-	public function testGetProductId()
+	public function testGetParentId()
 	{
-		$this->assertEquals( $this->values['ordprodid'], $this->object->getProductId() );
+		$this->assertEquals( 11, $this->object->getParentId() );
 	}
 
 
-	public function testSetProductId()
+	public function testSetParentId()
 	{
-		$this->object->setProductId( 33 );
-		$this->assertEquals( 33, $this->object->getProductId() );
+		$return = $this->object->setParentId( 33 );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Order\Item\Base\Product\Attribute\Iface::class, $return );
+		$this->assertEquals( 33, $this->object->getParentId() );
 		$this->assertTrue( $this->object->isModified() );
 	}
 
 
 	public function testGetType()
 	{
-		$this->assertEquals( $this->values['type'], $this->object->getType() );
+		$this->assertEquals( 'UnitType', $this->object->getType() );
 	}
 
 
 	public function testSetType()
 	{
-		$this->object->setType( 'testType' );
+		$return = $this->object->setType( 'testType' );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Order\Item\Base\Product\Attribute\Iface::class, $return );
 		$this->assertEquals( 'testType', $this->object->getType() );
 		$this->assertTrue( $this->object->isModified() );
 	}
@@ -128,13 +129,15 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testGetCode()
 	{
-		$this->assertEquals( $this->values['code'], $this->object->getCode() );
+		$this->assertEquals( 'size', $this->object->getCode() );
 	}
 
 
 	public function testSetCode()
 	{
-		$this->object->setCode( 'weight' );
+		$return = $this->object->setCode( 'weight' );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Order\Item\Base\Product\Attribute\Iface::class, $return );
 		$this->assertEquals( 'weight', $this->object->getCode() );
 		$this->assertTrue( $this->object->isModified() );
 	}
@@ -142,13 +145,15 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testGetValue()
 	{
-		$this->assertEquals( $this->values['value'], $this->object->getValue() );
+		$this->assertEquals( '30', $this->object->getValue() );
 	}
 
 
 	public function testSetValue()
 	{
-		$this->object->setValue( 36 );
+		$return = $this->object->setValue( 36 );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Order\Item\Base\Product\Attribute\Iface::class, $return );
 		$this->assertEquals( 36, $this->object->getValue() );
 		$this->assertTrue( $this->object->isModified() );
 	}
@@ -156,14 +161,32 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testGetName()
 	{
-		$this->assertEquals( $this->values['name'], $this->object->getName() );
+		$this->assertEquals( 'small', $this->object->getName() );
 	}
 
 
 	public function testSetName()
 	{
-		$this->object->setName( 'medium' );
+		$return = $this->object->setName( 'medium' );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Order\Item\Base\Product\Attribute\Iface::class, $return );
 		$this->assertEquals( 'medium', $this->object->getName() );
+		$this->assertTrue( $this->object->isModified() );
+	}
+
+
+	public function testGetQuantity()
+	{
+		$this->assertEquals( 2, $this->object->getQuantity() );
+	}
+
+
+	public function testSetQuantity()
+	{
+		$return = $this->object->setQuantity( 3 );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Order\Item\Base\Product\Attribute\Iface::class, $return );
+		$this->assertEquals( 3, $this->object->getQuantity() );
 		$this->assertTrue( $this->object->isModified() );
 	}
 
@@ -187,19 +210,26 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	}
 
 
+	public function testGetResourceType()
+	{
+		$this->assertEquals( 'order/base/product/attribute', $this->object->getResourceType() );
+	}
+
+
 	public function testCopyFrom()
 	{
-		$attrManager = \Aimeos\MShop\Attribute\Manager\Factory::createManager( \TestHelper::getContext() );
+		$attrManager = \Aimeos\MShop\Attribute\Manager\Factory::create( \TestHelperMShop::getContext() );
 
 		$items = $attrManager->searchItems( $attrManager->createSearch() );
 		if( ( $item = reset( $items ) ) === false ) {
-			throw new \Exception( 'No attribute item found' );
+			throw new \RuntimeException( 'No attribute item found' );
 		}
 
-		$this->object->copyFrom( $item );
+		$return = $this->object->copyFrom( $item );
 
+		$this->assertInstanceOf( \Aimeos\MShop\Order\Item\Base\Product\Attribute\Iface::class, $return );
 		$this->assertEquals( $item->getId(), $this->object->getAttributeId() );
-		$this->assertEquals( $item->getLabel(), $this->object->getName() );
+		$this->assertEquals( $item->getName(), $this->object->getName() );
 		$this->assertEquals( $item->getType(), $this->object->getCode() );
 		$this->assertEquals( $item->getCode(), $this->object->getValue() );
 	}
@@ -209,44 +239,48 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	{
 		$item = new \Aimeos\MShop\Order\Item\Base\Product\Attribute\Standard();
 
-		$list = array(
+		$list = $entries = array(
 			'order.base.product.attribute.id' => 1,
+			'order.base.product.attribute.siteid' => 123,
 			'order.base.product.attribute.attrid' => 2,
-			'order.base.product.attribute.productid' => 3,
+			'order.base.product.attribute.parentid' => 3,
 			'order.base.product.attribute.type' => 'variant',
 			'order.base.product.attribute.code' => 'test',
 			'order.base.product.attribute.value' => 'value',
 			'order.base.product.attribute.name' => 'test item',
+			'order.base.product.attribute.quantity' => 4,
 		);
 
-		$unknown = $item->fromArray( $list );
+		$item = $item->fromArray( $entries, true );
 
-		$this->assertEquals( array(), $unknown );
-
+		$this->assertEquals( [], $entries );
 		$this->assertEquals( $list['order.base.product.attribute.id'], $item->getId() );
+		$this->assertEquals( $list['order.base.product.attribute.siteid'], $item->getSiteId() );
 		$this->assertEquals( $list['order.base.product.attribute.attrid'], $item->getAttributeId() );
-		$this->assertEquals( $list['order.base.product.attribute.productid'], $item->getProductId() );
+		$this->assertEquals( $list['order.base.product.attribute.parentid'], $item->getParentId() );
 		$this->assertEquals( $list['order.base.product.attribute.type'], $item->getType() );
 		$this->assertEquals( $list['order.base.product.attribute.code'], $item->getCode() );
 		$this->assertEquals( $list['order.base.product.attribute.value'], $item->getValue() );
 		$this->assertEquals( $list['order.base.product.attribute.name'], $item->getName() );
+		$this->assertEquals( $list['order.base.product.attribute.quantity'], $item->getQuantity() );
 	}
 
 
 	public function testToArray()
 	{
-		$list = $this->object->toArray();
+		$list = $this->object->toArray( true );
 
 		$this->assertEquals( count( $this->values ), count( $list ) );
 
 		$this->assertEquals( $this->object->getId(), $list['order.base.product.attribute.id'] );
 		$this->assertEquals( $this->object->getSiteId(), $list['order.base.product.attribute.siteid'] );
 		$this->assertEquals( $this->object->getAttributeId(), $list['order.base.product.attribute.attrid'] );
-		$this->assertEquals( $this->object->getProductId(), $list['order.base.product.attribute.productid'] );
+		$this->assertEquals( $this->object->getParentId(), $list['order.base.product.attribute.parentid'] );
 		$this->assertEquals( $this->object->getType(), $list['order.base.product.attribute.type'] );
 		$this->assertEquals( $this->object->getCode(), $list['order.base.product.attribute.code'] );
 		$this->assertEquals( $this->object->getValue(), $list['order.base.product.attribute.value'] );
 		$this->assertEquals( $this->object->getName(), $list['order.base.product.attribute.name'] );
+		$this->assertEquals( $this->object->getQuantity(), $list['order.base.product.attribute.quantity'] );
 		$this->assertEquals( $this->object->getTimeModified(), $list['order.base.product.attribute.mtime'] );
 		$this->assertEquals( $this->object->getTimeCreated(), $list['order.base.product.attribute.ctime'] );
 		$this->assertEquals( $this->object->getEditor(), $list['order.base.product.attribute.editor'] );

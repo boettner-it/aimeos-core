@@ -1,84 +1,105 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 namespace Aimeos\MShop\Price\Item;
 
 
-/**
- * Test class for \Aimeos\MShop\Price\Item\Standard.
- */
-class StandardTest extends \PHPUnit_Framework_TestCase
+class StandardTest extends \PHPUnit\Framework\TestCase
 {
 	private $object;
 	private $values;
 
 
-	/**
-	 * Sets up the fixture, for example, opens a network connection.
-	 * This method is called before a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function setUp()
 	{
 		$this->values = array(
-			'id' => 199,
-			'siteid'=>99,
-			'typeid' => 2,
-			'type' => 'default',
-			'currencyid' => 'EUR',
-			'domain' => 'product',
-			'label' => 'Price label',
-			'quantity' => 1500,
-			'value' => 195.50,
-			'costs' => 19.95,
-			'rebate' => 10.00,
-			'taxrate' => 19.00,
-			'status' => true,
-			'mtime' => '2011-01-01 00:00:02',
-			'ctime' => '2011-01-01 00:00:01',
-			'editor' => 'unitTestUser'
+			'price.id' => 199,
+			'price.siteid' => 99,
+			'price.type' => 'default',
+			'price.currencyid' => 'EUR',
+			'price.domain' => 'product',
+			'price.label' => 'Price label',
+			'price.quantity' => 15,
+			'price.value' => '195.50',
+			'price.costs' => '19.95',
+			'price.rebate' => '10.00',
+			'price.tax' => '34.3995',
+			'price.taxrates' => ['' => '19.00', 'local' => '5.00'],
+			'price.taxflag' => true,
+			'price.status' => true,
+			'price.mtime' => '2011-01-01 00:00:02',
+			'price.ctime' => '2011-01-01 00:00:01',
+			'price.editor' => 'unitTestUser',
+			'.currencyid' => 'EUR',
 		);
 
 		$this->object = new \Aimeos\MShop\Price\Item\Standard( $this->values );
 	}
 
-	/**
-	 * Tears down the fixture, for example, closes a network connection.
-	 * This method is called after a test is executed.
-	 *
-	 * @access protected
-	 */
+
 	protected function tearDown()
 	{
-		$this->object = null;
+		unset( $this->object );
 	}
+
 
 	public function testAddItem()
 	{
 		$price = new \Aimeos\MShop\Price\Item\Standard( $this->values );
-		$this->object->addItem( $price );
+		$return = $this->object->addItem( $price );
 
+		$this->assertInstanceOf( \Aimeos\MShop\Price\Item\Iface::class, $return );
 		$this->assertEquals( '391.00', $this->object->getValue() );
 		$this->assertEquals( '39.90', $this->object->getCosts() );
 		$this->assertEquals( '20.00', $this->object->getRebate() );
+		$this->assertEquals( '68.7990', $this->object->getTaxValue() );
+		$this->assertEquals( 1, $this->object->getQuantity() );
 	}
+
+
+	public function testAddItemSelf()
+	{
+		$return = $this->object->addItem( $this->object );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Price\Item\Iface::class, $return );
+		$this->assertEquals( '391.00', $this->object->getValue() );
+		$this->assertEquals( '39.90', $this->object->getCosts() );
+		$this->assertEquals( '20.00', $this->object->getRebate() );
+		$this->assertEquals( '68.7990', $this->object->getTaxValue() );
+		$this->assertEquals( 1, $this->object->getQuantity() );
+	}
+
 
 	public function testAddItemWrongCurrency()
 	{
 		$values = $this->values;
-		$values['currencyid'] = 'USD';
+		$values['price.currencyid'] = 'USD';
 
 		$price = new \Aimeos\MShop\Price\Item\Standard( $values );
 
-		$this->setExpectedException( '\\Aimeos\\MShop\\Price\\Exception' );
+		$this->setExpectedException( \Aimeos\MShop\Price\Exception::class );
 		$this->object->addItem( $price );
 	}
+
+
+	public function testClear()
+	{
+		$result = $this->object->clear();
+
+		$this->assertInstanceOf( 'Aimeos\MShop\Price\Item\Iface', $result );
+		$this->assertEquals( '0.00', $this->object->getValue() );
+		$this->assertEquals( '0.00', $this->object->getCosts() );
+		$this->assertEquals( '0.00', $this->object->getRebate() );
+		$this->assertEquals( '0.00', $this->object->getTaxValue() );
+		$this->assertEquals( true, $this->object->getTaxFlag() );
+		$this->assertEquals( 1, $this->object->getQuantity() );
+	}
+
 
 	public function testCompare()
 	{
@@ -86,178 +107,296 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$this->assertTrue( $this->object->compare( $price ) );
 	}
 
+
 	public function testCompareFail()
 	{
 		$values = $this->values;
-		$values['value'] = '200.00';
+		$values['price.value'] = '200.00';
 
 		$price = new \Aimeos\MShop\Price\Item\Standard( $values );
 		$this->assertFalse( $this->object->compare( $price ) );
 	}
+
+
+	public function testGetPrecision()
+	{
+		$this->assertEquals( 2, $this->object->getPrecision() );
+	}
+
 
 	public function testGetId()
 	{
 		$this->assertEquals( 199, $this->object->getId() );
 	}
 
+
 	public function testSetId()
 	{
-		$this->object->setId( null );
+		$return = $this->object->setId( null );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Price\Item\Iface::class, $return );
 		$this->assertNull( $this->object->getId() );
 		$this->assertTrue( $this->object->isModified() );
 	}
+
 
 	public function testGetSiteId()
 	{
 		$this->assertEquals( 99, $this->object->getSiteId() );
 	}
 
+
 	public function testGetType()
 	{
 		$this->assertEquals( 'default', $this->object->getType() );
 	}
 
-	public function testGetTypeId()
-	{
-		$this->assertEquals( 2, $this->object->getTypeId() );
-	}
 
-	public function testSetTypeId()
+	public function testSetType()
 	{
-		$this->object->setTypeId( 99 );
-		$this->assertEquals( 99, $this->object->getTypeId() );
+		$this->object->setType( 'test' );
+		$this->assertEquals( 'test', $this->object->getType() );
 
 		$this->assertTrue( $this->object->isModified() );
 	}
+
 
 	public function testGetCurrencyId()
 	{
 		$this->assertEquals( 'EUR', $this->object->getCurrencyId() );
 	}
 
+
 	public function testSetCurrencyId()
 	{
-		$this->object->setCurrencyId( 'USD' );
+		$return = $this->object->setCurrencyId( 'USD' );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Price\Item\Iface::class, $return );
 		$this->assertEquals( 'USD', $this->object->getCurrencyId() );
 		$this->assertTrue( $this->object->isModified() );
 	}
 
+
 	public function testSetCurrencyIdNull()
 	{
-		$this->setExpectedException( '\\Aimeos\\MShop\\Exception' );
+		$this->setExpectedException( \Aimeos\MShop\Exception::class );
 		$this->object->setCurrencyId( null );
 	}
 
+
 	public function testSetCurrencyIdInvalid()
 	{
-		$this->setExpectedException( '\\Aimeos\\MShop\\Exception' );
+		$this->setExpectedException( \Aimeos\MShop\Exception::class );
 		$this->object->setCurrencyId( 'usd' );
 	}
+
 
 	public function testGetDomain()
 	{
 		$this->assertEquals( 'product', $this->object->getDomain() );
 	}
 
+
 	public function testSetDomain()
 	{
-		$this->object->setDomain( 'service' );
+		$return = $this->object->setDomain( 'service' );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Price\Item\Iface::class, $return );
 		$this->assertEquals( 'service', $this->object->getDomain() );
 		$this->assertTrue( $this->object->isModified() );
 	}
+
 
 	public function testGetLabel()
 	{
 		$this->assertEquals( 'Price label', $this->object->getLabel() );
 	}
 
+
 	public function testSetLabel()
 	{
-		$this->object->setLabel( 'special price' );
+		$return = $this->object->setLabel( 'special price' );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Price\Item\Iface::class, $return );
 		$this->assertEquals( 'special price', $this->object->getlabel() );
 		$this->assertTrue( $this->object->isModified() );
 	}
 
+
 	public function testGetQuantity()
 	{
-		$this->assertEquals( 1500, $this->object->getQuantity() );
+		$this->assertEquals( 15, $this->object->getQuantity() );
 	}
+
 
 	public function testSetQuantity()
 	{
-		$this->object->setQuantity( 2000 );
-		$this->assertEquals( 2000, $this->object->getQuantity() );
+		$return = $this->object->setQuantity( 20 );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Price\Item\Iface::class, $return );
+		$this->assertEquals( 20, $this->object->getQuantity() );
 		$this->assertTrue( $this->object->isModified() );
 	}
+
 
 	public function testGetPrice()
 	{
 		$this->assertEquals( '195.50', $this->object->getValue() );
 	}
 
+
 	public function testSetPrice()
 	{
-		$this->object->setValue( 199.00 );
+		$return = $this->object->setValue( 199.00 );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Price\Item\Iface::class, $return );
 		$this->assertEquals( 199.00, $this->object->getValue() );
 		$this->assertTrue( $this->object->isModified() );
 
-		$this->setExpectedException( '\\Aimeos\\MShop\\Price\\Exception' );
+		$this->setExpectedException( \Aimeos\MShop\Price\Exception::class );
 		$this->object->setValue( '190,90' );
 	}
+
 
 	public function testGetCosts()
 	{
 		$this->assertEquals( '19.95', $this->object->getCosts() );
 	}
 
+
 	public function testSetCosts()
 	{
-		$this->object->setValue( '20.00' );
+		$return = $this->object->setValue( '20.00' );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Price\Item\Iface::class, $return );
 		$this->assertEquals( 20.00, $this->object->getValue() );
 		$this->assertTrue( $this->object->isModified() );
 
-		$this->setExpectedException( '\\Aimeos\\MShop\\Price\\Exception' );
+		$this->setExpectedException( \Aimeos\MShop\Price\Exception::class );
 		$this->object->setValue( '19,90' );
 	}
+
 
 	public function testGetRebate()
 	{
 		$this->assertEquals( '10.00', $this->object->getRebate() );
 	}
 
+
 	public function testSetRebate()
 	{
-		$this->object->setRebate( '20.00' );
+		$return = $this->object->setRebate( '20.00' );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Price\Item\Iface::class, $return );
 		$this->assertEquals( 20.00, $this->object->getRebate() );
 		$this->assertTrue( $this->object->isModified() );
 
-		$this->setExpectedException( '\\Aimeos\\MShop\\Price\\Exception' );
+		$this->setExpectedException( \Aimeos\MShop\Price\Exception::class );
 		$this->object->setValue( '19,90' );
 	}
 
-	public function testgetTaxRate()
+
+	public function testGetTaxRate()
 	{
 		$this->assertEquals( '19.00', $this->object->getTaxRate() );
 	}
 
-	public function testsetTaxRate()
+
+	public function testGetTaxRates()
 	{
-		$this->object->setTaxRate( '22.00' );
-		$this->assertEquals( 22.00, $this->object->getTaxRate() );
+		$this->assertEquals( ['' => '19.00', 'local' => '5.0'], $this->object->getTaxRates() );
+	}
+
+
+	public function testSetTaxRate()
+	{
+		$return = $this->object->setTaxRate( '22.00' );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Price\Item\Iface::class, $return );
+		$this->assertEquals( '22.00', $this->object->getTaxRate() );
 		$this->assertTrue( $this->object->isModified() );
 	}
+
+
+	public function testSetTaxRates()
+	{
+		$value = ['' => '22.00', 'local' => '10.00'];
+		$return = $this->object->setTaxRates( $value );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Price\Item\Iface::class, $return );
+		$this->assertEquals( ['' => '22.00', 'local' => '10.00'], $this->object->getTaxRates() );
+		$this->assertTrue( $this->object->isModified() );
+	}
+
+
+	public function testGetTaxFlag()
+	{
+		$this->assertEquals( true, $this->object->getTaxFlag() );
+	}
+
+
+	public function testSetTaxFlag()
+	{
+		$return = $this->object->setTaxFlag( false );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Price\Item\Iface::class, $return );
+		$this->assertEquals( false, $this->object->getTaxFlag() );
+		$this->assertTrue( $this->object->isModified() );
+	}
+
+
+	public function testGetTaxValue()
+	{
+		$this->assertEquals( '34.3995', $this->object->getTaxValue() );
+	}
+
+
+	public function testGetTaxValueFromNetprice()
+	{
+		$values = array(
+			'price.quantity' => 10,
+			'price.value' => 195.50,
+			'price.costs' => 19.95,
+			'price.taxrates' => ['' => '19.00', 'local' => '5.00'],
+			'price.taxflag' => false,
+		);
+
+		$object = new \Aimeos\MShop\Price\Item\Standard( $values );
+		$this->assertEquals( '51.7080', $object->getTaxValue() );
+
+
+		$values['price.taxflag'] = true;
+
+		$object = new \Aimeos\MShop\Price\Item\Standard( $values );
+		$this->assertEquals( '41.7000', $object->getTaxValue() );
+	}
+
+
+	public function testSetTaxValue()
+	{
+		$return = $this->object->setTaxValue( '100.00' );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Price\Item\Iface::class, $return );
+		$this->assertEquals( '100.00', $this->object->getTaxValue() );
+		$this->assertTrue( $this->object->isModified() );
+	}
+
 
 	public function testGetStatus()
 	{
 		$this->assertEquals( 1, $this->object->getStatus() );
 	}
 
+
 	public function testSetStatus()
 	{
-		$this->object->setStatus( 0 );
+		$return = $this->object->setStatus( 0 );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Price\Item\Iface::class, $return );
 		$this->assertEquals( 0, $this->object->getStatus() );
 		$this->assertTrue( $this->object->isModified() );
 	}
+
 
 	public function testGetTimeModified()
 	{
@@ -277,60 +416,96 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	}
 
 
+	public function testGetResourceType()
+	{
+		$this->assertEquals( 'price', $this->object->getResourceType() );
+	}
+
+
 	public function testFromArray()
 	{
 		$item = new \Aimeos\MShop\Price\Item\Standard();
 
-		$list = array(
+		$list = $entries = array(
 			'price.id' => 1,
-			'price.typeid' => 2,
+			'price.type' => 'test',
 			'price.label' => 'test item',
 			'price.currencyid' => 'EUR',
 			'price.quantity' => 3,
 			'price.value' => '10.00',
 			'price.costs' => '5.00',
 			'price.rebate' => '2.00',
+			'price.taxvalue' => '3.00',
+			'price.taxrates' => ['' => '20.00'],
 			'price.taxrate' => '20.00',
+			'price.taxflag' => false,
 			'price.status' => 0,
 		);
 
-		$unknown = $item->fromArray( $list );
+		$item = $item->fromArray( $entries, true );
 
-		$this->assertEquals( array(), $unknown );
-
+		$this->assertEquals( [], $entries );
 		$this->assertEquals( $list['price.id'], $item->getId() );
-		$this->assertEquals( $list['price.typeid'], $item->getTypeId() );
+		$this->assertEquals( $list['price.type'], $item->getType() );
 		$this->assertEquals( $list['price.label'], $item->getLabel() );
 		$this->assertEquals( $list['price.currencyid'], $item->getCurrencyId() );
 		$this->assertEquals( $list['price.quantity'], $item->getQuantity() );
 		$this->assertEquals( $list['price.value'], $item->getValue() );
 		$this->assertEquals( $list['price.costs'], $item->getCosts() );
 		$this->assertEquals( $list['price.rebate'], $item->getRebate() );
-		$this->assertEquals( $list['price.taxrate'], $item->getTaxrate() );
+		$this->assertEquals( $list['price.taxvalue'], $item->getTaxValue() );
+		$this->assertEquals( $list['price.taxrates'], $item->getTaxRates() );
+		$this->assertEquals( $list['price.taxrate'], $item->getTaxRate() );
+		$this->assertEquals( $list['price.taxflag'], $item->getTaxFlag() );
 		$this->assertEquals( $list['price.status'], $item->getStatus() );
+		$this->assertNull( $item->getSiteId() );
 	}
 
 
 	public function testToArray()
 	{
-		$arrayObject = $this->object->toArray();
+		$arrayObject = $this->object->toArray( true );
+
 		$this->assertEquals( count( $this->values ), count( $arrayObject ) );
 
 		$this->assertEquals( $this->object->getId(), $arrayObject['price.id'] );
-		$this->assertEquals( $this->object->getTypeId(), $arrayObject['price.typeid'] );
+		$this->assertEquals( $this->object->getType(), $arrayObject['price.type'] );
 		$this->assertEquals( $this->object->getSiteId(), $arrayObject['price.siteid'] );
 		$this->assertEquals( $this->object->getLabel(), $arrayObject['price.label'] );
+		$this->assertEquals( $this->object->getDomain(), $arrayObject['price.domain'] );
 		$this->assertEquals( $this->object->getCurrencyId(), $arrayObject['price.currencyid'] );
 		$this->assertEquals( $this->object->getQuantity(), $arrayObject['price.quantity'] );
 		$this->assertEquals( $this->object->getValue(), $arrayObject['price.value'] );
 		$this->assertEquals( $this->object->getCosts(), $arrayObject['price.costs'] );
 		$this->assertEquals( $this->object->getRebate(), $arrayObject['price.rebate'] );
-		$this->assertEquals( $this->object->getTaxrate(), $arrayObject['price.taxrate'] );
+		$this->assertEquals( $this->object->getTaxValue(), $arrayObject['price.taxvalue'] );
+		$this->assertEquals( $this->object->getTaxRates(), $arrayObject['price.taxrates'] );
+		$this->assertEquals( $this->object->getTaxRate(), $arrayObject['price.taxrate'] );
+		$this->assertEquals( $this->object->getTaxFlag(), $arrayObject['price.taxflag'] );
 		$this->assertEquals( $this->object->getStatus(), $arrayObject['price.status'] );
 		$this->assertEquals( $this->object->getTimeCreated(), $arrayObject['price.ctime'] );
 		$this->assertEquals( $this->object->getTimeModified(), $arrayObject['price.mtime'] );
 		$this->assertEquals( $this->object->getEditor(), $arrayObject['price.editor'] );
 	}
+
+
+	public function testIsAvailable()
+	{
+		$this->assertTrue( $this->object->isAvailable() );
+		$this->object->setAvailable( false );
+		$this->assertFalse( $this->object->isAvailable() );
+	}
+
+
+	public function testIsAvailableOnStatus()
+	{
+		$this->assertTrue( $this->object->isAvailable() );
+		$this->object->setStatus( 0 );
+		$this->assertFalse( $this->object->isAvailable() );
+		$this->object->setStatus( -1 );
+		$this->assertFalse( $this->object->isAvailable() );
+	}
+
 
 	public function testIsModified()
 	{

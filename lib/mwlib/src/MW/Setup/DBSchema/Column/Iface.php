@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Setup
  */
@@ -29,15 +29,22 @@ interface Iface
 	 * @param integer $length Length of the column if the column type is of variable length
 	 * @param string $default Default value if not specified
 	 * @param string $nullable "YES" if null values are allowed, "NO" if not
-	 * @param string $collation collation type of the column
-	 * @return void
+	 * @param string|null $charset Charset of the column
+	 * @param string|null $collation Collation type of the column
 	 */
-	public function __construct( $tablename, $name, $type, $length, $default, $nullable, $collation );
+	public function __construct( $tablename, $name, $type, $length, $default, $nullable, $charset, $collation );
+
+	/**
+	 * Returns the charset of the column.
+	 *
+	 * @return string|null Charset of the column
+	 */
+	public function getCharset();
 
 	/**
 	 * Returns the collation type of the column.
 	 *
-	 * @return string collation type of the column
+	 * @return string|null Collation type of the column
 	 */
 	public function getCollationType();
 

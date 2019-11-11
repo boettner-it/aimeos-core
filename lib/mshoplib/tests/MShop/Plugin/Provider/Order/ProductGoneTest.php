@@ -1,205 +1,138 @@
 <?php
 
+/**
+ * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
+ */
+
+
 namespace Aimeos\MShop\Plugin\Provider\Order;
 
 
-/**
- * @copyright Metaways Infosystems GmbH, 2011
- * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
- */
-class ProductGoneTest extends \PHPUnit_Framework_TestCase
+class ProductGoneTest extends \PHPUnit\Framework\TestCase
 {
 	private $order;
-	private $plugin;
+	private $object;
 	private $product;
-	private $orderManager;
+	private $context;
 
 
-	/**
-	 * Sets up the fixture, for example, opens a network connection.
-	 * This method is called before a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function setUp()
 	{
-		$context = \TestHelper::getContext();
+		$this->context = \TestHelperMShop::getContext();
+		$plugin = \Aimeos\MShop::create( $this->context, 'plugin' )->createItem();
 
-		$pluginManager = \Aimeos\MShop\Plugin\Manager\Factory::createManager( $context );
-		$this->plugin = $pluginManager->createItem();
-		$this->plugin->setProvider( 'ProductGone' );
-		$this->plugin->setStatus( 1 );
+		$manager = \Aimeos\MShop::create( $this->context, 'product' );
+		$newProduct = $manager->findItem( 'CNE' )->setId( null )->setLabel( 'Bad Product' )->setCode( 'WTF' );
+		$this->product = $manager->saveItem( $newProduct );
 
-		$this->orderManager = \Aimeos\MShop\Order\Manager\Factory::createManager( $context );
-		$orderBaseManager = $this->orderManager->getSubManager( 'base' );
-
-		$search = $orderBaseManager->createSearch();
+		$manager = \Aimeos\MShop::create( $this->context, 'order/base' );
+		$search = $manager->createSearch()->setSlice( 0, 1 );
 		$search->setConditions( $search->compare( '==', 'order.base.price', 672.00 ) );
-		$search->setSlice( 0, 1 );
-		$items = $orderBaseManager->searchItems( $search );
-		if( ( $baseItem = reset( $items ) ) === false ) {
-			throw new \Exception( 'No order base item found.' );
+		$items = $manager->searchItems( $search );
+
+		if( ( $this->order = reset( $items ) ) === false ) {
+			throw new \RuntimeException( 'No order base item found.' );
 		}
 
-		$this->order = $baseItem;
-
-		// create a product to mess with in the tests
-		$productManager = \Aimeos\MShop\Product\Manager\Factory::createManager( \TestHelper::getContext() );
-		$search = $productManager->createSearch();
-		$search->setConditions( $search->compare( '==', 'product.code', 'CNE' ) );
-		$search->setSlice( 0, 1 );
-		$items = $productManager->searchItems( $search );
-		if( ( $newProduct = reset( $items ) ) === false ) {
-			throw new \Exception( 'Product code "CNE" not found.' );
-		}
-
-		$newProduct->setId( null );
-		$newProduct->setLabel( 'Bad Product' );
-		$newProduct->setCode( 'WTF' );
-		$productManager->saveItem( $newProduct );
-
-		$this->product = $newProduct;
+		$this->object = new \Aimeos\MShop\Plugin\Provider\Order\ProductGone( $this->context, $plugin );
 	}
 
 
-	/**
-	 * Tears down the fixture, for example, closes a network connection.
-	 * This method is called after a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function tearDown()
 	{
-		$productManager = \Aimeos\MShop\Product\Manager\Factory::createManager( \TestHelper::getContext() );
-		$search = $productManager->createSearch();
-		$search->setConditions( $search->compare( '==', 'product.code', 'WTF' ) );
-		$items = $productManager->searchItems( $search );
+		$manager = \Aimeos\MShop::create( $this->context, 'product' );
+		$manager->deleteItem( $manager->findItem( 'WTF' )->getId() );
 
-		foreach( $items as $badItem ) {
-			$productManager->deleteItem( $badItem->getId() );
-		}
-
-		unset( $this->orderManager );
-		unset( $this->plugin );
+		unset( $this->object, $this->product, $this->order, $this->context );
 	}
 
 
 	public function testRegister()
 	{
-		$object = new \Aimeos\MShop\Plugin\Provider\Order\ProductGone( \TestHelper::getContext(), $this->plugin );
-		$object->register( $this->order );
+		$this->object->register( $this->order );
 	}
 
 
 	public function testUpdateNone()
 	{
-		// \Aimeos\MShop\Order\Item\Base\Base::PARTS_PRODUCT not set, so check shall not be executed
-		$object = new \Aimeos\MShop\Plugin\Provider\Order\ProductGone( \TestHelper::getContext(), $this->plugin );
-		$this->AssertTrue( $object->update( $this->order, 'check.after' ) );
+		$this->assertEquals( null, $this->object->update( $this->order, 'check.after' ) );
 	}
 
 
 	public function testUpdateOk()
 	{
-		$object = new \Aimeos\MShop\Plugin\Provider\Order\ProductGone( \TestHelper::getContext(), $this->plugin );
-		$result = $object->update( $this->order, 'check.after', \Aimeos\MShop\Order\Item\Base\Base::PARTS_PRODUCT );
-
-		$this->assertTrue( $result );
+		$type = \Aimeos\MShop\Order\Item\Base\Base::PARTS_PRODUCT;
+		$this->assertEquals( $type, $this->object->update( $this->order, 'check.after', $type ) );
 	}
 
 
 	public function testUpdateProductDeleted()
 	{
-		$orderBaseManager = $this->orderManager->getSubManager( 'base' );
-		$orderBaseProductManager = $orderBaseManager->getSubManager( 'product' );
-
-		$badItem = $orderBaseProductManager->createItem();
-		$badItem->setProductId( -13 );
-		$badItem->setProductCode( 'NONE' );
+		$badItem = \Aimeos\MShop::create( $this->context, 'order/base/product' )->createItem()
+			->setProductId( -13 )->setProductCode( 'NONE' );
 
 		$this->order->addProduct( $badItem );
+		$type = \Aimeos\MShop\Order\Item\Base\Base::PARTS_PRODUCT;
 
-		$object = new \Aimeos\MShop\Plugin\Provider\Order\ProductGone( \TestHelper::getContext(), $this->plugin );
-
-		$this->setExpectedException( '\\Aimeos\\MShop\\Plugin\\Provider\\Exception' );
-		$object->update( $this->order, 'check.after', \Aimeos\MShop\Order\Item\Base\Base::PARTS_PRODUCT );
+		$this->setExpectedException( \Aimeos\MShop\Plugin\Provider\Exception::class );
+		$this->object->update( $this->order, 'check.after', $type );
 	}
 
 
 	public function testUpdateProductEnded()
 	{
-		$productManager = \Aimeos\MShop\Product\Manager\Factory::createManager( \TestHelper::getContext() );
-
-		$orderBaseManager = $this->orderManager->getSubManager( 'base' );
-		$orderBaseProductManager = $orderBaseManager->getSubManager( 'product' );
-		$badItem = $orderBaseProductManager->createItem();
-		$badItem->copyFrom( $this->product );
+		$badItem = \Aimeos\MShop::create( $this->context, 'order/base/product' )
+			->createItem()->copyFrom( $this->product );
 
 		$this->product->setDateEnd( '1999-12-31 23:59:59' );
-
-		$productManager->saveItem( $this->product );
+		\Aimeos\MShop\Product\Manager\Factory::create( $this->context )->saveItem( $this->product );
 
 		$this->order->addProduct( $badItem );
+		$type = \Aimeos\MShop\Order\Item\Base\Base::PARTS_PRODUCT;
 
-		$object = new \Aimeos\MShop\Plugin\Provider\Order\ProductGone( \TestHelper::getContext(), $this->plugin );
-		$this->setExpectedException( '\\Aimeos\\MShop\\Plugin\\Provider\\Exception' );
-		$object->update( $this->order, 'check.after', \Aimeos\MShop\Order\Item\Base\Base::PARTS_PRODUCT );
+		$this->setExpectedException( \Aimeos\MShop\Plugin\Provider\Exception::class );
+		$this->object->update( $this->order, 'check.after', $type );
 	}
 
 
 	public function testUpdateProductNotStarted()
 	{
-		$productManager = \Aimeos\MShop\Product\Manager\Factory::createManager( \TestHelper::getContext() );
+		$badItem = \Aimeos\MShop::create( $this->context, 'order/base/product' )
+			->createItem()->copyFrom( $this->product );
 
-		$orderBaseManager = $this->orderManager->getSubManager( 'base' );
-		$orderBaseProductManager = $orderBaseManager->getSubManager( 'product' );
-		$badItem = $orderBaseProductManager->createItem();
-		$badItem->copyFrom( $this->product );
-
-		$this->product->setDateStart( '2022-12-31 23:59:59' );
-
-		$productManager->saveItem( $this->product );
+		$this->product->setDateStart( '2100-12-31 23:59:59' );
+		\Aimeos\MShop\Product\Manager\Factory::create( $this->context )->saveItem( $this->product );
 
 		$this->order->addProduct( $badItem );
+		$type = \Aimeos\MShop\Order\Item\Base\Base::PARTS_PRODUCT;
 
-		$object = new \Aimeos\MShop\Plugin\Provider\Order\ProductGone( \TestHelper::getContext(), $this->plugin );
-		$this->setExpectedException( '\\Aimeos\\MShop\\Plugin\\Provider\\Exception' );
-		$object->update( $this->order, 'check.after', \Aimeos\MShop\Order\Item\Base\Base::PARTS_PRODUCT );
+		$this->setExpectedException( \Aimeos\MShop\Plugin\Provider\Exception::class );
+		$this->object->update( $this->order, 'check.after', $type );
 	}
 
 
 	public function testUpdateProductDeactivated()
 	{
-		$productManager = \Aimeos\MShop\Product\Manager\Factory::createManager( \TestHelper::getContext() );
+		$badItem = \Aimeos\MShop::create( $this->context, 'order/base/product' )
+			->createItem()->copyFrom( $this->product );
 
-		$orderBaseManager = $this->orderManager->getSubManager( 'base' );
-		$orderBaseProductManager = $orderBaseManager->getSubManager( 'product' );
-		$badItem = $orderBaseProductManager->createItem();
-		$badItem->copyFrom( $this->product );
-
-		$this->product->setStatus( 0 );
-		$productManager->saveItem( $this->product );
+		\Aimeos\MShop\Product\Manager\Factory::create( $this->context )->saveItem( $this->product->setStatus( 0 ) );
 
 		$this->order->addProduct( $badItem );
 		$products = $this->order->getProducts();
-
-		if( count( $products ) < 1 ) {
-			throw new \Exception( 'Product for testing not in basket.' );
-		}
-
 		$badItemPosition = key( $products );
-
-		$object = new \Aimeos\MShop\Plugin\Provider\Order\ProductGone( \TestHelper::getContext(), $this->plugin );
 
 		try
 		{
-			$object->update( $this->order, 'check.after', \Aimeos\MShop\Order\Item\Base\Base::PARTS_PRODUCT );
+			$type = \Aimeos\MShop\Order\Item\Base\Base::PARTS_PRODUCT;
+			$this->object->update( $this->order, 'check.after', $type );
 			$this->fail( '\Aimeos\MShop\Plugin\Provider\Exception not thrown.' );
 		}
 		catch( \Aimeos\MShop\Plugin\Provider\Exception $e )
 		{
-			$ref = array( 'product' => array( $badItemPosition => 'gone.status' ) );
+			$ref = ['product' => [$badItemPosition => 'gone.status']];
 			$this->assertEquals( $ref, $e->getErrorCodes() );
 		}
 	}

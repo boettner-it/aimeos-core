@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2013
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2013
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Price
  */
@@ -19,14 +19,13 @@ namespace Aimeos\MShop\Price\Manager\Lists\Type;
  */
 class Standard
 	extends \Aimeos\MShop\Common\Manager\Type\Base
-	implements \Aimeos\MShop\Price\Manager\Lists\Type\Iface
+	implements \Aimeos\MShop\Price\Manager\Lists\Type\Iface, \Aimeos\MShop\Common\Manager\Factory\Iface
 {
 	private $searchConfig = array(
 		'price.lists.type.id' => array(
 			'code' => 'price.lists.type.id',
 			'internalcode' => 'mprility."id"',
-			'internaldeps' => array( 'LEFT JOIN "mshop_price_list_type" AS mprility ON ( mprili."typeid" = mprility."id" )' ),
-			'label' => 'Price list type Id',
+			'label' => 'List type Id',
 			'type' => 'integer',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 			'public' => false,
@@ -34,34 +33,41 @@ class Standard
 		'price.lists.type.siteid' => array(
 			'code' => 'price.lists.type.siteid',
 			'internalcode' => 'mprility."siteid"',
-			'label' => 'Price list type site Id',
+			'label' => 'List type site Id',
 			'type' => 'integer',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 			'public' => false,
 		),
+		'price.lists.type.label' => array(
+			'label' => 'List type label',
+			'code' => 'price.lists.type.label',
+			'internalcode' => 'mprility."label"',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		),
 		'price.lists.type.code' => array(
 			'code' => 'price.lists.type.code',
 			'internalcode' => 'mprility."code"',
-			'label' => 'Price list type code',
+			'label' => 'List type code',
 			'type' => 'string',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
 		'price.lists.type.domain' => array(
 			'code' => 'price.lists.type.domain',
 			'internalcode' => 'mprility."domain"',
-			'label' => 'Price list type domain',
+			'label' => 'List type domain',
 			'type' => 'string',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
-		'price.lists.type.label' => array(
-			'label' => 'Price list type label',
-			'code' => 'price.lists.type.label',
-			'internalcode' => 'mprility."label"',
-			'type' => 'string',
-			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'price.lists.type.position' => array(
+			'label' => 'List type position',
+			'code' => 'price.lists.type.position',
+			'internalcode' => 'mprility."pos"',
+			'type' => 'integer',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 		),
 		'price.lists.type.status' => array(
-			'label' => 'Price list type status',
+			'label' => 'List type status',
 			'code' => 'price.lists.type.status',
 			'internalcode' => 'mprility."status"',
 			'type' => 'integer',
@@ -70,23 +76,26 @@ class Standard
 		'price.lists.type.ctime' => array(
 			'code' => 'price.lists.type.ctime',
 			'internalcode' => 'mprility."ctime"',
-			'label' => 'Price list type create date/time',
+			'label' => 'List type create date/time',
 			'type' => 'datetime',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
 		'price.lists.type.mtime' => array(
 			'code' => 'price.lists.type.mtime',
 			'internalcode' => 'mprility."mtime"',
-			'label' => 'Price list type modification date/time',
+			'label' => 'List type modify date/time',
 			'type' => 'datetime',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
 		'price.lists.type.editor' => array(
 			'code' => 'price.lists.type.editor',
 			'internalcode' => 'mprility."editor"',
-			'label' => 'Price list type editor',
+			'label' => 'List type editor',
 			'type' => 'string',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
 	);
 
@@ -106,16 +115,30 @@ class Standard
 	/**
 	 * Removes old entries from the storage.
 	 *
-	 * @param array $siteids List of IDs for sites whose entries should be deleted
+	 * @param string[] $siteids List of IDs for sites whose entries should be deleted
+	 * @return \Aimeos\MShop\Price\Manager\Lists\Type\Iface Manager object for chaining method calls
 	 */
-	public function cleanup( array $siteids )
+	public function clear( array $siteids )
 	{
 		$path = 'mshop/price/manager/lists/type/submanagers';
-		foreach( $this->getContext()->getConfig()->get( $path, array() ) as $domain ) {
-			$this->getSubManager( $domain )->cleanup( $siteids );
+		foreach( $this->getContext()->getConfig()->get( $path, [] ) as $domain ) {
+			$this->getObject()->getSubManager( $domain )->clear( $siteids );
 		}
 
-		$this->cleanupBase( $siteids, 'mshop/price/manager/lists/type/standard/delete' );
+		return $this->clearBase( $siteids, 'mshop/price/manager/lists/type/standard/delete' );
+	}
+
+
+	/**
+	 * Returns the available manager types
+	 *
+	 * @param boolean $withsub Return also the resource type of sub-managers if true
+	 * @return string[] Type of the manager and submanagers, subtypes are separated by slashes
+	 */
+	public function getResourceType( $withsub = true )
+	{
+		$path = 'mshop/price/manager/lists/type/submanagers';
+		return $this->getResourceTypeBase( 'price/lists/type', $path, [], $withsub );
 	}
 
 
@@ -123,7 +146,7 @@ class Standard
 	 * Returns the attributes that can be used for searching.
 	 *
 	 * @param boolean $withsub Return also attributes of sub-managers if true
-	 * @return array List of attribute items implementing \Aimeos\MW\Criteria\Attribute\Iface
+	 * @return \Aimeos\MW\Criteria\Attribute\Iface[] List of search attribute items
 	 */
 	public function getSearchAttributes( $withsub = true )
 	{
@@ -146,7 +169,7 @@ class Standard
 		 */
 		$path = 'mshop/price/manager/lists/type/submanagers';
 
-		return $this->getSearchAttributesBase( $this->searchConfig, $path, array(), $withsub );
+		return $this->getSearchAttributesBase( $this->searchConfig, $path, [], $withsub );
 	}
 
 
@@ -228,12 +251,14 @@ class Standard
 		 * modify what is returned to the caller.
 		 *
 		 * This option allows you to wrap global decorators
-		 * ("\Aimeos\MShop\Common\Manager\Decorator\*") around the price list type manager.
+		 * ("\Aimeos\MShop\Common\Manager\Decorator\*") around the price list type
+		 * manager.
 		 *
 		 *  mshop/price/manager/lists/type/decorators/global = array( 'decorator1' )
 		 *
 		 * This would add the decorator named "decorator1" defined by
-		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator1" only to the price controller.
+		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator1" only to the price
+		 * list type manager.
 		 *
 		 * @param array List of decorator names
 		 * @since 2014.03
@@ -252,13 +277,14 @@ class Standard
 		 * modify what is returned to the caller.
 		 *
 		 * This option allows you to wrap local decorators
-		 * ("\Aimeos\MShop\Common\Manager\Decorator\*") around the price list type manager.
+		 * ("\Aimeos\MShop\Price\Manager\Lists\Type\Decorator\*") around the
+		 * price list type manager.
 		 *
 		 *  mshop/price/manager/lists/type/decorators/local = array( 'decorator2' )
 		 *
 		 * This would add the decorator named "decorator2" defined by
-		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator2" only to the price
-		 * controller.
+		 * "\Aimeos\MShop\Price\Manager\Lists\Type\Decorator\Decorator2" only to
+		 * the price list type manager.
 		 *
 		 * @param array List of decorator names
 		 * @since 2014.03
@@ -279,7 +305,13 @@ class Standard
 	 */
 	protected function getConfigPath()
 	{
-		/** mshop/price/manager/lists/type/standard/insert
+		/** mshop/price/manager/lists/type/standard/insert/mysql
+		 * Inserts a new price list type record into the database table
+		 *
+		 * @see mshop/price/manager/lists/type/standard/insert/ansi
+		 */
+
+		/** mshop/price/manager/lists/type/standard/insert/ansi
 		 * Inserts a new price list type record into the database table
 		 *
 		 * Items with no ID yet (i.e. the ID is NULL) will be created in
@@ -302,14 +334,20 @@ class Standard
 		 * @param string SQL statement for inserting records
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/price/manager/lists/type/standard/update
-		 * @see mshop/price/manager/lists/type/standard/newid
-		 * @see mshop/price/manager/lists/type/standard/delete
-		 * @see mshop/price/manager/lists/type/standard/search
-		 * @see mshop/price/manager/lists/type/standard/count
+		 * @see mshop/price/manager/lists/type/standard/update/ansi
+		 * @see mshop/price/manager/lists/type/standard/newid/ansi
+		 * @see mshop/price/manager/lists/type/standard/delete/ansi
+		 * @see mshop/price/manager/lists/type/standard/search/ansi
+		 * @see mshop/price/manager/lists/type/standard/count/ansi
 		 */
 
-		/** mshop/price/manager/lists/type/standard/update
+		/** mshop/price/manager/lists/type/standard/update/mysql
+		 * Updates an existing price list type record in the database
+		 *
+		 * @see mshop/price/manager/lists/type/standard/update/ansi
+		 */
+
+		/** mshop/price/manager/lists/type/standard/update/ansi
 		 * Updates an existing price list type record in the database
 		 *
 		 * Items which already have an ID (i.e. the ID is not NULL) will
@@ -329,14 +367,20 @@ class Standard
 		 * @param string SQL statement for updating records
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/price/manager/lists/type/standard/insert
-		 * @see mshop/price/manager/lists/type/standard/newid
-		 * @see mshop/price/manager/lists/type/standard/delete
-		 * @see mshop/price/manager/lists/type/standard/search
-		 * @see mshop/price/manager/lists/type/standard/count
+		 * @see mshop/price/manager/lists/type/standard/insert/ansi
+		 * @see mshop/price/manager/lists/type/standard/newid/ansi
+		 * @see mshop/price/manager/lists/type/standard/delete/ansi
+		 * @see mshop/price/manager/lists/type/standard/search/ansi
+		 * @see mshop/price/manager/lists/type/standard/count/ansi
 		 */
 
-		/** mshop/price/manager/lists/type/standard/newid
+		/** mshop/price/manager/lists/type/standard/newid/mysql
+		 * Retrieves the ID generated by the database when inserting a new record
+		 *
+		 * @see mshop/price/manager/lists/type/standard/newid/ansi
+		 */
+
+		/** mshop/price/manager/lists/type/standard/newid/ansi
 		 * Retrieves the ID generated by the database when inserting a new record
 		 *
 		 * As soon as a new record is inserted into the database table,
@@ -360,14 +404,20 @@ class Standard
 		 * @param string SQL statement for retrieving the last inserted record ID
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/price/manager/lists/type/standard/insert
-		 * @see mshop/price/manager/lists/type/standard/update
-		 * @see mshop/price/manager/lists/type/standard/delete
-		 * @see mshop/price/manager/lists/type/standard/search
-		 * @see mshop/price/manager/lists/type/standard/count
+		 * @see mshop/price/manager/lists/type/standard/insert/ansi
+		 * @see mshop/price/manager/lists/type/standard/update/ansi
+		 * @see mshop/price/manager/lists/type/standard/delete/ansi
+		 * @see mshop/price/manager/lists/type/standard/search/ansi
+		 * @see mshop/price/manager/lists/type/standard/count/ansi
 		 */
 
-		/** mshop/price/manager/lists/type/standard/delete
+		/** mshop/price/manager/lists/type/standard/delete/mysql
+		 * Deletes the items matched by the given IDs from the database
+		 *
+		 * @see mshop/price/manager/lists/type/standard/delete/ansi
+		 */
+
+		/** mshop/price/manager/lists/type/standard/delete/ansi
 		 * Deletes the items matched by the given IDs from the database
 		 *
 		 * Removes the records specified by the given IDs from the price database.
@@ -385,14 +435,20 @@ class Standard
 		 * @param string SQL statement for deleting items
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/price/manager/lists/type/standard/insert
-		 * @see mshop/price/manager/lists/type/standard/update
-		 * @see mshop/price/manager/lists/type/standard/newid
-		 * @see mshop/price/manager/lists/type/standard/search
-		 * @see mshop/price/manager/lists/type/standard/count
+		 * @see mshop/price/manager/lists/type/standard/insert/ansi
+		 * @see mshop/price/manager/lists/type/standard/update/ansi
+		 * @see mshop/price/manager/lists/type/standard/newid/ansi
+		 * @see mshop/price/manager/lists/type/standard/search/ansi
+		 * @see mshop/price/manager/lists/type/standard/count/ansi
 		 */
 
-		/** mshop/price/manager/lists/type/standard/search
+		/** mshop/price/manager/lists/type/standard/search/mysql
+		 * Retrieves the records matched by the given criteria in the database
+		 *
+		 * @see mshop/price/manager/lists/type/standard/search/ansi
+		 */
+
+		/** mshop/price/manager/lists/type/standard/search/ansi
 		 * Retrieves the records matched by the given criteria in the database
 		 *
 		 * Fetches the records matched by the given criteria from the price
@@ -437,14 +493,20 @@ class Standard
 		 * @param string SQL statement for searching items
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/price/manager/lists/type/standard/insert
-		 * @see mshop/price/manager/lists/type/standard/update
-		 * @see mshop/price/manager/lists/type/standard/newid
-		 * @see mshop/price/manager/lists/type/standard/delete
-		 * @see mshop/price/manager/lists/type/standard/count
+		 * @see mshop/price/manager/lists/type/standard/insert/ansi
+		 * @see mshop/price/manager/lists/type/standard/update/ansi
+		 * @see mshop/price/manager/lists/type/standard/newid/ansi
+		 * @see mshop/price/manager/lists/type/standard/delete/ansi
+		 * @see mshop/price/manager/lists/type/standard/count/ansi
 		 */
 
-		/** mshop/price/manager/lists/type/standard/count
+		/** mshop/price/manager/lists/type/standard/count/mysql
+		 * Counts the number of records matched by the given criteria in the database
+		 *
+		 * @see mshop/price/manager/lists/type/standard/count/ansi
+		 */
+
+		/** mshop/price/manager/lists/type/standard/count/ansi
 		 * Counts the number of records matched by the given criteria in the database
 		 *
 		 * Counts all records matched by the given criteria from the price
@@ -483,11 +545,11 @@ class Standard
 		 * @param string SQL statement for counting items
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/price/manager/lists/type/standard/insert
-		 * @see mshop/price/manager/lists/type/standard/update
-		 * @see mshop/price/manager/lists/type/standard/newid
-		 * @see mshop/price/manager/lists/type/standard/delete
-		 * @see mshop/price/manager/lists/type/standard/search
+		 * @see mshop/price/manager/lists/type/standard/insert/ansi
+		 * @see mshop/price/manager/lists/type/standard/update/ansi
+		 * @see mshop/price/manager/lists/type/standard/newid/ansi
+		 * @see mshop/price/manager/lists/type/standard/delete/ansi
+		 * @see mshop/price/manager/lists/type/standard/search/ansi
 		 */
 
 		return 'mshop/price/manager/lists/type/standard/';

@@ -3,35 +3,22 @@
 namespace Aimeos\MW\Setup\DBSchema;
 
 
-/**
- * Test class for \Aimeos\MW\Setup\DBSchema\Mysql.
- *
- * @copyright Metaways Infosystems GmbH, 2011
- * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
- */
-class MysqlTest extends \PHPUnit_Framework_TestCase
+class MysqlTest extends \PHPUnit\Framework\TestCase
 {
 	private $object;
 	private $dbm;
 
 
-	/**
-	 * Sets up the fixture, for example, opens a network connection.
-	 * This method is called before a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function setUp()
 	{
-		$config = \TestHelper::getConfig();
+		$config = \TestHelperMw::getConfig();
 
-		if( $config->get( 'resource/db/adapter', false ) === false ) {
+		if( ( $adapter = $config->get( 'resource/db/adapter', false ) ) !== 'mysql' ) {
 			$this->markTestSkipped( 'No database configured' );
 		}
 
 
-		$this->dbm = \TestHelper::getDBManager();
+		$this->dbm = \TestHelperMw::getDBManager();
 		$conn = $this->dbm->acquire();
 
 		$sql = '
@@ -46,26 +33,25 @@ class MysqlTest extends \PHPUnit_Framework_TestCase
 		$conn->create( $sql )->execute()->finish();
 		$conn->create( 'CREATE INDEX "idx_msdt_smallint" ON "mw_setup_dbschema_test" ("smallint")' )->execute()->finish();
 
-		$this->object = new \Aimeos\MW\Setup\DBSchema\Mysql( $conn, $config->get( 'resource/db/database', 'notfound' ) );
-
 		$this->dbm->release( $conn );
+
+		$this->object = new \Aimeos\MW\Setup\DBSchema\Mysql( $this->dbm, 'db', $config->get( 'resource/db/database', 'notfound' ), $adapter );
 	}
 
-	/**
-	 * Tears down the fixture, for example, closes a network connection.
-	 * This method is called after a test is executed.
-	 *
-	 * @access protected
-	 */
+
 	protected function tearDown()
 	{
-		$this->dbm = \TestHelper::getDBManager();
+		if( \TestHelperMw::getConfig()->get( 'resource/db/adapter', false ) === 'mysql' )
+		{
+			$this->dbm = \TestHelperMw::getDBManager();
 
-		$conn = $this->dbm->acquire();
-		$conn->create( 'DROP INDEX "idx_msdt_smallint" ON "mw_setup_dbschema_test"' )->execute()->finish();
-		$conn->create( 'DROP TABLE "mw_setup_dbschema_test"' )->execute()->finish();
-		$this->dbm->release( $conn );
+			$conn = $this->dbm->acquire();
+			$conn->create( 'DROP INDEX "idx_msdt_smallint" ON "mw_setup_dbschema_test"' )->execute()->finish();
+			$conn->create( 'DROP TABLE "mw_setup_dbschema_test"' )->execute()->finish();
+			$this->dbm->release( $conn );
+		}
 	}
+
 
 	public function testTableExists()
 	{
@@ -73,17 +59,20 @@ class MysqlTest extends \PHPUnit_Framework_TestCase
 		$this->assertFalse( $this->object->tableExists( 'notexisting' ) );
 	}
 
+
 	public function testConstraintExists()
 	{
 		$this->assertTrue( $this->object->constraintExists( 'mw_setup_dbschema_test', 'unq_mwsdt_integer' ) );
 		$this->assertFalse( $this->object->constraintExists( 'mw_setup_dbschema_test', 'notexisting' ) );
 	}
 
+
 	public function testColumnExists()
 	{
 		$this->assertTrue( $this->object->columnExists( 'mw_setup_dbschema_test', 'integer' ) );
 		$this->assertFalse( $this->object->columnExists( 'mw_setup_dbschema_test', 'notexisting' ) );
 	}
+
 
 	public function testGetColumnDetails()
 	{
@@ -98,14 +87,15 @@ class MysqlTest extends \PHPUnit_Framework_TestCase
 		$columnItem = $this->object->getColumnDetails( 'mw_setup_dbschema_test', 'integernull' );
 		$this->assertEquals( 'mw_setup_dbschema_test', $columnItem->getTableName() );
 		$this->assertEquals( 'integernull', $columnItem->getName() );
-		$this->assertEquals( 'int', $columnItem->getDataType() );
+		$this->assertEquals( 'integer', $columnItem->getDataType() );
 		$this->assertEquals( 10, $columnItem->getMaxLength() );
 		$this->assertEquals( null, $columnItem->getDefaultValue() );
 		$this->assertTrue( $columnItem->isNullable() );
 
-		$this->setExpectedException('\\Aimeos\\MW\\Setup\\Exception');
+		$this->setExpectedException( \Aimeos\MW\Setup\Exception::class );
 		$this->object->getColumnDetails( 'mw_setup_dbschema_test', 'notexisting' );
 	}
+
 
 	public function testIndexExists()
 	{

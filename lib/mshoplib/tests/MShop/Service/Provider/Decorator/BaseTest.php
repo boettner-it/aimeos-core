@@ -1,13 +1,15 @@
 <?php
 
+/**
+ * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
+ * @copyright Aimeos (aimeos.org), 2015-2018
+ */
+
+
 namespace Aimeos\MShop\Service\Provider\Decorator;
 
 
-/**
- * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
- */
-class BaseTest extends \PHPUnit_Framework_TestCase
+class BaseTest extends \PHPUnit\Framework\TestCase
 {
 	private $mock;
 	private $object;
@@ -16,25 +18,26 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 
 	protected function setUp()
 	{
-		$this->context = \TestHelper::getContext();
+		$this->context = \TestHelperMShop::getContext();
 
-		$servManager = \Aimeos\MShop\Service\Manager\Factory::createManager( $this->context );
+		$servManager = \Aimeos\MShop\Service\Manager\Factory::create( $this->context );
 		$search = $servManager->createSearch();
-		$search->setConditions($search->compare('==', 'service.provider', 'Standard'));
-		$result = $servManager->searchItems($search, array('price'));
+		$search->setConditions( $search->compare( '==', 'service.provider', 'Standard' ) );
+		$result = $servManager->searchItems( $search, array( 'price' ) );
 
 		if( ( $item = reset( $result ) ) === false ) {
-			throw new \Exception( 'No order base item found' );
+			throw new \RuntimeException( 'No order base item found' );
 		}
 
-		$this->mock = $this->getMockBuilder( '\\Aimeos\\MShop\\Service\\Provider\\Payment\\PrePay' )
+		$this->mock = $this->getMockBuilder( \Aimeos\MShop\Service\Provider\Payment\PrePay::class )
 			->setConstructorArgs( array( $this->context, $item ) )
 			->setMethods( array( 'calcPrice', 'checkConfigBE', 'checkConfigFE', 'getConfigBE',
 				'getConfigFE', 'injectGlobalConfigBE', 'isAvailable', 'isImplemented', 'query',
-				'setCommunication', 'setConfigFE', 'updateAsync', 'updateSync' ) )
+				'cancel', 'capture', 'process', 'refund', 'repay', 'setCommunication', 'setConfigFE',
+				'updateAsync', 'updatePush', 'updateSync' ) )
 			->getMock();
 
-		$this->object = new TestBase( $this->context, $item, $this->mock );
+		$this->object = new TestBase( $this->mock, $this->context, $item );
 	}
 
 
@@ -52,45 +55,45 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 
 	public function testCalcPrice()
 	{
-		$item = \Aimeos\MShop\Order\Manager\Factory::createManager( $this->context )->getSubManager( 'base' )->createItem();
+		$item = \Aimeos\MShop\Order\Manager\Factory::create( $this->context )->getSubManager( 'base' )->createItem();
 
 		$this->mock->expects( $this->once() )->method( 'calcPrice' )->will( $this->returnValue( $item->getPrice() ) );
 
-		$this->assertInstanceOf( '\\Aimeos\\MShop\\Price\\Item\\Iface', $this->object->calcPrice( $item ) );
+		$this->assertInstanceOf( \Aimeos\MShop\Price\Item\Iface::class, $this->object->calcPrice( $item ) );
 	}
 
 
 	public function testCheckConfigBE()
 	{
-		$this->mock->expects( $this->once() )->method( 'checkConfigBE' )->will( $this->returnValue( array() ) );
+		$this->mock->expects( $this->once() )->method( 'checkConfigBE' )->will( $this->returnValue( [] ) );
 
-		$this->assertEquals( array(), $this->object->checkConfigBE( array() ) );
+		$this->assertEquals( [], $this->object->checkConfigBE( [] ) );
 	}
 
 
 	public function testCheckConfigFE()
 	{
-		$this->mock->expects( $this->once() )->method( 'checkConfigFE' )->will( $this->returnValue( array() ) );
+		$this->mock->expects( $this->once() )->method( 'checkConfigFE' )->will( $this->returnValue( [] ) );
 
-		$this->assertEquals( array(), $this->object->checkConfigFE( array() ) );
+		$this->assertEquals( [], $this->object->checkConfigFE( [] ) );
 	}
 
 
 	public function testGetConfigBE()
 	{
-		$this->mock->expects( $this->once() )->method( 'getConfigBE' )->will( $this->returnValue( array() ) );
+		$this->mock->expects( $this->once() )->method( 'getConfigBE' )->will( $this->returnValue( [] ) );
 
-		$this->assertEquals( array(), $this->object->getConfigBE() );
+		$this->assertEquals( [], $this->object->getConfigBE() );
 	}
 
 
 	public function testGetConfigFE()
 	{
-		$item = \Aimeos\MShop\Order\Manager\Factory::createManager( $this->context )->getSubManager( 'base' )->createItem();
+		$item = \Aimeos\MShop\Order\Manager\Factory::create( $this->context )->getSubManager( 'base' )->createItem();
 
-		$this->mock->expects( $this->once() )->method( 'getConfigFE' )->will( $this->returnValue( array() ) );
+		$this->mock->expects( $this->once() )->method( 'getConfigFE' )->will( $this->returnValue( [] ) );
 
-		$this->assertEquals( array(), $this->object->getConfigFE( $item ) );
+		$this->assertEquals( [], $this->object->getConfigFE( $item ) );
 	}
 
 
@@ -98,18 +101,17 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 	{
 		$this->mock->expects( $this->once() )->method( 'injectGlobalConfigBE' );
 
-		$this->object->injectGlobalConfigBE( array() );
+		$this->object->injectGlobalConfigBE( [] );
 	}
 
 
 	public function testIsAvailable()
 	{
-		$item = \Aimeos\MShop\Order\Manager\Factory::createManager( $this->context )->getSubManager( 'base' )->createItem();
+		$item = \Aimeos\MShop\Order\Manager\Factory::create( $this->context )->getSubManager( 'base' )->createItem();
 
 		$this->mock->expects( $this->once() )->method( 'isAvailable' )->will( $this->returnValue( true ) );
 
 		$this->assertEquals( true, $this->object->isAvailable( $item ) );
-
 	}
 
 	public function testIsImplemented()
@@ -120,9 +122,39 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 	}
 
 
+	public function testCancel()
+	{
+		$item = \Aimeos\MShop\Order\Manager\Factory::create( $this->context )->createItem();
+
+		$this->mock->expects( $this->once() )->method( 'cancel' );
+
+		$this->object->cancel( $item );
+	}
+
+
+	public function testCapture()
+	{
+		$item = \Aimeos\MShop\Order\Manager\Factory::create( $this->context )->createItem();
+
+		$this->mock->expects( $this->once() )->method( 'capture' );
+
+		$this->object->capture( $item );
+	}
+
+
+	public function testProcess()
+	{
+		$item = \Aimeos\MShop\Order\Manager\Factory::create( $this->context )->createItem();
+
+		$this->mock->expects( $this->once() )->method( 'process' );
+
+		$this->object->process( $item, array( 'params' ) );
+	}
+
+
 	public function testQuery()
 	{
-		$item = \Aimeos\MShop\Order\Manager\Factory::createManager( $this->context )->createItem();
+		$item = \Aimeos\MShop\Order\Manager\Factory::create( $this->context )->createItem();
 
 		$this->mock->expects( $this->once() )->method( 'query' );
 
@@ -130,22 +162,34 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 	}
 
 
-	public function testSetCommunication()
+	public function testRefund()
 	{
-		$this->mock->expects( $this->once() )->method( 'setCommunication' );
+		$item = \Aimeos\MShop\Order\Manager\Factory::create( $this->context )->createItem();
 
-		$this->object->setCommunication( new \Aimeos\MW\Communication\Curl() );
+		$this->mock->expects( $this->once() )->method( 'refund' );
+
+		$this->object->refund( $item );
+	}
+
+
+	public function testRepay()
+	{
+		$item = \Aimeos\MShop\Order\Manager\Factory::create( $this->context )->createItem();
+
+		$this->mock->expects( $this->once() )->method( 'repay' );
+
+		$this->object->repay( $item );
 	}
 
 
 	public function testSetConfigFE()
 	{
-		$item = \Aimeos\MShop\Order\Manager\Factory::createManager( $this->context )
+		$item = \Aimeos\MShop\Order\Manager\Factory::create( $this->context )
 			->getSubManager( 'base' )->getSubManager( 'service' )->createItem();
 
 		$this->mock->expects( $this->once() )->method( 'setConfigFE' );
 
-		$this->object->setConfigFE( $item, array() );
+		$this->object->setConfigFE( $item, [] );
 	}
 
 
@@ -157,19 +201,29 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 	}
 
 
-	public function testUpdateSync()
+	public function testUpdatePush()
 	{
-		$this->mock->expects( $this->once() )->method( 'updateSync' );
+		$request = $this->getMockBuilder( \Psr\Http\Message\ServerRequestInterface::class )->getMock();
+		$response = $this->getMockBuilder( \Psr\Http\Message\ResponseInterface::class )->getMock();
 
-		$response = null; $header = array();
-		$this->object->updateSync( array(), 'body', $response, $header );
+		$this->mock->expects( $this->once() )->method( 'updatePush' )->will( $this->returnValue( $response ) );
+
+		$result = $this->object->updatePush( $request, $response );
+
+		$this->assertInstanceOf( \Psr\Http\Message\ResponseInterface::class, $result );
 	}
 
 
-	public function testCallInvalid()
+	public function testUpdateSync()
 	{
-		$this->setExpectedException( '\\Aimeos\\MShop\\Service\\Exception' );
-		$this->object->invalid();
+		$orderItem = \Aimeos\MShop\Order\Manager\Factory::create( $this->context )->createItem();
+		$request = $this->getMockBuilder( \Psr\Http\Message\ServerRequestInterface::class )->getMock();
+
+		$this->mock->expects( $this->once() )->method( 'updateSync' )->will( $this->returnValue( $orderItem ) );
+
+		$result = $this->object->updateSync( $request, $orderItem );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Order\Item\Iface::class, $result );
 	}
 }
 

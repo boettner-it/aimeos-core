@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2014
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2014
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Cache
  */
@@ -95,9 +95,9 @@ class DB
 	 *
 	 * @inheritDoc
 	 *
-	 * @throws \Aimeos\MW\Cache\Exception If the cache server doesn't respond
+	 * @return bool True on success and false on failure
 	 */
-	public function cleanup()
+	public function cleanup() : bool
 	{
 		$conn = $this->dbm->acquire( $this->dbname );
 
@@ -109,7 +109,7 @@ class DB
 
 			$types = $this->getSearchTypes( $this->searchConfig );
 			$translations = $this->getSearchTranslations( $this->searchConfig );
-			$conditions = $search->getConditionString( $types, $translations );
+			$conditions = $search->getConditionSource( $types, $translations );
 
 			$stmt = $conn->create( str_replace( ':cond', $conditions, $this->sql['delete'] ) );
 			$stmt->bind( 1, $this->siteid, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
@@ -120,8 +120,43 @@ class DB
 		catch( \Exception $e )
 		{
 			$this->dbm->release( $conn, $this->dbname );
-			throw $e;
+
+			error_log( __METHOD__ . ': ' . $e->getMessage() );
+			return false;
 		}
+
+		return true;
+	}
+
+
+	/**
+	 * Removes all entries of the site from the cache.
+	 *
+	 * @inheritDoc
+	 *
+	 * @return bool True on success and false on failure
+	 */
+	public function clear() : bool
+	{
+		$conn = $this->dbm->acquire( $this->dbname );
+
+		try
+		{
+			$stmt = $conn->create( str_replace( ':cond', '1=1', $this->sql['delete'] ) );
+			$stmt->bind( 1, $this->siteid, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmt->execute()->finish();
+
+			$this->dbm->release( $conn, $this->dbname );
+		}
+		catch( \Exception $e )
+		{
+			$this->dbm->release( $conn, $this->dbname );
+
+			error_log( __METHOD__ . ': ' . $e->getMessage() );
+			return false;
+		}
+
+		return true;
 	}
 
 
@@ -130,11 +165,11 @@ class DB
 	 *
 	 * @inheritDoc
 	 *
-	 * @param array $keys List of key strings that identify the cache entries
-	 * 	that should be removed
-	 * @throws \Aimeos\MW\Cache\Exception If the cache server doesn't respond
+	 * @param iterable $keys List of key strings that identify the cache entries that should be removed
+	 * @return bool True if the items were successfully removed. False if there was an error.
+	 * @throws \Psr\SimpleCache\InvalidArgumentException
 	 */
-	public function deleteList( array $keys )
+	public function deleteMultiple( iterable $keys ) : bool
 	{
 		$conn = $this->dbm->acquire( $this->dbname );
 
@@ -145,7 +180,7 @@ class DB
 
 			$types = $this->getSearchTypes( $this->searchConfig );
 			$translations = $this->getSearchTranslations( $this->searchConfig );
-			$conditions = $search->getConditionString( $types, $translations );
+			$conditions = $search->getConditionSource( $types, $translations );
 
 			$stmt = $conn->create( str_replace( ':cond', $conditions, $this->sql['delete'] ) );
 			$stmt->bind( 1, $this->siteid, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
@@ -156,8 +191,12 @@ class DB
 		catch( \Exception $e )
 		{
 			$this->dbm->release( $conn, $this->dbname );
-			throw $e;
+
+			error_log( __METHOD__ . ': ' . $e->getMessage() );
+			return false;
 		}
+
+		return true;
 	}
 
 
@@ -166,11 +205,12 @@ class DB
 	 *
 	 * @inheritDoc
 	 *
-	 * @param string[] $tags List of tag strings that are associated to one or more
-	 * 	cache entries that should be removed
-	 * @throws \Aimeos\MW\Cache\Exception If the cache server doesn't respond
+	 * @param iterable $tags List of tag strings that are associated to one or
+	 *  more cache entries that should be removed
+	 * @return bool True if the items were successfully removed. False if there was an error.
+	 * @throws \Psr\SimpleCache\InvalidArgumentException
 	 */
-	public function deleteByTags( array $tags )
+	public function deleteByTags( iterable $tags ) : bool
 	{
 		$conn = $this->dbm->acquire( $this->dbname );
 
@@ -181,7 +221,7 @@ class DB
 
 			$types = $this->getSearchTypes( $this->searchConfig );
 			$translations = $this->getSearchTranslations( $this->searchConfig );
-			$conditions = $search->getConditionString( $types, $translations );
+			$conditions = $search->getConditionSource( $types, $translations );
 
 			$stmt = $conn->create( str_replace( ':cond', $conditions, $this->sql['deletebytag'] ) );
 			$stmt->bind( 1, $this->siteid, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
@@ -193,35 +233,12 @@ class DB
 		catch( \Exception $e )
 		{
 			$this->dbm->release( $conn, $this->dbname );
-			throw $e;
+
+			error_log( __METHOD__ . ': ' . $e->getMessage() );
+			return false;
 		}
-	}
 
-
-	/**
-	 * Removes all entries of the site from the cache.
-	 *
-	 * @inheritDoc
-	 *
-	 * @throws \Aimeos\MW\Cache\Exception If the cache server doesn't respond
-	 */
-	public function flush()
-	{
-		$conn = $this->dbm->acquire( $this->dbname );
-
-		try
-		{
-			$stmt = $conn->create( str_replace( ':cond', '1', $this->sql['delete'] ) );
-			$stmt->bind( 1, $this->siteid, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->execute()->finish();
-
-			$this->dbm->release( $conn, $this->dbname );
-		}
-		catch( \Exception $e )
-		{
-			$this->dbm->release( $conn, $this->dbname );
-			throw $e;
-		}
+		return true;
 	}
 
 
@@ -231,14 +248,15 @@ class DB
 	 * @inheritDoc
 	 *
 	 * @param string[] $keys List of key strings for the requested cache entries
-	 * @return array Associative list of key/value pairs for the requested cache
+	 * @param mixed $default Default value to return for keys that do not exist
+	 * @return iterable Associative list of key/value pairs for the requested cache
 	 * 	entries. If a cache entry doesn't exist, neither its key nor a value
 	 * 	will be in the result list
 	 * @throws \Aimeos\MW\Cache\Exception If the cache server doesn't respond
 	 */
-	public function getList( array $keys )
+	public function getMultiple( iterable $keys, $default = null ) : iterable
 	{
-		$list = array();
+		$list = [];
 		$conn = $this->dbm->acquire( $this->dbname );
 
 		try
@@ -256,14 +274,14 @@ class DB
 
 			$types = $this->getSearchTypes( $this->searchConfig );
 			$translations = $this->getSearchTranslations( $this->searchConfig );
-			$conditions = $search->getConditionString( $types, $translations );
+			$conditions = $search->getConditionSource( $types, $translations );
 
 			$stmt = $conn->create( str_replace( ':cond', $conditions, $this->sql['get'] ) );
 			$stmt->bind( 1, $this->siteid, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 			$result = $stmt->execute();
 
 			while( ( $row = $result->fetch() ) !== false ) {
-				$list[ $row['id'] ] = $row['value'];
+				$list[$row['id']] = (string) $row['value'];
 			}
 
 			$this->dbm->release( $conn, $this->dbname );
@@ -271,7 +289,14 @@ class DB
 		catch( \Exception $e )
 		{
 			$this->dbm->release( $conn, $this->dbname );
-			throw $e;
+			error_log( __METHOD__ . ': ' . $e->getMessage() );
+		}
+
+		foreach( $keys as $key )
+		{
+			if( !isset( $list[$key] ) ) {
+				$list[$key] = $default;
+			}
 		}
 
 		return $list;
@@ -279,19 +304,17 @@ class DB
 
 
 	/**
-	 * Returns the cached keys and values associated to the given tags if available.
+	 * Determines whether an item is present in the cache.
 	 *
 	 * @inheritDoc
 	 *
-	 * @param string[] $tags List of tag strings associated to the requested cache entries
-	 * @return array Associative list of key/value pairs for the requested cache
-	 * 	entries. If a tag isn't associated to any cache entry, nothing is returned
-	 * 	for that tag
-	 * @throws \Aimeos\MW\Cache\Exception If the cache server doesn't respond
+	 * @param string $key The cache item key
+	 * @return bool True if cache entry is available, false if not
+	 * @throws \Psr\SimpleCache\InvalidArgumentException
 	 */
-	public function getListByTags( array $tags )
+	public function has( string $key ) : bool
 	{
-		$list = array();
+		$return = false;
 		$conn = $this->dbm->acquire( $this->dbname );
 
 		try
@@ -302,22 +325,21 @@ class DB
 				$search->compare( '==', 'cache.expire', null ),
 			);
 			$expr = array(
-				$search->compare( '==', 'cache.tag.name', $tags ),
+				$search->compare( '==', 'cache.id', $key ),
 				$search->combine( '||', $expires ),
 			);
 			$search->setConditions( $search->combine( '&&', $expr ) );
 
 			$types = $this->getSearchTypes( $this->searchConfig );
 			$translations = $this->getSearchTranslations( $this->searchConfig );
-			$conditions = $search->getConditionString( $types, $translations );
+			$conditions = $search->getConditionSource( $types, $translations );
 
-			$stmt = $conn->create( str_replace( ':cond', $conditions, $this->sql['getbytag'] ) );
+			$stmt = $conn->create( str_replace( ':cond', $conditions, $this->sql['get'] ) );
 			$stmt->bind( 1, $this->siteid, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 2, $this->siteid, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 			$result = $stmt->execute();
 
-			while( ( $row = $result->fetch() ) !== false ) {
-				$list[ $row['id'] ] = $row['value'];
+			while( $result->fetch() !== false ) {
+				$return = true;
 			}
 
 			$this->dbm->release( $conn, $this->dbname );
@@ -325,10 +347,10 @@ class DB
 		catch( \Exception $e )
 		{
 			$this->dbm->release( $conn, $this->dbname );
-			throw $e;
+			error_log( __METHOD__ . ': ' . $e->getMessage() );
 		}
 
-		return $list;
+		return $return;
 	}
 
 
@@ -338,18 +360,18 @@ class DB
 	 *
 	 * @inheritDoc
 	 *
-	 * @param array $pairs Associative list of key/value pairs. Both must be
-	 * 	a string
-	 * @param array $tags Associative list of key/tag or key/tags pairs that should be
-	 * 	associated to the values identified by their key. The value associated
-	 * 	to the key can either be a tag string or an array of tag strings
-	 * @param array $expires Associative list of key/datetime pairs.
-	 * @throws \Aimeos\MW\Cache\Exception If the cache server doesn't respond
+	 * @param iterable $pairs Associative list of key/value pairs. Both must be a string
+	 * @param \DateInterval|int|string|null $expires Date interval object,
+	 *  date/time string in "YYYY-MM-DD HH:mm:ss" format or as integer TTL value
+	 *  when the cache entry will expiry
+	 * @param iterable $tags List of tags that should be associated to the cache entries
+	 * @return bool True on success and false on failure.
+	 * @throws \Psr\SimpleCache\InvalidArgumentException
 	 */
-	public function setList( array $pairs, array $tags = array(), array $expires = array() )
+	public function setMultiple( iterable $pairs, $expires = null, iterable $tags = [] ) : bool
 	{
 		// Remove existing entries first to avoid duplicate key conflicts
-		$this->deleteList( array_keys( $pairs ) );
+		$this->deleteMultiple( array_keys( $pairs ) );
 
 		$type = ( count( $pairs ) > 1 ? \Aimeos\MW\DB\Connection\Base::TYPE_PREP : \Aimeos\MW\DB\Connection\Base::TYPE_SIMPLE );
 		$conn = $this->dbm->acquire( $this->dbname );
@@ -362,23 +384,24 @@ class DB
 
 			foreach( $pairs as $key => $value )
 			{
-				$date = ( isset( $expires[$key] ) ? $expires[$key] : null );
+				if( $expires instanceof \DateInterval ) {
+					$expires = date_create()->add( $expires )->format( 'Y-m-d H:i:s' );
+				} elseif( is_int( $expires ) ) {
+					$expires = date( 'Y-m-d H:i:s', time() + $expires );
+				}
 
-				$stmt->bind( 1, $key );
+				$stmt->bind( 1, (string) $key );
 				$stmt->bind( 2, $this->siteid, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-				$stmt->bind( 3, $date );
-				$stmt->bind( 4, $value );
+				$stmt->bind( 3, $expires );
+				$stmt->bind( 4, (string) $value );
 				$stmt->execute()->finish();
 
-				if( isset( $tags[$key] ) )
+				foreach( $tags as $name )
 				{
-					foreach( (array) $tags[$key] as $name )
-					{
-						$stmtTag->bind( 1, $key );
-						$stmtTag->bind( 2, $this->siteid, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-						$stmtTag->bind( 3, $name );
-						$stmtTag->execute()->finish();
-					}
+					$stmtTag->bind( 1, (string) $key );
+					$stmtTag->bind( 2, $this->siteid, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+					$stmtTag->bind( 3, (string) $name );
+					$stmtTag->execute()->finish();
 				}
 			}
 
@@ -389,8 +412,12 @@ class DB
 		{
 			$conn->rollback();
 			$this->dbm->release( $conn, $this->dbname );
-			throw $e;
+
+			error_log( __METHOD__ . ': ' . $e->getMessage() );
+			return false;
 		}
+
+		return true;
 	}
 
 

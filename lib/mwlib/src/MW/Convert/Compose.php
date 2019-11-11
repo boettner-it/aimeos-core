@@ -2,7 +2,7 @@
 
 /**
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Convert
  */
@@ -25,11 +25,11 @@ class Compose implements \Aimeos\MW\Convert\Iface
 	/**
 	 * Initializes the compose object.
 	 *
-	 * @param array $converter Instances of converter classes
+	 * @param \Aimeos\MW\Convert\Iface[] $converter Instances of converter classes
 	 */
 	public function __construct( array $converter )
 	{
-		$this->converter = $converter;
+		$this->converter = \Aimeos\MW\Common\Base::checkClassList( \Aimeos\MW\Convert\Iface::class, $converter );
 	}
 
 

@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Observer
  */
@@ -25,10 +25,10 @@ interface Iface
 	 *
 	 * @param \Aimeos\MW\Observer\Listener\Iface $l Object implementing listener interface
 	 * @param string $action Name of the action to listen for
-	 * @return void
+	 * @return \Aimeos\MW\Observer\Publisher\Iface Publisher object for method chaining
 	 */
 
-	public function addListener( \Aimeos\MW\Observer\Listener\Iface $l, $action );
+	public function attach( \Aimeos\MW\Observer\Listener\Iface $l, $action );
 
 
 	/**
@@ -36,8 +36,8 @@ interface Iface
 	 *
 	 * @param \Aimeos\MW\Observer\Listener\Iface $l Object implementing listener interface
 	 * @param string $action Name of the action to remove listener from
-	 * @return void
+	 * @return \Aimeos\MW\Observer\Publisher\Iface Publisher object for method chaining
 	 */
 
-	public function removeListener( \Aimeos\MW\Observer\Listener\Iface $l, $action );
+	public function detach( \Aimeos\MW\Observer\Listener\Iface $l, $action );
 }

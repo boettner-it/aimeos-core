@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2014
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2014
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Service
  */
@@ -19,35 +19,54 @@ namespace Aimeos\MShop\Service\Provider\Decorator;
  * @subpackage Service
  */
 class Reduction
-extends \Aimeos\MShop\Service\Provider\Decorator\Base
+	extends \Aimeos\MShop\Service\Provider\Decorator\Base
+	implements \Aimeos\MShop\Service\Provider\Decorator\Iface
 {
 	private $beConfig = array(
 		'reduction.percent' => array(
 			'code' => 'reduction.percent',
-			'internalcode'=> 'reduction.percent',
-			'label'=> 'Percent: Decimal value in percent (positive or negative)',
-			'type'=> 'number',
-			'internaltype'=> 'number',
-			'default'=> 0,
-			'required'=> false,
+			'internalcode' => 'reduction.percent',
+			'label' => 'Decimal value in percent (positive or negative)',
+			'type' => 'number',
+			'internaltype' => 'float',
+			'default' => '',
+			'required' => true,
+		),
+		'reduction.product-costs' => array(
+			'code' => 'reduction.product-costs',
+			'internalcode' => 'reduction.product-costs',
+			'label' => 'Include product costs in reduction calculation',
+			'type' => 'boolean',
+			'internaltype' => 'boolean',
+			'default' => '0',
+			'required' => false,
 		),
 		'reduction.basket-value-min' => array(
 			'code' => 'reduction.basket-value-min',
-			'internalcode'=> 'reduction.basket-value-min',
-			'label'=> 'Percent: Minimum basket value required before increasing/decreasing costs',
-			'type'=> 'map',
-			'internaltype'=> 'map',
-			'default'=> 0,
-			'required'=> false,
+			'internalcode' => 'reduction.basket-value-min',
+			'label' => 'Apply decorator over this basket value',
+			'type' => 'map',
+			'internaltype' => 'array',
+			'default' => [],
+			'required' => false,
 		),
 		'reduction.basket-value-max' => array(
 			'code' => 'reduction.basket-value-max',
-			'internalcode'=> 'reduction.basket-value-max',
-			'label'=> 'Percent: Maximum basket value required until increasing/decreasing costs',
-			'type'=> 'map',
-			'internaltype'=> 'map',
-			'default'=> 0,
-			'required'=> false,
+			'internalcode' => 'reduction.basket-value-max',
+			'label' => 'Apply decorator up to this basket value',
+			'type' => 'map',
+			'internaltype' => 'array',
+			'default' => [],
+			'required' => false,
+		),
+		'reduction.product-costs' => array(
+			'code' => 'reduction.product-costs',
+			'internalcode' => 'reduction.product-costs',
+			'label' => 'Include product shipping costs in reduction',
+			'type' => 'boolean',
+			'internaltype' => 'boolean',
+			'default' => 0,
+			'required' => false,
 		),
 	);
 
@@ -76,13 +95,7 @@ extends \Aimeos\MShop\Service\Provider\Decorator\Base
 	 */
 	public function getConfigBE()
 	{
-		$list = $this->getProvider()->getConfigBE();
-
-		foreach( $this->beConfig as $key => $config ) {
-			$list[$key] = new \Aimeos\MW\Criteria\Attribute\Standard( $config );
-		}
-
-		return $list;
+		return array_merge( $this->getProvider()->getConfigBE(), $this->getConfigItems( $this->beConfig ) );
 	}
 
 
@@ -96,31 +109,33 @@ extends \Aimeos\MShop\Service\Provider\Decorator\Base
 	 */
 	public function calcPrice( \Aimeos\MShop\Order\Item\Base\Iface $basket )
 	{
-		$config = $this->getServiceItem()->getConfig();
-
 		$price = $this->getProvider()->calcPrice( $basket );
 		$total = $basket->getPrice()->getValue() + $basket->getPrice()->getRebate();
 		$currency = $price->getCurrencyId();
+		$item = $this->getServiceItem();
+		$costs = 0;
 
-		if( isset( $config['reduction.basket-value-min'][$currency] )
-			&& $total < $config['reduction.basket-value-min'][$currency]
-		) {
+		if( ( $val = $item->getConfigValue( 'reduction.basket-value-min/' . $currency ) ) !== null && $val > $total ) {
 			return $price;
 		}
 
-		if( isset( $config['reduction.basket-value-max'][$currency] )
-			&& $total > $config['reduction.basket-value-max'][$currency]
-		) {
+		if( ( $val = $item->getConfigValue( 'reduction.basket-value-max/' . $currency ) ) !== null && $val < $total ) {
 			return $price;
 		}
 
-		if( isset( $config['reduction.percent'] ) )
+		if( $item->getConfigValue( 'reduction.product-costs' ) )
 		{
-			$reduction = $price->getCosts() * $config['reduction.percent'] / 100;
-			$price->setRebate( $price->getRebate() + $reduction );
-			$price->setCosts( $price->getCosts() - $reduction );
+			foreach( $basket->getProducts() as $orderProduct )
+			{
+				$costs += $orderProduct->getPrice()->getCosts() * $orderProduct->getQuantity();
+
+				foreach( $orderProduct->getProducts() as $subProduct ) {
+					$costs += $subProduct->getPrice()->getCosts() * $subProduct->getQuantity();
+				}
+			}
 		}
 
-		return $price;
+		$sub = ( $price->getCosts() + $costs ) * $item->getConfigValue( 'reduction.percent' ) / 100;
+		return $price->setRebate( $price->getRebate() + $sub )->setCosts( $price->getCosts() - $sub );
 	}
 }

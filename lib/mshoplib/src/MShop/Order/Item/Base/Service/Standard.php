@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Order
  */
@@ -18,15 +18,8 @@ namespace Aimeos\MShop\Order\Item\Base\Service;
  * @package MShop
  * @subpackage Order
  */
-class Standard
-	extends \Aimeos\MShop\Order\Item\Base\Service\Base
-	implements \Aimeos\MShop\Order\Item\Base\Service\Iface
+class Standard extends Base implements Iface
 {
-	private $price;
-	private $attributes;
-	private $attributesMap;
-	private $values;
-
 	/**
 	 * Initializes the order base service item
 	 *
@@ -34,49 +27,55 @@ class Standard
 	 * @param array $values Values to be set on initialisation
 	 * @param array $attributes Attributes to be set on initialisation
 	 */
-	public function __construct( \Aimeos\MShop\Price\Item\Iface $price, array $values = array(), array $attributes = array() )
+	public function __construct( \Aimeos\MShop\Price\Item\Iface $price, array $values = [], array $attributes = [] )
 	{
-		parent::__construct( 'order.base.service.', $values );
-
-		$this->values = $values;
-		$this->price = $price;
-
-		\Aimeos\MW\Common\Base::checkClassList( '\\Aimeos\\MShop\\Order\\Item\\Base\\Service\\Attribute\\Iface', $attributes );
-		$this->attributes = $attributes;
+		parent::__construct( $price, $values, $attributes );
 	}
 
 
 	/**
-	 * Clones internal objects of the order base service item.
+	 * Returns the ID of the site the item is stored
+	 *
+	 * @return string|null Site ID (or null if not available)
 	 */
-	public function __clone()
+	public function getSiteId()
 	{
-		$this->price = clone $this->price;
+		return $this->get( 'order.base.service.siteid' );
+	}
+
+
+	/**
+	 * Sets the site ID of the item.
+	 *
+	 * @param string $value Unique site ID of the item
+	 * @return \Aimeos\MShop\Order\Item\Base\Service\Iface Order base service item for chaining method calls
+	 */
+	public function setSiteId( $value )
+	{
+		return $this->set( 'order.base.service.siteid', (string) $value );
 	}
 
 
 	/**
 	 * Returns the order base ID of the order service if available.
 	 *
-	 * @return integer|null Base ID of the item.
+	 * @return string|null Base ID of the item.
 	 */
 	public function getBaseId()
 	{
-		return ( isset( $this->values['baseid'] ) ? (int) $this->values['baseid'] : null );
+		return $this->get( 'order.base.service.baseid' );
 	}
 
 
 	/**
 	 * Sets the order service base ID of the order service item.
 	 *
-	 * @param integer|null $value Order service base ID
+	 * @param string $value Order service base ID
+	 * @return \Aimeos\MShop\Order\Item\Base\Service\Iface Order base service item for chaining method calls
 	 */
 	public function setBaseId( $value )
 	{
-		if( $value == $this->getBaseId() ) { return; }
-
-		$this->values['baseid'] = ( $value !== null ? (int) $value : null );
-		$this->setModified();
+		return $this->set( 'order.base.service.baseid', (string) $value );
 	}
 
 
@@ -87,7 +86,7 @@ class Standard
 	 */
 	public function getServiceId()
 	{
-		return( isset( $this->values['servid'] ) ? (string) $this->values['servid'] : '' );
+		return (string) $this->get( 'order.base.service.serviceid', '' );
 	}
 
 
@@ -95,13 +94,11 @@ class Standard
 	 * Sets a new ID of the service item used for the order.
 	 *
 	 * @param string $servid ID of the service item used for the order
+	 * @return \Aimeos\MShop\Order\Item\Base\Service\Iface Order base service item for chaining method calls
 	 */
 	public function setServiceId( $servid )
 	{
-		if( $servid == $this->getServiceId() ) { return; }
-
-		$this->values['servid'] = (string) $servid;
-		$this->setModified();
+		return $this->set( 'order.base.service.serviceid', (string) $servid );
 	}
 
 
@@ -112,7 +109,7 @@ class Standard
 	 */
 	public function getCode()
 	{
-		return ( isset( $this->values['code'] ) ? (string) $this->values['code'] : '' );
+		return (string) $this->get( 'order.base.service.code', '' );
 	}
 
 
@@ -120,15 +117,11 @@ class Standard
 	 * Sets a new code for the service item.
 	 *
 	 * @param string $code Code as defined by the service provider
+	 * @return \Aimeos\MShop\Order\Item\Base\Service\Iface Order base service item for chaining method calls
 	 */
 	public function setCode( $code )
 	{
-		$this->checkCode( $code );
-
-		if( $code == $this->getCode() ) { return; }
-
-		$this->values['code'] = (string) $code;
-		$this->setModified();
+		return $this->set( 'order.base.service.code', $this->checkCode( $code ) );
 	}
 
 
@@ -139,7 +132,7 @@ class Standard
 	 */
 	public function getName()
 	{
-		return ( isset( $this->values['name'] ) ? (string) $this->values['name'] : '' );
+		return (string) $this->get( 'order.base.service.name', '' );
 	}
 
 
@@ -147,13 +140,11 @@ class Standard
 	 * Sets a new name for the service item.
 	 *
 	 * @param string $name service item name
+	 * @return \Aimeos\MShop\Order\Item\Base\Service\Iface Order base service item for chaining method calls
 	 */
 	public function setName( $name )
 	{
-		if( $name == $this->getName() ) { return; }
-
-		$this->values['name'] = (string) $name;
-		$this->setModified();
+		return $this->set( 'order.base.service.name', (string) $name );
 	}
 
 
@@ -164,7 +155,7 @@ class Standard
 	 */
 	public function getType()
 	{
-		return ( isset( $this->values['type'] ) ? (string) $this->values['type'] : null );
+		return (string) $this->get( 'order.base.service.type', '' );
 	}
 
 
@@ -172,13 +163,11 @@ class Standard
 	 * Sets a new type for the service item.
 	 *
 	 * @param string $type Type of the service item
+	 * @return \Aimeos\MShop\Order\Item\Base\Service\Iface Order base service item for chaining method calls
 	 */
 	public function setType( $type )
 	{
-		if( $type == $this->getType() ) { return; }
-
-		$this->values['type'] = (string) $type;
-		$this->setModified();
+		return $this->set( 'order.base.service.type', $this->checkCode( $type ) );
 	}
 
 
@@ -189,7 +178,7 @@ class Standard
 	 */
 	public function getMediaUrl()
 	{
-		return ( isset( $this->values['mediaurl'] ) ? (string) $this->values['mediaurl'] : '' );
+		return (string) $this->get( 'order.base.service.mediaurl', '' );
 	}
 
 
@@ -197,194 +186,96 @@ class Standard
 	 * Sets the media url of the service item.
 	 *
 	 * @param string $value Location of the media/picture
+	 * @return \Aimeos\MShop\Order\Item\Base\Service\Iface Order base service item for chaining method calls
 	 */
 	public function setMediaUrl( $value )
 	{
-		if( $value == $this->getMediaUrl() ) {
-			return;
+		return $this->set( 'order.base.service.mediaurl', (string) $value );
+	}
+
+
+	/**
+	 * Returns the position of the service in the order.
+	 *
+	 * @return integer|null Service position in the order from 0-n
+	 */
+	public function getPosition()
+	{
+		return $this->get( 'order.base.service.position' );
+	}
+
+
+	/**
+	 * Sets the position of the service within the list of ordered servicees
+	 *
+	 * @param integer|null $value Service position in the order from 0-n or null for resetting the position
+	 * @return \Aimeos\MShop\Order\Item\Base\Service\Iface Order base service item for chaining method calls
+	 * @throws \Aimeos\MShop\Order\Exception If the position is invalid
+	 */
+	public function setPosition( $value )
+	{
+		if( $value < 0 ) {
+			throw new \Aimeos\MShop\Order\Exception( sprintf( 'Order service position "%1$s" must be greater than 0', $value ) );
 		}
 
-		$this->values['mediaurl'] = (string) $value;
-		$this->setModified();
+		return $this->set( 'order.base.service.position', ( $value !== null ? (int) $value : null ) );
 	}
 
 
-	/**
-	 * Returns the price object which belongs to the service item.
+	/*
+	 * Sets the item values from the given array and removes that entries from the list
 	 *
-	 * @return \Aimeos\MShop\Price\Item\Iface Price item
+	 * @param array &$list Associative list of item keys and their values
+	 * @param boolean True to set private properties too, false for public only
+	 * @return \Aimeos\MShop\Order\Item\Base\Service\Iface Order service item for chaining method calls
 	 */
-	public function getPrice()
+	public function fromArray( array &$list, $private = false )
 	{
-		return $this->price;
-	}
-
-
-	/**
-	 * Sets a new price object for the service item.
-	 *
-	 * @param \Aimeos\MShop\Price\Item\Iface $price Price item
-	 */
-	public function setPrice( \Aimeos\MShop\Price\Item\Iface $price )
-	{
-		if( $price === $this->price ) { return; }
-
-		$this->price = $price;
-		$this->setModified();
-	}
-
-
-	/**
-	 * Returns the value of the attribute item for the service with the given code.
-	 *
-	 * @param string $code code of the service attribute item
-	 * @param string $type Type of the service attribute item
-	 * @return string|null value of the attribute item for the service and the given code
-	 */
-	public function getAttribute( $code, $type = '' )
-	{
-		$map = $this->getAttributeMap();
-
-		if( isset( $map[$type][$code] ) ) {
-			return $map[$type][$code]->getValue();
-		}
-
-		return null;
-	}
-
-	/**
-	 * Returns the attribute item for the service with the given code.
-	 *
-	 * @param string $code Code of the service attribute item
-	 * @param string $type Type of the service attribute item
-	 * @return \Aimeos\MShop\Order\Item\Base\Service\Attribute\Iface|null Attribute item for the service and the given code
-	 */
-	public function getAttributeItem( $code, $type = '' )
-	{
-		$map = $this->getAttributeMap();
-
-		if( isset( $map[$type][$code] ) ) {
-			return $map[$type][$code];
-		}
-
-		return null;
-	}
-
-
-	/**
-	 * Adds or replaces the attribute item in the list of service attributes.
-	 *
-	 * @param \Aimeos\MShop\Order\Item\Base\Service\Attribute\Iface $item Service attribute item
-	 */
-	public function setAttributeItem( \Aimeos\MShop\Order\Item\Base\Service\Attribute\Iface $item )
-	{
-		$this->getAttributeMap();
-
-		$type = $item->getType();
-		$code = $item->getCode();
-
-		if( !isset( $this->attributesMap[$type][$code] ) )
-		{
-			$this->attributesMap[$type][$code] = $item;
-			$this->attributes[] = $item;
-		}
-
-		$this->attributesMap[$type][$code]->setValue( $item->getValue() );
-		$this->setModified();
-	}
-
-
-	/**
-	 * Returns the list of attribute items for the service.
-	 *
-	 * @param string|null $type Filters returned attributes by the given type or null for no filtering
-	 * @return array List of attribute items implementing \Aimeos\MShop\Order\Item\Base\Service\Attribute\Iface
-	 */
-	public function getAttributes( $type = null )
-	{
-		if( $type === null ) {
-			return $this->attributes;
-		}
-
-		$map = $this->getAttributeMap();
-
-		if( isset( $map[$type] ) ) {
-			return $map[$type];
-		}
-
-		return array();
-	}
-
-
-	/**
-	 * Sets the new list of attribute items for the service.
-	 *
-	 * @param array $attributes List of attribute items implementing \Aimeos\MShop\Order\Item\Base\Service\Attribute\Iface
-	 */
-	public function setAttributes( array $attributes )
-	{
-		\Aimeos\MW\Common\Base::checkClassList( '\\Aimeos\\MShop\\Order\\Item\\Base\\Service\\Attribute\\Iface', $attributes );
-
-		$this->attributes = $attributes;
-		$this->attributesMap = null;
-		$this->setModified();
-	}
-
-
-	/**
-	 * Sets the item values from the given array.
-	 *
-	 * @param array $list Associative list of item keys and their values
-	 * @return array Associative list of keys and their values that are unknown
-	 */
-	public function fromArray( array $list )
-	{
-		$unknown = array();
-		$list = parent::fromArray( $list );
+		$item = parent::fromArray( $list, $private );
 
 		foreach( $list as $key => $value )
 		{
 			switch( $key )
 			{
-				case 'order.base.service.baseid': $this->setBaseId( $value ); break;
-				case 'order.base.service.code': $this->setCode( $value ); break;
-				case 'order.base.service.serviceid': $this->setServiceId( $value ); break;
-				case 'order.base.service.name': $this->setName( $value ); break;
-				case 'order.base.service.mediaurl': $this->setMediaUrl( $value ); break;
-				case 'order.base.service.type': $this->setType( $value ); break;
-				case 'order.base.service.price': $this->price->setValue( $value ); break;
-				case 'order.base.service.costs': $this->price->setCosts( $value ); break;
-				case 'order.base.service.rebate': $this->price->setRebate( $value ); break;
-				case 'order.base.service.taxrate': $this->price->setTaxRate( $value ); break;
-				default: $unknown[$key] = $value;
+				case 'order.base.service.siteid': !$private ?: $item = $item->setSiteId( $value ); break;
+				case 'order.base.service.baseid': !$private ?: $item = $item->setBaseId( $value ); break;
+				case 'order.base.service.serviceid': !$private ?: $item = $item->setServiceId( $value ); break;
+				case 'order.base.service.type': $item = $item->setType( $value ); break;
+				case 'order.base.service.code': $item = $item->setCode( $value ); break;
+				case 'order.base.service.name': $item = $item->setName( $value ); break;
+				case 'order.base.service.position': $item = $item->setPosition( $value ); break;
+				case 'order.base.service.mediaurl': $item = $item->setMediaUrl( $value ); break;
+				default: continue 2;
 			}
+
+			unset( $list[$key] );
 		}
 
-		return $unknown;
+		return $item;
 	}
 
 
 	/**
 	 * Returns the item values as array.
 	 *
-	 * @return Associative list of item properties and their values.
+	 * @param boolean True to return private properties, false for public only
+	 * @return array Associative list of item properties and their values.
 	 */
-	public function toArray()
+	public function toArray( $private = false )
 	{
-		$list = parent::toArray();
+		$list = parent::toArray( $private );
 
-		$price = $this->price;
-
-		$list['order.base.service.baseid'] = $this->getBaseId();
-		$list['order.base.service.code'] = $this->getCode();
-		$list['order.base.service.serviceid'] = $this->getServiceId();
-		$list['order.base.service.name'] = $this->getName();
-		$list['order.base.service.mediaurl'] = $this->getMediaUrl();
 		$list['order.base.service.type'] = $this->getType();
-		$list['order.base.service.price'] = $price->getValue();
-		$list['order.base.service.costs'] = $price->getCosts();
-		$list['order.base.service.rebate'] = $price->getRebate();
-		$list['order.base.service.taxrate'] = $price->getTaxRate();
+		$list['order.base.service.code'] = $this->getCode();
+		$list['order.base.service.name'] = $this->getName();
+		$list['order.base.service.position'] = $this->getPosition();
+		$list['order.base.service.mediaurl'] = $this->getMediaUrl();
+
+		if( $private === true )
+		{
+			$list['order.base.service.baseid'] = $this->getBaseId();
+			$list['order.base.service.serviceid'] = $this->getServiceId();
+		}
 
 		return $list;
 	}
@@ -394,39 +285,22 @@ class Standard
 	 * Copys all data from a given service item.
 	 *
 	 * @param \Aimeos\MShop\Service\Item\Iface $service New service item
+	 * @return \Aimeos\MShop\Order\Item\Base\Service\Iface Order base service item for chaining method calls
 	 */
 	public function copyFrom( \Aimeos\MShop\Service\Item\Iface $service )
 	{
+		$this->setSiteId( $service->getSiteId() );
 		$this->setCode( $service->getCode() );
 		$this->setName( $service->getName() );
 		$this->setType( $service->getType() );
 		$this->setServiceId( $service->getId() );
 
 		$items = $service->getRefItems( 'media', 'default', 'default' );
+
 		if( ( $item = reset( $items ) ) !== false ) {
 			$this->setMediaUrl( $item->getUrl() );
 		}
 
-		$this->setModified();
-	}
-
-
-	/**
-	 * Returns the attribute map for the service.
-	 *
-	 * @return array Associative list of type and code as key and an \Aimeos\MShop\Order\Item\Base\Service\Attribute\Iface as value
-	 */
-	protected function getAttributeMap()
-	{
-		if( !isset( $this->attributesMap ) )
-		{
-			$this->attributesMap = array();
-
-			foreach( $this->attributes as $attribute ) {
-				$this->attributesMap[$attribute->getType()][$attribute->getCode()] = $attribute;
-			}
-		}
-
-		return $this->attributesMap;
+		return $this->setModified();
 	}
 }

@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2013
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2013
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage View
  */
@@ -20,7 +20,7 @@ namespace Aimeos\MW\View\Helper\Url;
  */
 class None
 	extends \Aimeos\MW\View\Helper\Base
-	implements \Aimeos\MW\View\Helper\Iface
+	implements \Aimeos\MW\View\Helper\Url\Iface
 {
 	/**
 	 * Returns an empty string as URL.
@@ -33,7 +33,7 @@ class None
 	 * @param array $config Additional configuration parameter per URL
 	 * @return string Complete URL that can be used in the template
 	 */
-	public function transform( $target = null, $controller = null, $action = null, array $params = array(), array $trailing = array(), array $config = array() )
+	public function transform( $target = null, $controller = null, $action = null, array $params = [], array $trailing = [], array $config = [] )
 	{
 		return '';
 	}

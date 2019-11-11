@@ -3,7 +3,7 @@
 /**
  * @copyright Metaways Infosystems GmbH, 2014
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package Controller
  * @subpackage Common
  */
@@ -24,7 +24,7 @@ interface Iface
 	 * Initializes the object.
 	 *
 	 * @param \Aimeos\MShop\Context\Item\Iface $context
-	 * @return void
+	 * @return null
 	 */
 	public function __construct( \Aimeos\MShop\Context\Item\Iface $context );
 
@@ -46,7 +46,7 @@ interface Iface
 	 * meantime. This can lead to an oversell of products!
 	 *
 	 * @param \Aimeos\MShop\Order\Item\Iface $orderItem Order item object
-	 * @return void
+	 * @return \Aimeos\MShop\Order\Item\Iface Order item object
 	 */
 	public function block( \Aimeos\MShop\Order\Item\Iface $orderItem );
 
@@ -68,7 +68,7 @@ interface Iface
 	 * meantime. This can lead to an oversell of products!
 	 *
 	 * @param \Aimeos\MShop\Order\Item\Iface $orderItem Order item object
-	 * @return void
+	 * @return \Aimeos\MShop\Order\Item\Iface Order item object
 	 */
 	public function unblock( \Aimeos\MShop\Order\Item\Iface $orderItem );
 
@@ -86,7 +86,7 @@ interface Iface
 	 * nothing as long as the payment status hasn't changed in the meantime.
 	 *
 	 * @param \Aimeos\MShop\Order\Item\Iface $orderItem Order item object
-	 * @return void
+	 * @return \Aimeos\MShop\Order\Item\Iface Order item object
 	 */
 	public function update( \Aimeos\MShop\Order\Item\Iface $orderItem );
 }

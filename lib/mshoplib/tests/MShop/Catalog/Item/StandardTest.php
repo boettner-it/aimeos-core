@@ -1,18 +1,15 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 namespace Aimeos\MShop\Catalog\Item;
 
 
-/**
- * Test class for \Aimeos\MShop\Catalog\Item\Standard.
- */
-class StandardTest extends \PHPUnit_Framework_TestCase
+class StandardTest extends \PHPUnit\Framework\TestCase
 {
 	private $node;
 	private $object;
@@ -20,43 +17,35 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	private $listItems;
 
 
-	/**
-	 * Sets up the fixture, for example, opens a network connection.
-	 * This method is called before a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function setUp()
 	{
-		$listValues = array( 'id' => 1, 'type' => 'default', 'domain' => 'text' );
-		$this->listItems = array( 1 => new \Aimeos\MShop\Common\Item\Lists\Standard( 'catalog.lists.', $listValues ) );
+		$listValues = ['id' => 1, 'type' => 'default', 'domain' => 'text'];
+		$this->listItems = ['text' => [1 => new \Aimeos\MShop\Common\Item\Lists\Standard( 'catalog.lists.', $listValues )]];
 
 		$this->values = array(
 			'id' => 2,
+			'parentid' => 3,
+			'level' => 1,
 			'code' => 'unit-test',
 			'label' => 'unittest',
-			'config' => array( 'testcategory' => '10' ),
+			'config' => ['testcategory' => '10'],
 			'status' => 1,
 			'siteid' => '99',
 			'mtime' => '2011-01-01 00:00:02',
 			'ctime' => '2011-01-01 00:00:01',
 			'editor' => 'unitTestUser',
+			'target' => 'testtarget',
 			'hasChildren' => true
 		);
 
 		$this->node = new \Aimeos\MW\Tree\Node\Standard( $this->values );
-		$child = new \Aimeos\MShop\Catalog\Item\Standard( $this->node );
+		$childnode = new \Aimeos\MW\Tree\Node\Standard( array_merge( $this->values, ['id' => 3] ) );
 
+		$child = new \Aimeos\MShop\Catalog\Item\Standard( $childnode );
 		$this->object = new \Aimeos\MShop\Catalog\Item\Standard( $this->node, array( $child ), $this->listItems );
 	}
 
 
-	/**
-	 * Tears down the fixture, for example, closes a network connection.
-	 * This method is called after a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function tearDown()
 	{
 		unset( $this->object );
@@ -71,13 +60,23 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testSetId()
 	{
-		$this->object->setId( 5 );
+		$return = $this->object->setId( 5 );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Catalog\Item\Iface::class, $return );
 		$this->assertEquals( 5, $this->object->getId() );
 		$this->assertFalse( $this->object->isModified() );
 
-		$this->object->setId( null );
+		$return = $this->object->setId( null );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Catalog\Item\Iface::class, $return );
 		$this->assertEquals( null, $this->object->getId() );
 		$this->assertTrue( $this->object->isModified() );
+	}
+
+
+	public function testGetParentId()
+	{
+		$this->assertEquals( 3, $this->object->getParentId() );
 	}
 
 
@@ -89,9 +88,17 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testSetCode()
 	{
-		$this->object->setCode( 'unit test' );
+		$return = $this->object->setCode( 'unit test' );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Catalog\Item\Iface::class, $return );
 		$this->assertEquals( 'unit test', $this->object->getCode() );
 		$this->assertTrue( $this->object->isModified() );
+	}
+
+
+	public function testGetLevel()
+	{
+		$this->assertEquals( 1, $this->object->getLevel() );
 	}
 
 
@@ -103,7 +110,9 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testSetLabel()
 	{
-		$this->object->setLabel( 'unit test' );
+		$return = $this->object->setLabel( 'unit test' );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Catalog\Item\Iface::class, $return );
 		$this->assertEquals( 'unit test', $this->object->getLabel() );
 		$this->assertTrue( $this->object->isModified() );
 	}
@@ -115,9 +124,17 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	}
 
 
+	public function testGetConfigValue()
+	{
+		$this->assertEquals( '10', $this->object->getConfigValue( 'testcategory' ) );
+	}
+
+
 	public function testSetConfig()
 	{
-		$this->object->setConfig( array( 'unitcategory' => '12' ) );
+		$return = $this->object->setConfig( array( 'unitcategory' => '12' ) );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Catalog\Item\Iface::class, $return );
 		$this->assertEquals( array( 'unitcategory' => '12' ), $this->object->getConfig() );
 		$this->assertTrue( $this->object->isModified() );
 	}
@@ -131,8 +148,26 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testSetStatus()
 	{
-		$this->object->setStatus( 0 );
+		$return = $this->object->setStatus( 0 );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Catalog\Item\Iface::class, $return );
 		$this->assertEquals( 0, $this->object->getStatus() );
+		$this->assertTrue( $this->object->isModified() );
+	}
+
+
+	public function testGetTarget()
+	{
+		$this->assertEquals( 'testtarget', $this->object->getTarget() );
+	}
+
+
+	public function testSetTarget()
+	{
+		$return = $this->object->setTarget( 'ttarget' );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Catalog\Item\Iface::class, $return );
+		$this->assertEquals( 'ttarget', $this->object->getTarget() );
 		$this->assertTrue( $this->object->isModified() );
 	}
 
@@ -161,9 +196,31 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	}
 
 
+	public function testIsAvailable()
+	{
+		$this->assertTrue( $this->object->isAvailable() );
+	}
+
+
+	public function testIsAvailableOnStatus()
+	{
+		$this->assertTrue( $this->object->isAvailable() );
+		$this->object->setStatus( 0 );
+		$this->assertFalse( $this->object->isAvailable() );
+		$this->object->setStatus( -1 );
+		$this->assertFalse( $this->object->isAvailable() );
+	}
+
+
 	public function testIsModified()
 	{
 		$this->assertFalse( $this->object->isModified() );
+	}
+
+
+	public function testGetResourceType()
+	{
+		$this->assertEquals( 'catalog', $this->object->getResourceType() );
 	}
 
 
@@ -171,33 +228,37 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	{
 		$item = new \Aimeos\MShop\Catalog\Item\Standard( new \Aimeos\MW\Tree\Node\Standard() );
 
-		$list = array(
+		$list = $entries = array(
 			'catalog.id' => 1,
 			'catalog.code' => 'test',
 			'catalog.config' => array( 'test' ),
 			'catalog.label' => 'test item',
 			'catalog.status' => '0',
+			'catalog.target' => 'ttarget',
 		);
 
-		$unknown = $item->fromArray( $list );
+		$item = $item->fromArray( $entries, true );
 
-		$this->assertEquals( array(), $unknown );
+		$this->assertEquals( [], $entries );
 
 		$this->assertEquals( $list['catalog.id'], $item->getId() );
 		$this->assertEquals( $list['catalog.code'], $item->getCode() );
 		$this->assertEquals( $list['catalog.config'], $item->getConfig() );
 		$this->assertEquals( $list['catalog.status'], $item->getStatus() );
 		$this->assertEquals( $list['catalog.label'], $item->getLabel() );
+		$this->assertEquals( $list['catalog.target'], $item->getTarget() );
 	}
 
 
 	public function testToArray()
 	{
-		$values = $this->object->toArray();
+		$values = $this->object->toArray( true );
 
 		$this->assertEquals( count( $this->values ), count( $values ) );
 
 		$this->assertEquals( $this->values['id'], $values['catalog.id'] );
+		$this->assertEquals( $this->values['level'], $values['catalog.level'] );
+		$this->assertEquals( $this->values['parentid'], $values['catalog.parentid'] );
 		$this->assertEquals( $this->values['label'], $values['catalog.label'] );
 		$this->assertEquals( $this->values['config'], $values['catalog.config'] );
 		$this->assertEquals( $this->values['status'], $values['catalog.status'] );
@@ -206,6 +267,7 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals( $this->values['ctime'], $values['catalog.ctime'] );
 		$this->assertEquals( $this->values['mtime'], $values['catalog.mtime'] );
 		$this->assertEquals( $this->values['editor'], $values['catalog.editor'] );
+		$this->assertEquals( $this->values['target'], $values['catalog.target'] );
 		$this->assertEquals( $this->values['hasChildren'], $values['catalog.hasChildren'] );
 	}
 
@@ -222,29 +284,63 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals( 1, count( $children ) );
 
 		foreach( $children as $child ) {
-			$this->assertInstanceOf( '\\Aimeos\\MShop\\Catalog\\Item\\Iface', $child );
+			$this->assertInstanceOf( \Aimeos\MShop\Catalog\Item\Iface::class, $child );
 		}
-	}
-
-
-	public function testAddChild()
-	{
-		$this->object->addChild( $this->object );
-		$this->assertEquals( 2, count( $this->object->getChildren() ) );
 	}
 
 
 	public function testGetChild()
 	{
-		$this->assertInstanceOf( '\\Aimeos\\MShop\\Catalog\\Item\\Iface', $this->object->getChild( 0 ) );
+		$this->assertInstanceOf( \Aimeos\MShop\Catalog\Item\Iface::class, $this->object->getChild( 0 ) );
 
-		$this->setExpectedException( '\\Aimeos\\MShop\\Catalog\\Exception' );
+		$this->setExpectedException( \Aimeos\MShop\Catalog\Exception::class );
 		$this->object->getChild( 1 );
+	}
+
+
+	public function testAddChild()
+	{
+		$return = $this->object->addChild( $this->object );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Catalog\Item\Iface::class, $return );
+		$this->assertEquals( 2, count( $this->object->getChildren() ) );
+	}
+
+
+	public function testDeleteChild()
+	{
+		$child = $this->object->getChild( 0 );
+
+		$return = $this->object->deleteChild( $child );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Catalog\Item\Iface::class, $return );
+		$this->assertEquals( 0, count( $this->object->getChildren() ) );
+	}
+
+
+	public function testGetChildrenDeleted()
+	{
+		$child = $this->object->getChild( 0 );
+		$this->object->deleteChild( $child );
+
+		$return = $this->object->getChildrenDeleted();
+
+		$this->assertEquals( [$child], $return );
 	}
 
 
 	public function testGetNode()
 	{
-		$this->assertInstanceOf( '\\Aimeos\\MW\\Tree\\Node\\Iface', $this->object->getNode() );
+		$this->assertInstanceOf( \Aimeos\MW\Tree\Node\Iface::class, $this->object->getNode() );
+	}
+
+
+	public function testToList()
+	{
+		$list = $this->object->toList();
+
+		$this->assertEquals( 2, count( $list ) );
+		$this->assertArrayHasKey( '2', $list );
+		$this->assertArrayHasKey( '3', $list );
 	}
 }

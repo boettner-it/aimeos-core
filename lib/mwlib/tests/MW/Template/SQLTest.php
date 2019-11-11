@@ -6,11 +6,11 @@ namespace Aimeos\MW\Template;
 /**
  * Test class for \Aimeos\MW\Session\CMSLite.
  *
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
-class SQLTest extends \PHPUnit_Framework_TestCase
+class SQLTest extends \PHPUnit\Framework\TestCase
 {
 	private $object;
 
@@ -35,8 +35,8 @@ class SQLTest extends \PHPUnit_Framework_TestCase
 
 	public function testToString()
 	{
-		$template = $this->object->get('FROM');
-		$this->assertInstanceOf( '\\Aimeos\\MW\\Template\\Iface', $template );
+		$template = $this->object->get( 'FROM' );
+		$this->assertInstanceOf( \Aimeos\MW\Template\Iface::class, $template );
 
 		$this->assertEquals( 'table', $template->str() );
 	}

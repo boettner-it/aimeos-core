@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2013
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2013
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Service
  */
@@ -13,32 +13,38 @@ namespace Aimeos\MShop\Service\Provider\Decorator;
 
 
 /**
- * Decorator for service providers checking the orders of a customer.
+ * Decorator for service providers checking the orders of a customer
+ *
+ * This decorator interacts with the ServiceUpdate and Autofill basket plugins!
+ * If the delivery/payment option isn't available any more, the ServiceUpdate
+ * plugin will remove it from the basket and the Autofill plugin will add one
+ * of the available options again.
  *
  * @package MShop
  * @subpackage Service
  */
 class OrderCheck
-extends \Aimeos\MShop\Service\Provider\Decorator\Base
+	extends \Aimeos\MShop\Service\Provider\Decorator\Base
+	implements \Aimeos\MShop\Service\Provider\Decorator\Iface
 {
 	private $beConfig = array(
 		'ordercheck.total-number-min' => array(
 			'code' => 'ordercheck.total-number-min',
-			'internalcode'=> 'ordercheck.total-number-min',
-			'label'=> 'OrderCheck: Minimum successful orders',
-			'type'=> 'integer',
-			'internaltype'=> 'integer',
-			'default'=> 0,
-			'required'=> false,
+			'internalcode' => 'ordercheck.total-number-min',
+			'label' => 'Required minimum successful orders',
+			'type' => 'integer',
+			'internaltype' => 'integer',
+			'default' => 0,
+			'required' => true,
 		),
 		'ordercheck.limit-days-pending' => array(
 			'code' => 'ordercheck.limit-days-pending',
-			'internalcode'=> 'ordercheck.limit-days-pending',
-			'label'=> 'OrderCheck: Restrict if unpaid orders within time frame in days',
-			'type'=> 'integer',
-			'internaltype'=> 'integer',
-			'default'=> 0,
-			'required'=> false,
+			'internalcode' => 'ordercheck.limit-days-pending',
+			'label' => 'Number of days which must not contain pending orders',
+			'type' => 'integer',
+			'internaltype' => 'integer',
+			'default' => 0,
+			'required' => false,
 		),
 	);
 
@@ -67,13 +73,7 @@ extends \Aimeos\MShop\Service\Provider\Decorator\Base
 	 */
 	public function getConfigBE()
 	{
-		$list = $this->getProvider()->getConfigBE();
-
-		foreach( $this->beConfig as $key => $config ) {
-			$list[$key] = new \Aimeos\MW\Criteria\Attribute\Standard( $config );
-		}
-
-		return $list;
+		return array_merge( $this->getProvider()->getConfigBE(), $this->getConfigItems( $this->beConfig ) );
 	}
 
 
@@ -93,7 +93,7 @@ extends \Aimeos\MShop\Service\Provider\Decorator\Base
 			return false;
 		}
 
-		$manager = \Aimeos\MShop\Factory::createManager( $context, 'order' );
+		$manager = \Aimeos\MShop::create( $context, 'order' );
 
 		if( isset( $config['ordercheck.total-number-min'] ) )
 		{
@@ -120,7 +120,7 @@ extends \Aimeos\MShop\Service\Provider\Decorator\Base
 			$search = $manager->createSearch( true );
 			$expr = array(
 				$search->compare( '==', 'order.base.customerid', $customerId ),
-				$search->compare( '==', 'order.datepayment', date( 'Y-m-d H:i:s', $time ) ),
+				$search->compare( '>=', 'order.datepayment', date( 'Y-m-d H:i:s', $time ) ),
 				$search->compare( '==', 'order.statuspayment', \Aimeos\MShop\Order\Item\Base::PAY_PENDING ),
 				$search->getConditions(),
 			);

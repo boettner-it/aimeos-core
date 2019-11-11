@@ -2,8 +2,7 @@
 
 /**
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Metaways Infosystems GmbH, 2011
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Catalog
  */
@@ -19,52 +18,39 @@ namespace Aimeos\MShop\Catalog\Item;
  * @subpackage Catalog
  */
 interface Iface
-	extends \Aimeos\MShop\Common\Item\Config\Iface, \Aimeos\MShop\Common\Item\ListRef\Iface
+	extends \Aimeos\MShop\Common\Item\Iface, \Aimeos\MShop\Common\Item\Config\Iface,
+		\Aimeos\MShop\Common\Item\ListRef\Iface, \Aimeos\MShop\Common\Item\Tree\Iface
 {
 	/**
-	 * Returns the name of the item.
+	 * Returns the URL target specific for that category
 	 *
-	 * @return string Name of the item
+	 * @return string URL target specific for that category
 	 */
-	public function getLabel();
+	public function getTarget();
 
 	/**
-	 * Sets the new name of the item.
+	 * Sets a new URL target specific for that category
 	 *
-	 * @param string $name New name of the item
-	 * @return void
+	 * @param string $value New URL target specific for that category
+	 * @return \Aimeos\MShop\Product\Item\Iface Product item for chaining method calls
 	 */
-	public function setLabel( $name );
+	public function setTarget( $value );
 
 	/**
-	 * Returns the code of the item.
+	 * Adds a child node to this node.
 	 *
-	 * @return string Code of the item
+	 * @param \Aimeos\MShop\Common\Item\Tree\Iface $item Child node to add
+	 * @return \Aimeos\MShop\Common\Item\Tree\Iface Tree item for chaining method calls
 	 */
-	public function getCode();
+	public function addChild( \Aimeos\MShop\Common\Item\Tree\Iface $item );
 
 	/**
-	 * Sets the code of the item.
+	 * Removes a child node from this node.
 	 *
-	 * @param string $name New code of the item
-	 * @return void
+	 * @param \Aimeos\MShop\Common\Item\Tree\Iface $item Child node to remove
+	 * @return \Aimeos\MShop\Common\Item\Tree\Iface Tree item for chaining method calls
 	 */
-	public function setCode( $name );
-
-	/**
-	 * Returns the status of the item.
-	 *
-	 * @return boolean True if enabled, false if not
-	 */
-	public function getStatus();
-
-	/**
-	 * Sets the new status of the item.
-	 *
-	 * @param boolean $status True if enabled, false if not
-	 * @return void
-	 */
-	public function setStatus( $status );
+	public function deleteChild( \Aimeos\MShop\Common\Item\Tree\Iface $item );
 
 	/**
 	 * Returns a child of this node identified by its index.
@@ -82,6 +68,13 @@ interface Iface
 	public function getChildren();
 
 	/**
+	 * Returns the deleted children.
+	 *
+	 * @return \Aimeos\MShop\Catalog\Item\Iface[] List of removed children
+	 */
+	public function getChildrenDeleted();
+
+	/**
 	 * Tests if a node has children.
 	 *
 	 * @return boolean True if node has children, false if not
@@ -89,10 +82,9 @@ interface Iface
 	public function hasChildren();
 
 	/**
-	 * Adds a child node to this node.
+	 * Returns the node and its children as list
 	 *
-	 * @param \Aimeos\MShop\Catalog\Item\Iface $item Child node to add
-	 * @return void
+	 * @return \Aimeos\MShop\Catalog\Item\Iface Associative list of IDs as keys and nodes as values
 	 */
-	public function addChild( \Aimeos\MShop\Catalog\Item\Iface $item );
+	public function toList();
 }

@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MAdmin
  * @subpackage Log
  */
@@ -29,7 +29,7 @@ class Standard
 	 *
 	 * @param array $values Associative list of key/value pairs
 	 */
-	public function __construct( array $values = array() )
+	public function __construct( array $values = [] )
 	{
 		parent::__construct( 'log.', $values );
 
@@ -44,7 +44,11 @@ class Standard
 	 */
 	public function getFacility()
 	{
-		return ( isset( $this->values['facility'] ) ? (string) $this->values['facility'] : '' );
+		if( isset( $this->values['log.facility'] ) ) {
+			return (string) $this->values['log.facility'];
+		}
+
+		return '';
 	}
 
 
@@ -52,22 +56,30 @@ class Standard
 	 * Sets the new facility of the of the item.
 	 *
 	 * @param string $facility Facility
+	 * @return \Aimeos\MAdmin\Log\Item\Iface Log item for chaining method calls
 	 */
 	public function setFacility( $facility )
 	{
-		$this->values['facility'] = (string) $facility;
-		$this->setModified();
+		if( (string) $facility !== $this->getFacility() )
+		{
+			$this->values['log.facility'] = (string) $facility;
+			$this->setModified();
+		}
+
+		return $this;
 	}
 
 
 	/**
 	 * Returns the timestamp of the item.
 	 *
-	 * @return string ISO date in YYYY-MM-DD hh:mm:ss format
+	 * @return string|null ISO date in YYYY-MM-DD hh:mm:ss format
 	 */
 	public function getTimestamp()
 	{
-		return ( isset( $this->values['timestamp'] ) ? (string) $this->values['timestamp'] : null );
+		if( isset( $this->values['log.timestamp'] ) ) {
+			return (string) $this->values['log.timestamp'];
+		}
 	}
 
 
@@ -78,7 +90,11 @@ class Standard
 	 */
 	public function getPriority()
 	{
-		return ( isset( $this->values['priority'] ) ? (int) $this->values['priority'] : 0 );
+		if( isset( $this->values['log.priority'] ) ) {
+			return (int) $this->values['log.priority'];
+		}
+
+		return 0;
 	}
 
 
@@ -86,11 +102,17 @@ class Standard
 	 * Sets the new priority of the item.
 	 *
 	 * @param integer $priority Priority
+	 * @return \Aimeos\MAdmin\Log\Item\Iface Log item for chaining method calls
 	 */
 	public function setPriority( $priority )
 	{
-		$this->values['priority'] = (int) $priority;
-		$this->setModified();
+		if( (int) $priority !== $this->getPriority() )
+		{
+			$this->values['log.priority'] = (int) $priority;
+			$this->setModified();
+		}
+
+		return $this;
 	}
 
 
@@ -101,7 +123,11 @@ class Standard
 	 */
 	public function getMessage()
 	{
-		return ( isset( $this->values['message'] ) ? (string) $this->values['message'] : '' );
+		if( isset( $this->values['log.message'] ) ) {
+			return (string) $this->values['log.message'];
+		}
+
+		return '';
 	}
 
 
@@ -109,11 +135,17 @@ class Standard
 	 * Sets the new message of the item.
 	 *
 	 * @param string $message Message
+	 * @return \Aimeos\MAdmin\Log\Item\Iface Log item for chaining method calls
 	 */
 	public function setMessage( $message )
 	{
-		$this->values['message'] = (string) $message;
-		$this->setModified();
+		if( (string) $message !== $this->getMessage() )
+		{
+			$this->values['log.message'] = (string) $message;
+			$this->setModified();
+		}
+
+		return $this;
 	}
 
 
@@ -124,7 +156,11 @@ class Standard
 	 */
 	public function getRequest()
 	{
-		return ( isset( $this->values['request'] ) ? (string) $this->values['request'] : '' );
+		if( isset( $this->values['log.request'] ) ) {
+			return (string) $this->values['log.request'];
+		}
+
+		return '';
 	}
 
 
@@ -132,49 +168,69 @@ class Standard
 	 * Sets the new request of the item.
 	 *
 	 * @param string $request Request
+	 * @return \Aimeos\MAdmin\Log\Item\Iface Log item for chaining method calls
 	 */
 	public function setRequest( $request )
 	{
-		$this->values['request'] = (string) $request;
-		$this->setModified();
+		if( (string) $request !== $this->getRequest() )
+		{
+			$this->values['log.request'] = (string) $request;
+			$this->setModified();
+		}
+
+		return $this;
 	}
 
 
 	/**
-	 * Sets the item values from the given array.
+	 * Returns the item type
 	 *
-	 * @param array $list Associative list of item keys and their values
-	 * @return array Associative list of keys and their values that are unknown
+	 * @return string Item type, subtypes are separated by slashes
 	 */
-	public function fromArray( array $list )
+	public function getResourceType()
 	{
-		$unknown = array();
-		$list = parent::fromArray( $list );
+		return 'log';
+	}
+
+
+	/**
+	 * Sets the item values from the given array and removes that entries from the list
+	 *
+	 * @param array &$list Associative list of item keys and their values
+	 * @param boolean True to set private properties too, false for public only
+	 * @return \Aimeos\MAdmin\Log\Item\Iface Log item for chaining method calls
+	 */
+	public function fromArray( array &$list, $private = false )
+	{
+		$item = parent::fromArray( $list, $private );
 
 		foreach( $list as $key => $value )
 		{
 			switch( $key )
 			{
-				case 'log.facility': $this->setFacility( $value ); break;
-				case 'log.priority': $this->setPriority( $value ); break;
-				case 'log.message': $this->setMessage( $value ); break;
-				case 'log.request': $this->setRequest( $value ); break;
-				default: $unknown[$key] = $value;
+				case 'log.facility': $item = $item->setFacility( $value ); break;
+				case 'log.priority': $item = $item->setPriority( $value ); break;
+				case 'log.message': $item = $item->setMessage( $value ); break;
+				case 'log.request': $item = $item->setRequest( $value ); break;
+				default: continue 2;
 			}
+
+			unset( $list[$key] );
 		}
 
-		return $unknown;
+		return $item;
 	}
 
 
 	/**
 	 * Returns the item values as array.
 	 *
-	 * @return Associative list of item properties and their values
+	 * @param boolean True to return private properties, false for public only
+	 * @return array Associative list of item properties and their values
 	 */
-	public function toArray()
+	public function toArray( $private = false )
 	{
-		$list = parent::toArray();
+		$list = parent::toArray( $private );
 
 		$list['log.facility'] = $this->getFacility();
 		$list['log.timestamp'] = $this->getTimestamp();

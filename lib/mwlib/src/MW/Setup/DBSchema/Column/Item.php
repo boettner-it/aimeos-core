@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Setup
  */
@@ -26,7 +26,8 @@ class Item implements \Aimeos\MW\Setup\DBSchema\Column\Iface
 	private $length = 0;
 	private $default;
 	private $nullable = false;
-	private $collation = '';
+	private $charset;
+	private $collation;
 
 
 	/**
@@ -38,33 +39,51 @@ class Item implements \Aimeos\MW\Setup\DBSchema\Column\Iface
 	 * @param integer $length Length of the column if the column type is of variable length
 	 * @param string $default Default value if not specified
 	 * @param string $nullable "YES" if null values are allowed, "NO" if not
-	 * @param string $collation Used collation for text type columns
+	 * @param string|null $charset Charset of the column
+	 * @param string|null $collation Collation type of the column
 	 */
-	public function __construct( $tablename, $name, $type, $length, $default, $nullable, $collation )
+	public function __construct( $tablename, $name, $type, $length, $default, $nullable, $charset, $collation )
 	{
 		$this->tablename = (string) $tablename;
 		$this->name = (string) $name;
 		$this->type = (string) $type;
 		$this->length = (int) $length;
 		$this->default = $default;
-		$this->collation = (string) $collation;
+		$this->charset = $charset;
+		$this->collation = $collation;
 
-		switch( $nullable )
+		switch( strtoupper( $nullable ) )
 		{
 			case 'YES':
+			case 'Y':
+			case 'T':
+			case '1':
 				$this->nullable = true; break;
 			case 'NO':
+			case 'N':
+			case 'F':
+			case '0':
 				$this->nullable = false; break;
 			default:
 				throw new \Aimeos\MW\Setup\Exception( sprintf( 'Invalid value for allowing null: "%1$s', $nullable ) );
 		}
 	}
 
+	/**
+	 * Returns the charset of the column.
+	 *
+	 * @return string|null Charset of the column
+	 */
+	public function getCharset()
+	{
+		return $this->charset;
+	}
+
 
 	/**
 	 * Returns the collation type of the column.
 	 *
-	 * @return string collation type of the column
+	 * @return string|null Collation type of the column
 	 */
 	public function getCollationType()
 	{

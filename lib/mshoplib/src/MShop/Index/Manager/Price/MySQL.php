@@ -1,11 +1,11 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2012
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2012
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
- * @subpackage Catalog
+ * @subpackage Index
  */
 
 
@@ -16,19 +16,18 @@ namespace Aimeos\MShop\Index\Manager\Price;
  * MySQL based index price for searching in product tables.
  *
  * @package MShop
- * @subpackage Catalog
+ * @subpackage Index
  */
 class MySQL
 	extends \Aimeos\MShop\Index\Manager\Price\Standard
-	implements \Aimeos\MShop\Index\Manager\Iface
 {
 	private $searchConfig = array(
 		'index.price.id' => array(
-			'code'=>'index.price.id',
-			'internalcode'=>'mindpr."priceid"',
-			'internaldeps'=>array( 'LEFT JOIN "mshop_index_price" AS mindpr USE INDEX ("idx_msindpr_s_lt_cu_ty_va", "idx_msindpr_p_s_lt_cu_ty_va") ON mindpr."prodid" = mpro."id"' ),
-			'label'=>'Product index price ID',
-			'type'=> 'integer',
+			'code' => 'index.price.id',
+			'internalcode' => 'mindpr."priceid"',
+			'internaldeps'=>array( 'LEFT JOIN "mshop_index_price" AS mindpr USE INDEX ("unq_msindpr_pid_sid_cid", "idx_msindpr_sid_cid_val") ON mindpr."prodid" = mpro."id"' ),
+			'label' => 'Product index price ID',
+			'type' => 'string',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 			'public' => false,
 		),
@@ -39,7 +38,7 @@ class MySQL
 	 * Returns a list of objects describing the available criterias for searching.
 	 *
 	 * @param boolean $withsub Return also attributes of sub-managers if true
-	 * @return array List of items implementing \Aimeos\MW\Criteria\Attribute\Iface
+	 * @return \Aimeos\MW\Criteria\Attribute\Iface[] List of search attriubte items
 	 */
 	public function getSearchAttributes( $withsub = true )
 	{

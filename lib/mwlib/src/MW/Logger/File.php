@@ -3,7 +3,7 @@
 /**
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
  * @copyright Metaways Infosystems GmbH, 2013
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Logger
  */
@@ -20,26 +20,30 @@ namespace Aimeos\MW\Logger;
  */
 class File extends \Aimeos\MW\Logger\Base implements \Aimeos\MW\Logger\Iface
 {
-	private $stream;
 	private $loglevel;
+	private $filename;
 	private $facilities;
+	private $requestid;
 
 
 	/**
 	 * Initializes the logger object.
 	 *
 	 * @param string $filename Log file name
-	 * @param integer $priority Minimum priority for logging
-	 * @param array|null $facilities Facilities for which messages should be logged
+	 * @param int $priority Minimum priority for logging
+	 * @param string[]|null $facilities Facilities for which messages should be logged
+	 * @param string|null $requestid Unique identifier to identify multiple log entries for the same request faster
 	 */
-	public function __construct( $filename, $priority = \Aimeos\MW\Logger\Base::ERR, array $facilities = null )
+	public function __construct( string $filename, int $priority = Base::ERR, array $facilities = null, string $requestid = null )
 	{
-		if ( !$this->stream = fopen( $filename, 'a', false ) ) {
-			throw new \Aimeos\MW\Logger\Exception( sprintf( 'Unable to open file "%1$s" for appending' ), $filename );
-		}
-
+		$this->filename = $filename;
 		$this->loglevel = $priority;
 		$this->facilities = $facilities;
+
+		if( $requestid === null ) {
+			$requestid = substr( md5( php_uname( 'n' ) . getmypid() . date( 'Y-m-d H:i:s' ) ), 24 );
+		}
+		$this->requestid = $requestid;
 	}
 
 
@@ -47,27 +51,30 @@ class File extends \Aimeos\MW\Logger\Base implements \Aimeos\MW\Logger\Iface
 	 * Writes a message to the configured log facility.
 	 *
 	 * @param string|array|object $message Message text that should be written to the log facility
-	 * @param integer $priority Priority of the message for filtering
+	 * @param int $prio Priority of the message for filtering
 	 * @param string $facility Facility for logging different types of messages (e.g. message, auth, user, changelog)
+	 * @return \Aimeos\MW\Logger\Iface Logger object for method chaining
 	 * @throws \Aimeos\MW\Logger\Exception If an error occurs in Zend_Log
 	 * @see \Aimeos\MW\Logger\Base for available log level constants
 	 */
-	public function log( $message, $priority = \Aimeos\MW\Logger\Base::ERR, $facility = 'message' )
+	public function log( $message, int $prio = Base::ERR, string $facility = 'message' ) : Iface
 	{
-		if( $priority <= $this->loglevel
-			&& ( $this->facilities === null || in_array( $facility, $this->facilities ) ) )
+		if( $prio <= $this->loglevel && ( $this->facilities === null || in_array( $facility, $this->facilities ) ) )
 		{
-			$this->checkLogLevel( $priority );
+			$level = $this->getLogLevel( $prio );
 
 			if( !is_scalar( $message ) ) {
 				$message = json_encode( $message );
 			}
 
-			$message = '<' . $facility . '> ' . date( 'Y-m-d H:i:s' ) . ' ' . $priority . ' ' . $message;
+			$date = date( 'Y-m-d H:i:s' );
+			$msg = '[' . $date . '] <' . $facility . '> [' . $level . '] [' . $this->requestid . '] ' . $message . PHP_EOL;
 
-			if ( false === fwrite( $this->stream, $message ) ) {
-				throw new \Aimeos\MW\Logger\Exception( 'Unable to write to stream' );
+			if( file_put_contents( $this->filename, $msg, FILE_APPEND ) === false ) {
+				throw new \Aimeos\MW\Logger\Exception( sprintf( 'Unable to write to file "%1$s', $this->filename ) );
 			}
 		}
+
+		return $this;
 	}
 }

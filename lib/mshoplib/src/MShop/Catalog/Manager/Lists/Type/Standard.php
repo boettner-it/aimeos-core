@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2013
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2013
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Catalog
  */
@@ -19,74 +19,83 @@ namespace Aimeos\MShop\Catalog\Manager\Lists\Type;
  */
 class Standard
 	extends \Aimeos\MShop\Common\Manager\Type\Base
-	implements \Aimeos\MShop\Catalog\Manager\Lists\Type\Iface
+	implements \Aimeos\MShop\Catalog\Manager\Lists\Type\Iface, \Aimeos\MShop\Common\Manager\Factory\Iface
 {
 	private $searchConfig = array(
 		'catalog.lists.type.id' => array(
-			'code'=>'catalog.lists.type.id',
-			'internalcode'=>'mcatlity."id"',
-			'internaldeps'=>array( 'LEFT JOIN "mshop_catalog_list_type" as mcatlity ON ( mcatli."typeid" = mcatlity."id" )' ),
-			'label'=>'Catalog list type ID',
-			'type'=> 'integer',
+			'code' => 'catalog.lists.type.id',
+			'internalcode' => 'mcatlity."id"',
+			'label' => 'List type ID',
+			'type' => 'integer',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 			'public' => false,
 		),
 		'catalog.lists.type.siteid' => array(
-			'code'=>'catalog.lists.type.siteid',
-			'internalcode'=>'mcatlity."siteid"',
-			'label'=>'Catalog list type site ID',
-			'type'=> 'integer',
+			'code' => 'catalog.lists.type.siteid',
+			'internalcode' => 'mcatlity."siteid"',
+			'label' => 'List type site ID',
+			'type' => 'integer',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 			'public' => false,
-		),
-		'catalog.lists.type.code' => array(
-			'code'=>'catalog.lists.type.code',
-			'internalcode'=>'mcatlity."code"',
-			'label'=>'Catalog list type code',
-			'type'=> 'string',
-			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
-		),
-		'catalog.lists.type.domain' => array(
-			'code'=>'catalog.lists.type.domain',
-			'internalcode'=>'mcatlity."domain"',
-			'label'=>'Catalog list type domain',
-			'type'=> 'string',
-			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
 		'catalog.lists.type.label' => array(
 			'code' => 'catalog.lists.type.label',
 			'internalcode' => 'mcatlity."label"',
-			'label' => 'Catalog list type label',
+			'label' => 'List type label',
 			'type' => 'string',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		),
+		'catalog.lists.type.code' => array(
+			'code' => 'catalog.lists.type.code',
+			'internalcode' => 'mcatlity."code"',
+			'label' => 'List type code',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		),
+		'catalog.lists.type.domain' => array(
+			'code' => 'catalog.lists.type.domain',
+			'internalcode' => 'mcatlity."domain"',
+			'label' => 'List type domain',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		),
+		'catalog.lists.type.position' => array(
+			'code' => 'catalog.lists.type.position',
+			'internalcode' => 'mcatlity."pos"',
+			'label' => 'List type position',
+			'type' => 'integer',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 		),
 		'catalog.lists.type.status' => array(
 			'code' => 'catalog.lists.type.status',
 			'internalcode' => 'mcatlity."status"',
-			'label' => 'Catalog list type status',
+			'label' => 'List type status',
 			'type' => 'integer',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 		),
-		'catalog.lists.type.ctime'=> array(
-			'label' => 'Catalog list type creation time',
+		'catalog.lists.type.ctime' => array(
+			'label' => 'List type create date/time',
 			'code' => 'catalog.lists.type.ctime',
 			'internalcode' => 'mcatlity."ctime"',
 			'type' => 'datetime',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
-		'catalog.lists.type.mtime'=> array(
-			'label' => 'Catalog list type modification time',
+		'catalog.lists.type.mtime' => array(
+			'label' => 'List type modify date/time',
 			'code' => 'catalog.lists.type.mtime',
 			'internalcode' => 'mcatlity."mtime"',
 			'type' => 'datetime',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
-		'catalog.lists.type.editor'=> array(
-			'code'=>'catalog.lists.type.editor',
-			'internalcode'=>'mcatlity."editor"',
-			'label'=>'Catalog list type editor',
-			'type'=> 'string',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'catalog.lists.type.editor' => array(
+			'code' => 'catalog.lists.type.editor',
+			'internalcode' => 'mcatlity."editor"',
+			'label' => 'List type editor',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
 	);
 
@@ -106,16 +115,30 @@ class Standard
 	/**
 	 * Removes old entries from the storage.
 	 *
-	 * @param array $siteids List of IDs for sites whose entries should be deleted
+	 * @param string[] $siteids List of IDs for sites whose entries should be deleted
+	 * @return \Aimeos\MShop\Catalog\Manager\Lists\Type\Iface Manager object for chaining method calls
 	 */
-	public function cleanup( array $siteids )
+	public function clear( array $siteids )
 	{
 		$path = 'mshop/catalog/manager/lists/type/submanagers';
-		foreach( $this->getContext()->getConfig()->get( $path, array() ) as $domain ) {
-			$this->getSubManager( $domain )->cleanup( $siteids );
+		foreach( $this->getContext()->getConfig()->get( $path, [] ) as $domain ) {
+			$this->getObject()->getSubManager( $domain )->clear( $siteids );
 		}
 
-		$this->cleanupBase( $siteids, 'mshop/catalog/manager/lists/type/standard/delete' );
+		return $this->clearBase( $siteids, 'mshop/catalog/manager/lists/type/standard/delete' );
+	}
+
+
+	/**
+	 * Returns the available manager types
+	 *
+	 * @param boolean $withsub Return also the resource type of sub-managers if true
+	 * @return string[] Type of the manager and submanagers, subtypes are separated by slashes
+	 */
+	public function getResourceType( $withsub = true )
+	{
+		$path = 'mshop/catalog/manager/lists/type/submanagers';
+		return $this->getResourceTypeBase( 'catalog/lists/type', $path, [], $withsub );
 	}
 
 
@@ -123,7 +146,7 @@ class Standard
 	 * Returns the attributes that can be used for searching.
 	 *
 	 * @param boolean $withsub Return also catalogs of sub-managers if true
-	 * @return array List of catalog items implementing \Aimeos\MW\Criteria\Attribute\Iface
+	 * @return \Aimeos\MW\Criteria\Attribute\Iface[] List of search attribute items
 	 */
 	public function getSearchAttributes( $withsub = true )
 	{
@@ -146,7 +169,7 @@ class Standard
 		 */
 		$path = 'mshop/catalog/manager/lists/type/submanagers';
 
-		return $this->getSearchAttributesBase( $this->searchConfig, $path, array(), $withsub );
+		return $this->getSearchAttributesBase( $this->searchConfig, $path, [], $withsub );
 	}
 
 
@@ -233,7 +256,8 @@ class Standard
 		 *  mshop/catalog/manager/lists/type/decorators/global = array( 'decorator1' )
 		 *
 		 * This would add the decorator named "decorator1" defined by
-		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator1" only to the catalog controller.
+		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator1" only to the catalog
+		 * list type manager..
 		 *
 		 * @param array List of decorator names
 		 * @since 2014.03
@@ -252,13 +276,14 @@ class Standard
 		 * modify what is returned to the caller.
 		 *
 		 * This option allows you to wrap local decorators
-		 * ("\Aimeos\MShop\Common\Manager\Decorator\*") around the catalog list type manager.
+		 * ("\Aimeos\MShop\Catalog\Manager\Lists\Type\Decorator\*") around the catalog
+		 * list type manager.
 		 *
 		 *  mshop/catalog/manager/lists/type/decorators/local = array( 'decorator2' )
 		 *
 		 * This would add the decorator named "decorator2" defined by
-		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator2" only to the catalog
-		 * controller.
+		 * "\Aimeos\MShop\Catalog\Manager\Lists\Type\Decorator\Decorator2" only to the
+		 * catalog list type manager.
 		 *
 		 * @param array List of decorator names
 		 * @since 2014.03
@@ -279,7 +304,13 @@ class Standard
 	 */
 	protected function getConfigPath()
 	{
-		/** mshop/catalog/manager/lists/type/standard/insert
+		/** mshop/catalog/manager/lists/type/standard/insert/mysql
+		 * Inserts a new catalog list type record into the database table
+		 *
+		 * @see mshop/catalog/manager/lists/type/standard/insert/ansi
+		 */
+
+		/** mshop/catalog/manager/lists/type/standard/insert/ansi
 		 * Inserts a new catalog list type record into the database table
 		 *
 		 * Items with no ID yet (i.e. the ID is NULL) will be created in
@@ -302,14 +333,20 @@ class Standard
 		 * @param string SQL statement for inserting records
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/catalog/manager/lists/type/standard/update
-		 * @see mshop/catalog/manager/lists/type/standard/newid
-		 * @see mshop/catalog/manager/lists/type/standard/delete
-		 * @see mshop/catalog/manager/lists/type/standard/search
-		 * @see mshop/catalog/manager/lists/type/standard/count
+		 * @see mshop/catalog/manager/lists/type/standard/update/ansi
+		 * @see mshop/catalog/manager/lists/type/standard/newid/ansi
+		 * @see mshop/catalog/manager/lists/type/standard/delete/ansi
+		 * @see mshop/catalog/manager/lists/type/standard/search/ansi
+		 * @see mshop/catalog/manager/lists/type/standard/count/ansi
 		 */
 
-		/** mshop/catalog/manager/lists/type/standard/update
+		/** mshop/catalog/manager/lists/type/standard/update/mysql
+		 * Updates an existing catalog list type record in the database
+		 *
+		 * @see mshop/catalog/manager/lists/type/standard/update/ansi
+		 */
+
+		/** mshop/catalog/manager/lists/type/standard/update/ansi
 		 * Updates an existing catalog list type record in the database
 		 *
 		 * Items which already have an ID (i.e. the ID is not NULL) will
@@ -329,14 +366,20 @@ class Standard
 		 * @param string SQL statement for updating records
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/catalog/manager/lists/type/standard/insert
-		 * @see mshop/catalog/manager/lists/type/standard/newid
-		 * @see mshop/catalog/manager/lists/type/standard/delete
-		 * @see mshop/catalog/manager/lists/type/standard/search
-		 * @see mshop/catalog/manager/lists/type/standard/count
+		 * @see mshop/catalog/manager/lists/type/standard/insert/ansi
+		 * @see mshop/catalog/manager/lists/type/standard/newid/ansi
+		 * @see mshop/catalog/manager/lists/type/standard/delete/ansi
+		 * @see mshop/catalog/manager/lists/type/standard/search/ansi
+		 * @see mshop/catalog/manager/lists/type/standard/count/ansi
 		 */
 
-		/** mshop/catalog/manager/lists/type/standard/newid
+		/** mshop/catalog/manager/lists/type/standard/newid/mysql
+		 * Retrieves the ID generated by the database when inserting a new record
+		 *
+		 * @see mshop/catalog/manager/lists/type/standard/newid/ansi
+		 */
+
+		/** mshop/catalog/manager/lists/type/standard/newid/ansi
 		 * Retrieves the ID generated by the database when inserting a new record
 		 *
 		 * As soon as a new record is inserted into the database table,
@@ -360,14 +403,20 @@ class Standard
 		 * @param string SQL statement for retrieving the last inserted record ID
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/catalog/manager/lists/type/standard/insert
-		 * @see mshop/catalog/manager/lists/type/standard/update
-		 * @see mshop/catalog/manager/lists/type/standard/delete
-		 * @see mshop/catalog/manager/lists/type/standard/search
-		 * @see mshop/catalog/manager/lists/type/standard/count
+		 * @see mshop/catalog/manager/lists/type/standard/insert/ansi
+		 * @see mshop/catalog/manager/lists/type/standard/update/ansi
+		 * @see mshop/catalog/manager/lists/type/standard/delete/ansi
+		 * @see mshop/catalog/manager/lists/type/standard/search/ansi
+		 * @see mshop/catalog/manager/lists/type/standard/count/ansi
 		 */
 
-		/** mshop/catalog/manager/lists/type/standard/delete
+		/** mshop/catalog/manager/lists/type/standard/delete/mysql
+		 * Deletes the items matched by the given IDs from the database
+		 *
+		 * @see mshop/catalog/manager/lists/type/standard/delete/ansi
+		 */
+
+		/** mshop/catalog/manager/lists/type/standard/delete/ansi
 		 * Deletes the items matched by the given IDs from the database
 		 *
 		 * Removes the records specified by the given IDs from the catalog database.
@@ -385,14 +434,20 @@ class Standard
 		 * @param string SQL statement for deleting items
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/catalog/manager/lists/type/standard/insert
-		 * @see mshop/catalog/manager/lists/type/standard/update
-		 * @see mshop/catalog/manager/lists/type/standard/newid
-		 * @see mshop/catalog/manager/lists/type/standard/search
-		 * @see mshop/catalog/manager/lists/type/standard/count
+		 * @see mshop/catalog/manager/lists/type/standard/insert/ansi
+		 * @see mshop/catalog/manager/lists/type/standard/update/ansi
+		 * @see mshop/catalog/manager/lists/type/standard/newid/ansi
+		 * @see mshop/catalog/manager/lists/type/standard/search/ansi
+		 * @see mshop/catalog/manager/lists/type/standard/count/ansi
 		 */
 
-		/** mshop/catalog/manager/lists/type/standard/search
+		/** mshop/catalog/manager/lists/type/standard/search/mysql
+		 * Retrieves the records matched by the given criteria in the database
+		 *
+		 * @see mshop/catalog/manager/lists/type/standard/search/ansi
+		 */
+
+		/** mshop/catalog/manager/lists/type/standard/search/ansi
 		 * Retrieves the records matched by the given criteria in the database
 		 *
 		 * Fetches the records matched by the given criteria from the catalog
@@ -437,14 +492,20 @@ class Standard
 		 * @param string SQL statement for searching items
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/catalog/manager/lists/type/standard/insert
-		 * @see mshop/catalog/manager/lists/type/standard/update
-		 * @see mshop/catalog/manager/lists/type/standard/newid
-		 * @see mshop/catalog/manager/lists/type/standard/delete
-		 * @see mshop/catalog/manager/lists/type/standard/count
+		 * @see mshop/catalog/manager/lists/type/standard/insert/ansi
+		 * @see mshop/catalog/manager/lists/type/standard/update/ansi
+		 * @see mshop/catalog/manager/lists/type/standard/newid/ansi
+		 * @see mshop/catalog/manager/lists/type/standard/delete/ansi
+		 * @see mshop/catalog/manager/lists/type/standard/count/ansi
 		 */
 
-		/** mshop/catalog/manager/lists/type/standard/count
+		/** mshop/catalog/manager/lists/type/standard/count/mysql
+		 * Counts the number of records matched by the given criteria in the database
+		 *
+		 * @see mshop/catalog/manager/lists/type/standard/count/ansi
+		 */
+
+		/** mshop/catalog/manager/lists/type/standard/count/ansi
 		 * Counts the number of records matched by the given criteria in the database
 		 *
 		 * Counts all records matched by the given criteria from the catalog
@@ -483,11 +544,11 @@ class Standard
 		 * @param string SQL statement for counting items
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/catalog/manager/lists/type/standard/insert
-		 * @see mshop/catalog/manager/lists/type/standard/update
-		 * @see mshop/catalog/manager/lists/type/standard/newid
-		 * @see mshop/catalog/manager/lists/type/standard/delete
-		 * @see mshop/catalog/manager/lists/type/standard/search
+		 * @see mshop/catalog/manager/lists/type/standard/insert/ansi
+		 * @see mshop/catalog/manager/lists/type/standard/update/ansi
+		 * @see mshop/catalog/manager/lists/type/standard/newid/ansi
+		 * @see mshop/catalog/manager/lists/type/standard/delete/ansi
+		 * @see mshop/catalog/manager/lists/type/standard/search/ansi
 		 */
 
 		return 'mshop/catalog/manager/lists/type/standard/';

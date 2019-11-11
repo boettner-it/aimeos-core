@@ -2,8 +2,7 @@
 
 /**
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Metaways Infosystems GmbH, 2012
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 
@@ -11,118 +10,92 @@ namespace Aimeos\MW\Setup\Task;
 
 
 /**
- * Adds product test data.
+ * Adds product test data
  */
-class ProductAddTestData extends \Aimeos\MW\Setup\Task\Base
+class ProductAddTestData extends \Aimeos\MW\Setup\Task\BaseAddTestData
 {
-
 	/**
-	 * Returns the list of task names which this task depends on.
+	 * Returns the list of task names which this task depends on
 	 *
 	 * @return string[] List of task names
 	 */
 	public function getPreDependencies()
 	{
-		return array( 'MShopSetLocale' );
+		return ['AttributeAddTestData', 'TagAddTestData'];
 	}
 
 
 	/**
-	 * Returns the list of task names which depends on this task.
-	 *
-	 * @return string[] List of task names
+	 * Adds product test data
 	 */
-	public function getPostDependencies()
+	public function migrate()
 	{
-		return array( 'CatalogRebuildTestIndex' );
-	}
-
-
-	/**
-	 * Executes the task for MySQL databases.
-	 */
-	protected function mysql()
-	{
-		$this->process();
-	}
-
-
-	/**
-	 * Adds product test data.
-	 */
-	protected function process()
-	{
-		$iface = '\\Aimeos\\MShop\\Context\\Item\\Iface';
-		if( !( $this->additional instanceof $iface ) ) {
-			throw new \Aimeos\MW\Setup\Exception( sprintf( 'Additionally provided object is not of type "%1$s"', $iface ) );
-		}
+		\Aimeos\MW\Common\Base::checkClass( \Aimeos\MShop\Context\Item\Iface::class, $this->additional );
 
 		$this->msg( 'Adding product test data', 0 );
-		$this->additional->setEditor( 'core:unittest' );
 
-		$ds = DIRECTORY_SEPARATOR;
-		$path = __DIR__ . $ds . 'data' . $ds . 'product.php';
-
-		if( ( $testdata = include( $path ) ) == false ) {
-			throw new \Aimeos\MShop\Exception( sprintf( 'No file "%1$s" found for product domain', $path ) );
-		}
-
-		$this->addProductData( $testdata );
+		$this->additional->setEditor( 'core:lib/mshoplib' );
+		$this->process( $this->getData() );
 
 		$this->status( 'done' );
 	}
 
 
+	/**
+	 * Returns the test data array
+	 *
+	 * @return array Multi-dimensional array of test data
+	 */
+	protected function getData()
+	{
+		$path = __DIR__ . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'product.php';
+
+		if( ( $testdata = include( $path ) ) == false ) {
+			throw new \Aimeos\MShop\Exception( sprintf( 'No file "%1$s" found for product domain', $path ) );
+		}
+
+		return $testdata;
+	}
+
 
 	/**
-	 * Adds the product test data.
+	 * Returns the manager for the current setup task
 	 *
-	 * @param array $testdata Associative list of key/list pairs
-	 * @throws \Aimeos\MW\Setup\Exception If no type ID is found
+	 * @param string $domain Domain name of the manager
+	 * @return \Aimeos\MShop\Common\Manager\Iface Manager object
 	 */
-	private function addProductData( array $testdata )
+	protected function getManager( $domain )
 	{
-		$productManager = \Aimeos\MShop\Product\Manager\Factory::createManager( $this->additional, 'Standard' );
-		$productTypeManager = $productManager->getSubManager( 'type', 'Standard' );
-
-		$typeIds = array();
-		$type = $productTypeManager->createItem();
-
-		$this->conn->begin();
-
-		foreach( $testdata['product/type'] as $key => $dataset )
-		{
-			$type->setId( null );
-			$type->setCode( $dataset['code'] );
-			$type->setDomain( $dataset['domain'] );
-			$type->setLabel( $dataset['label'] );
-			$type->setStatus( $dataset['status'] );
-
-			$productTypeManager->saveItem( $type );
-			$typeIds[$key] = $type->getId();
+		if( $domain === 'product' ) {
+			return \Aimeos\MShop\Product\Manager\Factory::create( $this->additional, 'Standard' );
 		}
 
-		$product = $productManager->createItem();
-		foreach( $testdata['product'] as $key => $dataset )
+		return parent::getManager( $domain );
+	}
+
+
+	/**
+	 * Adds the product data from the given array
+	 *
+	 * @param array Multi-dimensional array of test data
+	 */
+	protected function process( array $testdata )
+	{
+		$manager = $this->getManager( 'product' );
+		$listManager = $manager->getSubManager( 'lists' );
+		$propManager = $manager->getSubManager( 'property' );
+
+		$manager->begin();
+		$this->storeTypes( $testdata, ['product/type', 'product/lists/type', 'product/property/type'] );
+		$manager->commit();
+
+		foreach( $testdata['product'] as $entry )
 		{
-			if( !isset( $typeIds[$dataset['typeid']] ) ) {
-				throw new \Aimeos\MW\Setup\Exception( sprintf( 'No product type ID found for "%1$s"', $dataset['typeid'] ) );
-			}
+			$item = $manager->createItem()->fromArray( $entry );
+			$item = $this->addListData( $listManager, $item, $entry );
+			$item = $this->addPropertyData( $propManager, $item, $entry );
 
-			$product->setId( null );
-			$product->setTypeId( $typeIds[$dataset['typeid']] );
-			$product->setCode( $dataset['code'] );
-			$product->setLabel( $dataset['label'] );
-			$product->setSupplierCode( $dataset['suppliercode'] );
-			$product->setStatus( $dataset['status'] );
-
-			if( isset( $dataset['config'] ) ) {
-				$product->setConfig( $dataset['config'] );
-			}
-
-			$productManager->saveItem( $product, false );
+			$manager->saveItem( $item );
 		}
-
-		$this->conn->commit();
 	}
 }

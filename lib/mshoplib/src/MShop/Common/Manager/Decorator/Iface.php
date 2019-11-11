@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Common
  */
@@ -24,9 +24,9 @@ interface Iface
 	/**
 	 * Initializes a new manager decorator object.
 	 *
-	 * @param \Aimeos\MShop\Context\Item\Iface $context Context object with required objects
 	 * @param \Aimeos\MShop\Common\Manager\Iface $manager Manager object
-	 * @return void
+	 * @param \Aimeos\MShop\Context\Item\Iface $context Context object with required objects
+	 * @return null
 	 */
-	public function __construct( \Aimeos\MShop\Context\Item\Iface $context, \Aimeos\MShop\Common\Manager\Iface $manager );
+	public function __construct( \Aimeos\MShop\Common\Manager\Iface $manager, \Aimeos\MShop\Context\Item\Iface $context );
 }

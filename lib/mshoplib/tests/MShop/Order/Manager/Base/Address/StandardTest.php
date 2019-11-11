@@ -1,41 +1,32 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 
 namespace Aimeos\MShop\Order\Manager\Base\Address;
 
 
-/**
- * Test class for \Aimeos\MShop\Order\Manager\Base\Address\Standard
- */
-class StandardTest extends \PHPUnit_Framework_TestCase
+class StandardTest extends \PHPUnit\Framework\TestCase
 {
 	private $context;
 	private $object = null;
 	private $editor = '';
 
 
-	/**
-	 * Sets up the fixture. This method is called before a test is executed.
-	 */
 	protected function setUp()
 	{
-		$this->editor = \TestHelper::getContext()->getEditor();
-		$this->context = \TestHelper::getContext();
+		$this->editor = \TestHelperMShop::getContext()->getEditor();
+		$this->context = \TestHelperMShop::getContext();
 
-		$orderManager = \Aimeos\MShop\Order\Manager\Factory::createManager( $this->context );
+		$orderManager = \Aimeos\MShop\Order\Manager\Factory::create( $this->context );
 		$this->object = $orderManager->getSubManager( 'base' )->getSubManager( 'address' );
 	}
 
 
-	/**
-	 * Tears down the fixture. This method is called after a test is executed.
-	 */
 	protected function tearDown()
 	{
 		unset( $this->object );
@@ -45,38 +36,52 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	public function testAggregate()
 	{
 		$search = $this->object->createSearch();
-		$search->setConditions( $search->compare( '==', 'order.base.address.editor', 'core:unittest' ) );
+		$search->setConditions( $search->compare( '==', 'order.base.address.editor', 'core:lib/mshoplib' ) );
 		$result = $this->object->aggregate( $search, 'order.base.address.salutation' );
-	
+
 		$this->assertEquals( 2, count( $result ) );
 		$this->assertArrayHasKey( \Aimeos\MShop\Common\Item\Address\Base::SALUTATION_MRS, $result );
 		$this->assertEquals( 4, $result[\Aimeos\MShop\Common\Item\Address\Base::SALUTATION_MRS] );
 	}
-	
 
-	public function testCleanup()
+
+	public function testClear()
 	{
-		$this->object->cleanup( array( -1 ) );
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Manager\Iface::class, $this->object->clear( [-1] ) );
+	}
+
+
+	public function testDeleteItems()
+	{
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Manager\Iface::class, $this->object->deleteItems( [-1] ) );
 	}
 
 
 	public function testCreateItem()
 	{
 		$item = $this->object->createItem();
-		$this->assertInstanceOf( '\\Aimeos\\MShop\\Order\\Item\\Base\\Address\\Iface', $item );
+		$this->assertInstanceOf( \Aimeos\MShop\Order\Item\Base\Address\Iface::class, $item );
 	}
 
 
 	public function testCreateSearch()
 	{
-		$this->assertInstanceOf( '\\Aimeos\\MW\\Criteria\\Iface', $this->object->createSearch() );
+		$this->assertInstanceOf( \Aimeos\MW\Criteria\Iface::class, $this->object->createSearch() );
+	}
+
+
+	public function testGetResourceType()
+	{
+		$result = $this->object->getResourceType();
+
+		$this->assertContains( 'order/base/address', $result );
 	}
 
 
 	public function testGetSearchAttributes()
 	{
 		foreach( $this->object->getSearchAttributes() as $attribute ) {
-			$this->assertInstanceOf( '\\Aimeos\\MW\\Criteria\\Attribute\\Iface', $attribute );
+			$this->assertInstanceOf( \Aimeos\MW\Criteria\Attribute\Iface::class, $attribute );
 		}
 	}
 
@@ -85,7 +90,7 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	{
 		$type = \Aimeos\MShop\Order\Item\Base\Address\Base::TYPE_DELIVERY;
 
-		$search = $this->object->createSearch();
+		$search = $this->object->createSearch()->setSlice( 0, 1 );
 		$conditions = array(
 			$search->compare( '==', 'order.base.address.type', $type ),
 			$search->compare( '==', 'order.base.address.editor', $this->editor )
@@ -94,11 +99,12 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$items = $this->object->searchItems( $search );
 
 		if( ( $item = reset( $items ) ) === false ) {
-			throw new \Exception( sprintf( 'No order base address item found for type "%1$s".', $type ) );
+			throw new \RuntimeException( sprintf( 'No order base address item found for type "%1$s".', $type ) );
 		}
 
 		$this->assertEquals( $item, $this->object->getItem( $item->getId() ) );
 	}
+
 
 
 	public function testSaveUpdateDeleteItem()
@@ -114,7 +120,7 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$items = $this->object->searchItems( $search );
 
 		if( ( $item = reset( $items ) ) === false ) {
-			throw new \Exception( sprintf( 'No order base address item found for type "%1$s".', $type ) );
+			throw new \RuntimeException( sprintf( 'No order base address item found for type "%1$s".', $type ) );
 		}
 
 		$this->object->deleteItem( $item->getId() );
@@ -123,12 +129,12 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 		$item->setId( null );
 		$item->setFirstname( 'unittestdata' );
-		$this->object->saveItem( $item );
+		$resultSaved = $this->object->saveItem( $item );
 		$itemSaved = $this->object->getItem( $item->getId() );
 
 		$itemExp = clone $itemSaved;
 		$itemExp->setFirstname( $firstname );
-		$this->object->saveItem( $itemExp );
+		$resultUpd = $this->object->saveItem( $itemExp );
 		$itemUpd = $this->object->getItem( $itemExp->getId() );
 
 
@@ -156,7 +162,9 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals( $item->getEmail(), $itemSaved->getEmail() );
 		$this->assertEquals( $item->getTelefax(), $itemSaved->getTelefax() );
 		$this->assertEquals( $item->getWebsite(), $itemSaved->getWebsite() );
-		$this->assertEquals( $item->getFlag(), $itemSaved->getFlag() );
+		$this->assertEquals( $item->getLongitude(), $itemSaved->getLongitude() );
+		$this->assertEquals( $item->getLatitude(), $itemSaved->getLatitude() );
+		$this->assertEquals( $item->getPosition(), $itemSaved->getPosition() );
 
 		$this->assertEquals( $this->editor, $itemSaved->getEditor() );
 		$this->assertRegExp( '/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/', $itemSaved->getTimeCreated() );
@@ -185,13 +193,18 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals( $itemExp->getEmail(), $itemUpd->getEmail() );
 		$this->assertEquals( $itemExp->getTelefax(), $itemUpd->getTelefax() );
 		$this->assertEquals( $itemExp->getWebsite(), $itemUpd->getWebsite() );
-		$this->assertEquals( $itemExp->getFlag(), $itemUpd->getFlag() );
+		$this->assertEquals( $itemExp->getLongitude(), $itemUpd->getLongitude() );
+		$this->assertEquals( $itemExp->getLatitude(), $itemUpd->getLatitude() );
+		$this->assertEquals( $itemExp->getPosition(), $itemUpd->getPosition() );
 
 		$this->assertEquals( $this->editor, $itemUpd->getEditor() );
 		$this->assertEquals( $itemExp->getTimeCreated(), $itemUpd->getTimeCreated() );
 		$this->assertRegExp( '/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/', $itemUpd->getTimeModified() );
 
-		$this->setExpectedException( '\\Aimeos\\MShop\\Exception' );
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Item\Iface::class, $resultSaved );
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Item\Iface::class, $resultUpd );
+
+		$this->setExpectedException( \Aimeos\MShop\Exception::class );
 		$this->object->getItem( $oldId );
 	}
 
@@ -203,7 +216,7 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$total = 0;
 		$search = $this->object->createSearch();
 
-		$expr = array();
+		$expr = [];
 		$expr[] = $search->compare( '!=', 'order.base.address.id', null );
 		$expr[] = $search->compare( '==', 'order.base.address.siteid', $siteid );
 		$expr[] = $search->compare( '!=', 'order.base.address.baseid', null );
@@ -227,12 +240,15 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$expr[] = $search->compare( '==', 'order.base.address.email', 'test@example.com' );
 		$expr[] = $search->compare( '==', 'order.base.address.telefax', '055544332213' );
 		$expr[] = $search->compare( '==', 'order.base.address.website', 'www.metaways.net' );
+		$expr[] = $search->compare( '==', 'order.base.address.longitude', '11.0' );
+		$expr[] = $search->compare( '==', 'order.base.address.latitude', '52.0' );
+		$expr[] = $search->compare( '==', 'order.base.address.position', 0 );
 		$expr[] = $search->compare( '>=', 'order.base.address.mtime', '1970-01-01 00:00:00' );
 		$expr[] = $search->compare( '>=', 'order.base.address.ctime', '1970-01-01 00:00:00' );
 		$expr[] = $search->compare( '==', 'order.base.address.editor', $this->editor );
 
 		$search->setConditions( $search->combine( '&&', $expr ) );
-		$result = $this->object->searchItems( $search, array(), $total );
+		$result = $this->object->searchItems( $search, [], $total );
 
 		$this->assertEquals( 1, count( $result ) );
 		$this->assertEquals( 1, $total );
@@ -243,7 +259,7 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		);
 		$search->setConditions( $search->combine( '&&', $conditions ) );
 		$search->setSlice( 0, 1 );
-		$items = $this->object->searchItems( $search, array(), $total );
+		$items = $this->object->searchItems( $search, [], $total );
 
 		$this->assertEquals( 1, count( $items ) );
 		$this->assertEquals( 4, $total );
@@ -256,7 +272,7 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testGetSubManager()
 	{
-		$this->setExpectedException( '\\Aimeos\\MShop\\Exception' );
+		$this->setExpectedException( \Aimeos\MShop\Exception::class );
 		$this->object->getSubManager( 'unknown' );
 	}
 }

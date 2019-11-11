@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage DB
  */
@@ -13,49 +13,29 @@ namespace Aimeos\MW\DB\Statement\PDO;
 
 
 /**
- * Database statement class for simple \PDO statements.
+ * Database statement class for simple PDO statements
  *
  * @package MW
  * @subpackage DB
  */
 class Simple extends \Aimeos\MW\DB\Statement\Base implements \Aimeos\MW\DB\Statement\Iface
 {
-	private $conn = null;
-	private $binds = array();
-	private $sql = '';
-	private $stmt = null;
-	private $parts = array();
+	private $binds = [];
+	private $parts;
+	private $sql;
 
 
 	/**
-	 * Initializes the statement object.
+	 * Initializes the statement object
 	 *
-	 * @param \PDO $conn \PDO database connection object
-	 * @param string $sql SQL statement string
+	 * @param \Aimeos\MW\DB\Connection\PDO $conn Database connection object
+	 * @param string $sql SQL statement
 	 */
-	public function __construct( \PDO $conn, $sql )
+	public function __construct( \Aimeos\MW\DB\Connection\PDO $conn, $sql )
 	{
-		$this->conn = $conn;
-		$this->sql = $sql;
+		parent::__construct( $conn );
 
-		$parts = explode( '?', $sql );
-
-		if( ( $part = reset( $parts ) ) !== false )
-		{
-			do
-			{
-				$count = 0; $temp = $part;
-				while( ( $count += substr_count( $part, '\'' ) ) % 2 !== 0 )
-				{
-					if( ( $part = next( $parts ) ) === false ) {
-						throw new \Aimeos\MW\DB\Exception( 'Number of apostrophes don\'t match' );
-					}
-					$temp .= '?' . $part;
-				}
-				$this->parts[] = $temp;
-			}
-			while( ( $part = next( $parts ) ) !== false );
-		}
+		$this->parts = $this->getSqlParts( $sql );
 	}
 
 
@@ -65,6 +45,8 @@ class Simple extends \Aimeos\MW\DB\Statement\Base implements \Aimeos\MW\DB\State
 	 * @param integer $position Position index of the placeholder
 	 * @param mixed $value Value which should be bound to the placeholder
 	 * @param integer $type Type of given value defined in \Aimeos\MW\DB\Statement\Base as constant
+	 * @return \Aimeos\MW\DB\Statement\Iface Statement instance for method chaining
+	 * @throws \Aimeos\MW\DB\Exception If the parameter type is invalid
 	 */
 	public function bind( $position, $value, $type = \Aimeos\MW\DB\Statement\Base::PARAM_STR )
 	{
@@ -77,20 +59,19 @@ class Simple extends \Aimeos\MW\DB\Statement\Base implements \Aimeos\MW\DB\State
 			case \Aimeos\MW\DB\Statement\Base::PARAM_NULL:
 				$this->binds[$position] = 'NULL'; break;
 			case \Aimeos\MW\DB\Statement\Base::PARAM_BOOL:
-				$this->binds[$position] = (int) (bool) $value; break;
+				$this->binds[$position] = ( (bool) $value ? 'TRUE' : 'FALSE' ); break;
 			case \Aimeos\MW\DB\Statement\Base::PARAM_INT:
 				$this->binds[$position] = (int) $value; break;
 			case \Aimeos\MW\DB\Statement\Base::PARAM_FLOAT:
 				$this->binds[$position] = (float) $value; break;
 			case \Aimeos\MW\DB\Statement\Base::PARAM_STR:
-				// \PDO quote isn't available for ODBC driver
-				$value = str_replace( '\'', '\'\'', str_replace( '\\', '\\\\', $value ) );
-				$this->binds[$position] = '\'' . $value . '\''; break;
+				$this->binds[$position] = $this->getConnection()->getRawObject()->quote( $value ); break;
 			default:
-				$this->binds[$position] = $value; break;
+				throw new \Aimeos\MW\DB\Exception( sprintf( 'Invalid parameter type "%1$s"', $type ) );
 		}
 
-		$this->stmt = null;
+		$this->sql = null;
+		return $this;
 	}
 
 
@@ -102,17 +83,19 @@ class Simple extends \Aimeos\MW\DB\Statement\Base implements \Aimeos\MW\DB\State
 	 */
 	public function execute()
 	{
-		if( count( $this->binds ) !== count( $this->parts ) - 1 ) {
-			throw new \Aimeos\MW\DB\Exception( sprintf( 'Number of binds (%1$d) doesn\'t match the number of markers in "%2$s"', count( $this->binds ), $this->sql ) );
+		if( count( $this->binds ) !== count( $this->parts ) - 1 )
+		{
+			$msg = 'Number of binds (%1$d) doesn\'t match the number of markers in "%2$s"';
+			throw new \Aimeos\MW\DB\Exception( sprintf( $msg, count( $this->binds ), implode( '?', $this->parts ) ) );
 		}
-
-		$sql = $this->buildSQL();
 
 		try {
-			return new \Aimeos\MW\DB\Result\PDO( $this->conn->query( $sql ) );
-		} catch ( \PDOException $pe ) {
-			throw new \Aimeos\MW\DB\Exception( sprintf( 'Executing statement "%1$s" failed: ', $sql ) . $pe->getMessage(), $pe->getCode(), $pe->errorInfo );
+			$result = $this->exec();
+		} catch( \PDOException $e ) {
+			throw new \Aimeos\MW\DB\Exception( $e->getMessage() . ': ' . $this->sql, $e->getCode() );
 		}
+
+		return new \Aimeos\MW\DB\Result\PDO( $result );
 	}
 
 
@@ -123,31 +106,48 @@ class Simple extends \Aimeos\MW\DB\Statement\Base implements \Aimeos\MW\DB\State
 	 */
 	public function __toString()
 	{
-		return $this->buildSQL();
+		if( $this->sql === null ) {
+			$this->sql = $this->buildSQL( $this->parts, $this->binds );
+		}
+
+		return $this->sql;
 	}
 
 
 	/**
-	 * Creates the SQL string with bound parameters.
+	 * Binds the parameters and executes the SQL statment
 	 *
-	 * @return string SQL statement
+	 * @return \PDOStatement Executed PDO statement
 	 */
-	protected function buildSQL()
+	protected function exec()
 	{
-		if( $this->stmt !== null ) {
-			return $this->stmt;
+		if( $this->sql === null ) {
+			$this->sql = $this->buildSQL( $this->parts, $this->binds );
 		}
 
-		$i = 1;
-		foreach( $this->parts as $part )
+		$level = error_reporting(); // Workaround for PDO warnings
+		$conn = $this->getConnection();
+
+		try
 		{
-			$this->stmt .= $part;
-			if( isset( $this->binds[$i] ) ) {
-				$this->stmt .= $this->binds[$i];
+			error_reporting( $level & ~E_WARNING );
+			$result = $conn->getRawObject()->query( $this->sql );
+		}
+		catch( \PDOException $e )
+		{
+			error_reporting( $level );
+
+			// recover from lost connection (MySQL)
+			if( !isset( $e->errorInfo[1] ) || $e->errorInfo[1] != 2006 || $conn->inTransaction() === true ) {
+				throw $e;
 			}
-			$i++;
+
+			$conn->connect();
+			return $this->exec();
 		}
 
-		return $this->stmt;
+		error_reporting( $level );
+
+		return $result;
 	}
 }

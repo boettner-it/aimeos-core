@@ -4,11 +4,11 @@ namespace Aimeos\MShop\Plugin\Provider;
 
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
-class ExceptionTest extends \PHPUnit_Framework_TestCase
+class ExceptionTest extends \PHPUnit\Framework\TestCase
 {
 	private $codes;
 
@@ -22,7 +22,6 @@ class ExceptionTest extends \PHPUnit_Framework_TestCase
 	protected function setUp()
 	{
 		$this->codes = array( 'something' => array( 'went', 'terribly', 'wrong' ) );
-
 	}
 
 	public function test()
@@ -35,7 +34,6 @@ class ExceptionTest extends \PHPUnit_Framework_TestCase
 			$this->assertEquals( 13, $mppe->getCode() );
 			$this->assertEquals( 'msg', $mppe->getMessage() );
 			$this->assertEquals( $this->codes, $mppe->getErrorCodes() );
-
 		}
 
 		try {
@@ -43,7 +41,7 @@ class ExceptionTest extends \PHPUnit_Framework_TestCase
 		}
 		catch( \Aimeos\MShop\Plugin\Provider\Exception $e )
 		{
-			$this->assertEquals( array(), $e->getErrorCodes() );
+			$this->assertEquals( [], $e->getErrorCodes() );
 		}
 	}
 }

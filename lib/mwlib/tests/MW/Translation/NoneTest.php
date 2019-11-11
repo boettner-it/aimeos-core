@@ -1,38 +1,26 @@
 <?php
 
+/**
+ * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
+ */
+
+
 namespace Aimeos\MW\Translation;
 
 
-/**
- * Test class for \Aimeos\MW\Translation\NoneTest.
- *
- * @copyright Metaways Infosystems GmbH, 2011
- * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
- */
-class NoneTest extends \PHPUnit_Framework_TestCase
+class NoneTest extends \PHPUnit\Framework\TestCase
 {
 	private $object;
 
 
-	/**
-	 * Sets up the fixture, for example, opens a network connection.
-	 * This method is called before a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function setUp()
 	{
 		$this->object = new \Aimeos\MW\Translation\None( 'ru_XX' );
 	}
 
 
-	/**
-	 * Tears down the fixture, for example, closes a network connection.
-	 * This method is called after a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function tearDown()
 	{
 		$this->object = null;
@@ -53,21 +41,21 @@ class NoneTest extends \PHPUnit_Framework_TestCase
 
 	public function testConstructInvalidUnderscoreLocale()
 	{
-		$this->setExpectedException( '\\Aimeos\\MW\\Translation\\Exception' );
+		$this->setExpectedException( \Aimeos\MW\Translation\Exception::class );
 		new \Aimeos\MW\Translation\None( 'de_' );
 	}
 
 
 	public function testConstructInvalidCaseLocale()
 	{
-		$this->setExpectedException( '\\Aimeos\\MW\\Translation\\Exception' );
+		$this->setExpectedException( \Aimeos\MW\Translation\Exception::class );
 		new \Aimeos\MW\Translation\None( 'de_de' );
 	}
 
 
 	public function testConstructInvalidCharLocale()
 	{
-		$this->setExpectedException( '\\Aimeos\\MW\\Translation\\Exception' );
+		$this->setExpectedException( \Aimeos\MW\Translation\Exception::class );
 		new \Aimeos\MW\Translation\None( 'd' );
 	}
 
@@ -98,8 +86,6 @@ class NoneTest extends \PHPUnit_Framework_TestCase
 
 		$this->assertEquals( 'File', $this->object->dn( 'testDomain', 'File', 'Files', -1 ) );
 		$this->assertEquals( 'Files', $this->object->dn( 'testDomain', 'File', 'Files', -22 ) );
-
-
 	}
 
 
@@ -109,7 +95,7 @@ class NoneTest extends \PHPUnit_Framework_TestCase
 
 		$lcList = array(
 			0 => array(
-				'am', 'ar','bh', 'fil', 'fr', 'gun', 'hi', 'ln', 'lv','mg', 'nso', 'xbr', 'ti', 'wa', 'pt_BR'
+				'am', 'ar', 'bh', 'fil', 'fr', 'gun', 'hi', 'ln', 'lv', 'mg', 'nso', 'xbr', 'ti', 'wa', 'pt_BR'
 			),
 			1 => array(
 				'af', 'az', 'bn', 'bg', 'ca', 'da', 'de', 'el', 'en', 'eo', 'es',
@@ -135,7 +121,7 @@ class NoneTest extends \PHPUnit_Framework_TestCase
 
 	public function testGetAll()
 	{
-		$this->assertEquals( array(), $this->object->getAll( 'testDomain' ) );
+		$this->assertEquals( [], $this->object->getAll( 'testDomain' ) );
 	}
 
 }

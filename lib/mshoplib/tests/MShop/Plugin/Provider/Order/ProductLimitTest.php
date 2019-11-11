@@ -1,81 +1,83 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
+
 
 namespace Aimeos\MShop\Plugin\Provider\Order;
 
 
-/**
- * Test class for \Aimeos\MShop\Plugin\Provider\Order\ProductLimit.
- */
-class ProductLimitTest extends \PHPUnit_Framework_TestCase
+class ProductLimitTest extends \PHPUnit\Framework\TestCase
 {
+	private $context;
 	private $object;
-	private $plugin;
 	private $order;
+	private $plugin;
 	private $products;
 
 
-	/**
-	 * Sets up the fixture, for example, opens a network connection.
-	 * This method is called before a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function setUp()
 	{
-		$pluginManager = \Aimeos\MShop\Plugin\Manager\Factory::createManager( \TestHelper::getContext() );
-		$this->plugin = $pluginManager->createItem();
-		$this->plugin->setTypeId( 2 );
-		$this->plugin->setProvider( 'ProductLimit' );
-		$this->plugin->setConfig( array( 'single-number-max' => 10 ) );
-		$this->plugin->setStatus( '1' );
+		$this->context = \TestHelperMShop::getContext();
+		$this->plugin = \Aimeos\MShop::create( $this->context, 'plugin' )->createItem()->setConfig( ['single-number-max' => 10] );
+		$this->order = \Aimeos\MShop::create( $this->context, 'order/base' )->createItem()->off(); // remove event listeners
 
+		$this->products = [];
+		$orderBaseProductManager = \Aimeos\MShop::create( $this->context, 'order/base/product' );
 
-		$orderManager = \Aimeos\MShop\Order\Manager\Factory::createManager( \TestHelper::getContext() );
-		$orderBaseManager = $orderManager->getSubManager( 'base' );
-		$orderBaseProductManager = $orderBaseManager->getSubManager( 'product' );
-
-		$manager = \Aimeos\MShop\Product\Manager\Factory::createManager( \TestHelper::getContext() );
+		$manager = \Aimeos\MShop\Product\Manager\Factory::create( \TestHelperMShop::getContext() );
 		$search = $manager->createSearch();
 		$search->setConditions( $search->compare( '==', 'product.code', array( 'CNE', 'CNC' ) ) );
 
-		$products = $manager->searchItems( $search );
-
-		if( count( $products ) !== 2 ) {
-			throw new \Exception( 'Wrong number of products' );
+		foreach( $manager->searchItems( $search ) as $product ) {
+			$this->products[$product->getCode()] = $orderBaseProductManager->createItem()->copyFrom( $product );
 		}
 
-		$this->products = array();
-
-		foreach( $products as $product )
-		{
-			$item = $orderBaseProductManager->createItem();
-			$item->copyFrom( $product );
-
-			$this->products[$product->getCode()] = $item;
-		}
-
-		$this->order = $orderBaseManager->createItem();
-
-		$this->object = new \Aimeos\MShop\Plugin\Provider\Order\ProductLimit( \TestHelper::getContext(), $this->plugin );
-
+		$this->object = new \Aimeos\MShop\Plugin\Provider\Order\ProductLimit( $this->context, $this->plugin );
 	}
 
 
-	/**
-	 * Tears down the fixture, for example, closes a network connection.
-	 * This method is called after a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function tearDown()
 	{
-		unset( $this->object, $this->order, $this->plugin, $this->products );
+		unset( $this->object, $this->order, $this->plugin, $this->products, $this->context );
+	}
+
+
+	public function testCheckConfigBE()
+	{
+		$attributes = array(
+			'single-number-max' => '10',
+			'total-number-max' => '100',
+			'single-value-max' => ['EUR' => '100.00'],
+			'total-value-max' => ['EUR' => '1000.00'],
+		);
+
+		$result = $this->object->checkConfigBE( $attributes );
+
+		$this->assertEquals( 4, count( $result ) );
+		$this->assertEquals( null, $result['single-number-max'] );
+		$this->assertEquals( null, $result['total-number-max'] );
+		$this->assertEquals( null, $result['single-value-max'] );
+		$this->assertEquals( null, $result['total-value-max'] );
+	}
+
+
+	public function testGetConfigBE()
+	{
+		$list = $this->object->getConfigBE();
+
+		$this->assertEquals( 4, count( $list ) );
+		$this->assertArrayHasKey( 'single-number-max', $list );
+		$this->assertArrayHasKey( 'total-number-max', $list );
+		$this->assertArrayHasKey( 'single-value-max', $list );
+		$this->assertArrayHasKey( 'total-value-max', $list );
+
+		foreach( $list as $entry ) {
+			$this->assertInstanceOf( \Aimeos\MW\Criteria\Attribute\Iface::class, $entry );
+		}
 	}
 
 
@@ -87,91 +89,70 @@ class ProductLimitTest extends \PHPUnit_Framework_TestCase
 
 	public function testUpdateSingleNumberMax()
 	{
-		$this->plugin->setConfig( array( 'single-number-max' => 10 ) );
+		$this->plugin->setConfig( ['single-number-max' => 10] );
+		$product = $this->products['CNC']->setQuantity( 10 );
+
+		$this->assertEquals( $product, $this->object->update( $this->order, 'addProduct.before', $product ) );
 
 
-		$this->products['CNC']->setQuantity( 10 );
+		$product = $this->products['CNE']->setQuantity( 11 );
 
-		$this->assertTrue( $this->object->update( $this->order, 'addProduct.before', $this->products['CNC'] ) );
-
-
-		$this->products['CNE']->setQuantity( 11 );
-
-		$this->setExpectedException( '\\Aimeos\\MShop\\Plugin\\Exception' );
-		$this->object->update( $this->order, 'addProduct.before', $this->products['CNE'] );
+		$this->setExpectedException( \Aimeos\MShop\Plugin\Exception::class );
+		$this->object->update( $this->order, 'addProduct.before', $product );
 	}
 
 
 	public function testUpdateSingleValueMax()
 	{
-		$priceManager = \Aimeos\MShop\Price\Manager\Factory::createManager( \TestHelper::getContext() );
+		$priceManager = \Aimeos\MShop::create( $this->context, 'price' );
+		$this->plugin->setConfig( ['single-value-max' => ['EUR' => '10.00']] );
 
-		$this->plugin->setConfig( array( 'single-value-max' => array( 'EUR' => '10.00' ) ) );
+		$product = $this->products['CNC']->setQuantity( 1 )
+			->setPrice( $priceManager->createItem()->setValue( '10.00' ) );
 
-
-		$price = $priceManager->createItem();
-		$price->setValue( '10.00' );
-
-		$this->products['CNC']->setPrice( $price );
-		$this->products['CNC']->setQuantity( 1 );
-
-		$this->assertTrue( $this->object->update( $this->order, 'addProduct.before', $this->products['CNC'] ) );
+		$this->assertEquals( $product, $this->object->update( $this->order, 'addProduct.before', $product ) );
 
 
-		$price = $priceManager->createItem();
-		$price->setValue( '3.50' );
+		$product = $this->products['CNE']->setQuantity( 3 )
+			->setPrice( $priceManager->createItem()->setValue( '3.50' ) );
 
-		$this->products['CNE']->setPrice( $price );
-		$this->products['CNE']->setQuantity( 3 );
-
-		$this->setExpectedException( '\\Aimeos\\MShop\\Plugin\\Exception' );
-		$this->object->update( $this->order, 'addProduct.before', $this->products['CNE'] );
+		$this->setExpectedException( \Aimeos\MShop\Plugin\Exception::class );
+		$this->object->update( $this->order, 'addProduct.before', $product );
 	}
 
 
 	public function testUpdateTotalNumberMax()
 	{
 		$this->plugin->setConfig( array( 'total-number-max' => 10 ) );
+		$product = $this->products['CNC']->setQuantity( 10 );
 
-
-		$this->products['CNC']->setQuantity( 10 );
-
-		$this->assertTrue( $this->object->update( $this->order, 'addProduct.before', $this->products['CNC'] ) );
+		$this->assertEquals( $product, $this->object->update( $this->order, 'addProduct.before', $product ) );
 
 
 		$this->order->addProduct( $this->products['CNC'] );
-		$this->products['CNE']->setQuantity( 1 );
+		$product = $this->products['CNE']->setQuantity( 1 );
 
-		$this->setExpectedException( '\\Aimeos\\MShop\\Plugin\\Exception' );
-		$this->object->update( $this->order, 'addProduct.before', $this->products['CNE'] );
+		$this->setExpectedException( \Aimeos\MShop\Plugin\Exception::class );
+		$this->object->update( $this->order, 'addProduct.before', $product );
 	}
 
 
 	public function testUpdateTotalValueMax()
 	{
-		$priceManager = \Aimeos\MShop\Price\Manager\Factory::createManager( \TestHelper::getContext() );
+		$priceManager = \Aimeos\MShop::create( $this->context, 'price' );
+		$this->plugin->setConfig( ['total-value-max' => ['EUR' => '110.00']] );
 
-		$this->plugin->setConfig( array( 'total-value-max' => array( 'EUR' => '110.00' ) ) );
+		$product = $this->products['CNC']->setQuantity( 1 )
+			->setPrice( $priceManager->createItem()->setValue( '100.00' ) );
 
-
-		$price = $priceManager->createItem();
-		$price->setValue( '100.00' );
-
-		$this->products['CNC']->setPrice( $price );
-		$this->products['CNC']->setQuantity( 1 );
-
-		$this->assertTrue( $this->object->update( $this->order, 'addProduct.before', $this->products['CNC'] ) );
+		$this->assertEquals( $product, $this->object->update( $this->order, 'addProduct.before', $product ) );
 
 
 		$this->order->addProduct( $this->products['CNC'] );
+		$product = $this->products['CNE']->setQuantity( 2 )
+			->setPrice( $priceManager->createItem()->setValue( '10.00' ) );
 
-		$price = $priceManager->createItem();
-		$price->setValue( '10.00' );
-
-		$this->products['CNE']->setPrice( $price );
-		$this->products['CNE']->setQuantity( 2 );
-
-		$this->setExpectedException( '\\Aimeos\\MShop\\Plugin\\Exception' );
-		$this->object->update( $this->order, 'addProduct.before', $this->products['CNE'] );
+		$this->setExpectedException( \Aimeos\MShop\Plugin\Exception::class );
+		$this->object->update( $this->order, 'addProduct.before', $product );
 	}
 }

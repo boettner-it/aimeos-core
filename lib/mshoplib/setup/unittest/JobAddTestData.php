@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2012
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2012
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 
@@ -23,42 +23,19 @@ class JobAddTestData extends \Aimeos\MW\Setup\Task\Base
 	 */
 	public function getPreDependencies()
 	{
-		return array( 'MShopSetLocale', 'OrderAddTestData' );
-	}
-
-
-	/**
-	 * Returns the list of task names which depends on this task.
-	 *
-	 * @return array List of task names
-	 */
-	public function getPostDependencies()
-	{
-		return array();
-	}
-
-
-	/**
-	 * Executes the task for MySQL databases.
-	 */
-	protected function mysql()
-	{
-		$this->process();
+		return ['MShopSetLocale'];
 	}
 
 
 	/**
 	 * Adds admin job test data.
 	 */
-	protected function process()
+	public function migrate()
 	{
-		$iface = '\\Aimeos\\MShop\\Context\\Item\\Iface';
-		if( !( $this->additional instanceof $iface ) ) {
-			throw new \Aimeos\MW\Setup\Exception( sprintf( 'Additionally provided object is not of type "%1$s"', $iface ) );
-		}
+		\Aimeos\MW\Common\Base::checkClass( \Aimeos\MShop\Context\Item\Iface::class, $this->additional );
 
 		$this->msg( 'Adding admin test data', 0 );
-		$this->additional->setEditor( 'core:unittest' );
+		$this->additional->setEditor( 'core:lib/mshoplib' );
 
 		$this->addJobTestData();
 
@@ -73,7 +50,7 @@ class JobAddTestData extends \Aimeos\MW\Setup\Task\Base
 	 */
 	private function addJobTestData()
 	{
-		$adminJobManager = \Aimeos\MAdmin\Job\Manager\Factory::createManager( $this->additional, 'Standard' );
+		$manager = \Aimeos\MAdmin\Job\Manager\Factory::create( $this->additional, 'Standard' );
 
 		$ds = DIRECTORY_SEPARATOR;
 		$path = __DIR__ . $ds . 'data' . $ds . 'job.php';
@@ -82,22 +59,8 @@ class JobAddTestData extends \Aimeos\MW\Setup\Task\Base
 			throw new \Aimeos\MShop\Exception( sprintf( 'No file "%1$s" found for job domain', $path ) );
 		}
 
-		$job = $adminJobManager->createItem();
-
-		$this->conn->begin();
-
-		foreach( $testdata['job'] as $dataset )
-		{
-			$job->setId( null );
-			$job->setLabel( $dataset['label'] );
-			$job->setMethod( $dataset['method'] );
-			$job->setParameter( $dataset['parameter'] );
-			$job->setResult( $dataset['result'] );
-			$job->setStatus( $dataset['status'] );
-
-			$adminJobManager->saveItem( $job, false );
+		foreach( $testdata['job'] as $dataset ) {
+			$manager->saveItem( $manager->createItem()->fromArray( $dataset ), false );
 		}
-
-		$this->conn->commit();
 	}
 }

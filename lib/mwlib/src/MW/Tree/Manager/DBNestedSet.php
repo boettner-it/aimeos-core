@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Tree
  */
@@ -20,7 +20,7 @@ namespace Aimeos\MW\Tree\Manager;
  */
 class DBNestedSet extends \Aimeos\MW\Tree\Manager\Base
 {
-	private $searchConfig = array();
+	private $searchConfig = [];
 	private $config;
 	private $dbname;
 	private $dbm;
@@ -99,11 +99,11 @@ class DBNestedSet extends \Aimeos\MW\Tree\Manager\Base
 	/**
 	 * Returns a list of attributes which can be used in the search method.
 	 *
-	 * @return array List of search attribute objects implementing \Aimeos\MW\Criteria\Attribute\Iface
+	 * @return \Aimeos\MW\Criteria\Attribute\Iface[] List of search attribute items
 	 */
-	public function getSearchAttributes()
+	public function getSearchAttributes() : array
 	{
-		$attributes = array();
+		$attributes = [];
 
 		foreach( $this->searchConfig as $values ) {
 			$attributes[] = new \Aimeos\MW\Criteria\Attribute\Standard( $values );
@@ -118,7 +118,7 @@ class DBNestedSet extends \Aimeos\MW\Tree\Manager\Base
 	 *
 	 * @return \Aimeos\MW\Criteria\Iface Search object instance
 	 */
-	public function createSearch()
+	public function createSearch() : \Aimeos\MW\Criteria\Iface
 	{
 		$conn = $this->dbm->acquire( $this->dbname );
 		$search = new \Aimeos\MW\Criteria\SQL( $conn );
@@ -133,7 +133,7 @@ class DBNestedSet extends \Aimeos\MW\Tree\Manager\Base
 	 *
 	 * @return \Aimeos\MW\Tree\Node\Iface Empty node object
 	 */
-	public function createNode()
+	public function createNode() : \Aimeos\MW\Tree\Node\Iface
 	{
 		return $this->createNodeBase();
 	}
@@ -142,9 +142,10 @@ class DBNestedSet extends \Aimeos\MW\Tree\Manager\Base
 	/**
 	 * Deletes a node and its descendants from the storage.
 	 *
-	 * @param integer|null $id Delete the node with the ID and all nodes below
+	 * @param string|null $id Delete the node with the ID and all nodes below
+	 * @return \Aimeos\MW\Tree\Manager\Iface Manager object for method chaining
 	 */
-	public function deleteNode( $id = null )
+	public function deleteNode( string $id = null ) : Iface
 	{
 		$node = $this->getNode( $id, \Aimeos\MW\Tree\Manager\Base::LEVEL_ONE );
 
@@ -153,23 +154,23 @@ class DBNestedSet extends \Aimeos\MW\Tree\Manager\Base
 		try
 		{
 			$stmt = $conn->create( $this->config['delete'] );
-			$stmt->bind( 1, $node->left, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 2, $node->right, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmt->bind( 1, $node->left, $this->searchConfig['left']['internaltype'] );
+			$stmt->bind( 2, $node->right, $this->searchConfig['right']['internaltype'] );
 			$stmt->execute()->finish();
 
 			$diff = $node->right - $node->left + 1;
 
 			$stmt = $conn->create( $this->config['move-left'] );
-			$stmt->bind( 1, -$diff, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 2, 0, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 3, $node->right + 1, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 4, 0x7FFFFFFF, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmt->bind( 1, -$diff, $this->searchConfig['left']['internaltype'] );
+			$stmt->bind( 2, 0, $this->searchConfig['level']['internaltype'] );
+			$stmt->bind( 3, $node->right + 1, $this->searchConfig['left']['internaltype'] );
+			$stmt->bind( 4, 0x7FFFFFFF, $this->searchConfig['left']['internaltype'] );
 			$stmt->execute()->finish();
 
 			$stmt = $conn->create( $this->config['move-right'] );
-			$stmt->bind( 1, -$diff, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 2, $node->right + 1, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 3, 0x7FFFFFFF, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmt->bind( 1, -$diff, $this->searchConfig['right']['internaltype'] );
+			$stmt->bind( 2, $node->right + 1, $this->searchConfig['right']['internaltype'] );
+			$stmt->bind( 3, 0x7FFFFFFF, $this->searchConfig['right']['internaltype'] );
 			$stmt->execute()->finish();
 
 			$this->dbm->release( $conn, $this->dbname );
@@ -179,18 +180,20 @@ class DBNestedSet extends \Aimeos\MW\Tree\Manager\Base
 			$this->dbm->release( $conn, $this->dbname );
 			throw $e;
 		}
+
+		return $this;
 	}
 
 
 	/**
 	 * Returns a node and its descendants depending on the given resource.
 	 *
-	 * @param integer|null $id Retrieve nodes starting from the given ID
-	 * @param integer $level One of the level constants from \Aimeos\MW\Tree\Manager\Base
-	 * * @param \Aimeos\MW\Criteria\Iface|null $condition Optional criteria object with conditions
+	 * @param string|null $id Retrieve nodes starting from the given ID
+	 * @param int $level One of the level constants from \Aimeos\MW\Tree\Manager\Base
+	 * @param \Aimeos\MW\Criteria\Iface|null $condition Optional criteria object with conditions
 	 * @return \Aimeos\MW\Tree\Node\Iface Node, maybe with subnodes
 	 */
-	public function getNode( $id = null, $level = \Aimeos\MW\Tree\Manager\Base::LEVEL_TREE, \Aimeos\MW\Criteria\Iface $condition = null )
+	public function getNode( string $id = null, int $level = Base::LEVEL_TREE, \Aimeos\MW\Criteria\Iface $condition = null ) : \Aimeos\MW\Tree\Node\Iface
 	{
 		if( $id === null )
 		{
@@ -223,12 +226,12 @@ class DBNestedSet extends \Aimeos\MW\Tree\Manager\Base
 				$search->getConditions(),
 				$condition->getConditions()
 			);
-			$search->setConditions( $search->combine('&&', $expr) );
+			$search->setConditions( $search->combine( '&&', $expr ) );
 		}
 
 		$types = $this->getSearchTypes( $this->searchConfig );
 		$translations = $this->getSearchTranslations( $this->searchConfig );
-		$conditions = $search->getConditionString( $types, $translations );
+		$conditions = $search->getConditionSource( $types, $translations );
 
 
 		$conn = $this->dbm->acquire( $this->dbname );
@@ -236,8 +239,8 @@ class DBNestedSet extends \Aimeos\MW\Tree\Manager\Base
 		try
 		{
 			$stmt = $conn->create( str_replace( ':cond', $conditions, $this->config['get'] ) );
-			$stmt->bind( 1, $id, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 2, $numlevel, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmt->bind( 1, $id, $this->searchConfig['parentid']['internaltype'] );
+			$stmt->bind( 2, $numlevel, $this->searchConfig['level']['internaltype'] );
 			$result = $stmt->execute();
 
 			if( ( $row = $result->fetch() ) === false ) {
@@ -263,10 +266,11 @@ class DBNestedSet extends \Aimeos\MW\Tree\Manager\Base
 	 * Inserts a new node before the given reference node to the parent in the storage.
 	 *
 	 * @param \Aimeos\MW\Tree\Node\Iface $node New node that should be inserted
-	 * @param mixed $parentId ID of the parent node where the new node should be inserted below (null for root node)
-	 * @param mixed $refId ID of the node where the node should be inserted before (null to append)
+	 * @param string|null $parentId ID of the parent node where the new node should be inserted below (null for root node)
+	 * @param string|null $refId ID of the node where the node should be inserted before (null to append)
+	 * @return \Aimeos\MW\Tree\Node\Iface Updated node item
 	 */
-	public function insertNode( \Aimeos\MW\Tree\Node\Iface $node, $parentId = null, $refId = null )
+	public function insertNode( \Aimeos\MW\Tree\Node\Iface $node, string $parentId = null, string $refId = null ) : \Aimeos\MW\Tree\Node\Iface
 	{
 		$node->parentid = $parentId;
 
@@ -304,26 +308,26 @@ class DBNestedSet extends \Aimeos\MW\Tree\Manager\Base
 		try
 		{
 			$stmt = $conn->create( $this->config['move-left'] );
-			$stmt->bind( 1, 2, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 2, 0, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 3, $node->left, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 4, 0x7FFFFFFF, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmt->bind( 1, 2, $this->searchConfig['left']['internaltype'] );
+			$stmt->bind( 2, 0, $this->searchConfig['level']['internaltype'] );
+			$stmt->bind( 3, $node->left, $this->searchConfig['left']['internaltype'] );
+			$stmt->bind( 4, 0x7FFFFFFF, $this->searchConfig['left']['internaltype'] );
 			$stmt->execute()->finish();
 
 			$stmt = $conn->create( $this->config['move-right'] );
-			$stmt->bind( 1, 2, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 2, $node->left, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 3, 0x7FFFFFFF, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmt->bind( 1, 2, $this->searchConfig['right']['internaltype'] );
+			$stmt->bind( 2, $node->left, $this->searchConfig['right']['internaltype'] );
+			$stmt->bind( 3, 0x7FFFFFFF, $this->searchConfig['right']['internaltype'] );
 			$stmt->execute()->finish();
 
 			$stmt = $conn->create( $this->config['insert'] );
-			$stmt->bind( 1, $node->getLabel(), \Aimeos\MW\DB\Statement\Base::PARAM_STR );
-			$stmt->bind( 2, $node->getCode(), \Aimeos\MW\DB\Statement\Base::PARAM_STR );
-			$stmt->bind( 3, $node->getStatus(), \Aimeos\MW\DB\Statement\Base::PARAM_BOOL );
-			$stmt->bind( 4, (int) $node->parentid, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 5, $node->level, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 6, $node->left, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 7, $node->right, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmt->bind( 1, $node->getLabel(), $this->searchConfig['label']['internaltype'] );
+			$stmt->bind( 2, $node->getCode(), $this->searchConfig['code']['internaltype'] );
+			$stmt->bind( 3, $node->getStatus(), $this->searchConfig['status']['internaltype'] );
+			$stmt->bind( 4, (int) $node->parentid, $this->searchConfig['parentid']['internaltype'] );
+			$stmt->bind( 5, $node->level, $this->searchConfig['level']['internaltype'] );
+			$stmt->bind( 6, $node->left, $this->searchConfig['left']['internaltype'] );
+			$stmt->bind( 7, $node->right, $this->searchConfig['right']['internaltype'] );
 			$stmt->execute()->finish();
 
 
@@ -343,18 +347,21 @@ class DBNestedSet extends \Aimeos\MW\Tree\Manager\Base
 			$this->dbm->release( $conn, $this->dbname );
 			throw $e;
 		}
+
+		return $node;
 	}
 
 
 	/**
 	 * Moves an existing node to the new parent in the storage.
 	 *
-	 * @param string|null $id ID of the node that should be moved
+	 * @param string $id ID of the node that should be moved
 	 * @param string|null $oldParentId ID of the old parent node which currently contains the node that should be removed
 	 * @param string|null $newParentId ID of the new parent node where the node should be moved to
-	 * @param null|string $newRefId ID of the node where the node should be inserted before (null to append)
+	 * @param string|null $newRefId ID of the node where the node should be inserted before (null to append)
+	 * @return \Aimeos\MW\Tree\Manager\Iface Manager object for method chaining
 	 */
-	public function moveNode( $id, $oldParentId, $newParentId, $newRefId = null )
+	public function moveNode( string $id, string $oldParentId = null, string $newParentId = null, string $newRefId = null ) : Iface
 	{
 		$node = $this->getNode( $id, \Aimeos\MW\Tree\Manager\Base::LEVEL_ONE );
 		$diff = $node->right - $node->left + 1;
@@ -438,46 +445,46 @@ class DBNestedSet extends \Aimeos\MW\Tree\Manager\Base
 			$updateParentId = $conn->create( $this->config['update-parentid'], \Aimeos\MW\DB\Connection\Base::TYPE_PREP );
 			// open gap for inserting node or subtree
 
-			$stmtLeft->bind( 1, $diff, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmtLeft->bind( 2, 0, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmtLeft->bind( 3, $openNodeLeftBegin, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmtLeft->bind( 4, 0x7FFFFFFF, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmtLeft->bind( 1, $diff, $this->searchConfig['left']['internaltype'] );
+			$stmtLeft->bind( 2, 0, $this->searchConfig['level']['internaltype'] );
+			$stmtLeft->bind( 3, $openNodeLeftBegin, $this->searchConfig['left']['internaltype'] );
+			$stmtLeft->bind( 4, 0x7FFFFFFF, $this->searchConfig['left']['internaltype'] );
 			$stmtLeft->execute()->finish();
 
-			$stmtRight->bind( 1, $diff, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmtRight->bind( 2, $openNodeRightBegin, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmtRight->bind( 3, 0x7FFFFFFF, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmtRight->bind( 1, $diff, $this->searchConfig['right']['internaltype'] );
+			$stmtRight->bind( 2, $openNodeRightBegin, $this->searchConfig['right']['internaltype'] );
+			$stmtRight->bind( 3, 0x7FFFFFFF, $this->searchConfig['right']['internaltype'] );
 			$stmtRight->execute()->finish();
 
 			// move node or subtree to the new gap
 
-			$stmtLeft->bind( 1, $movesize, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmtLeft->bind( 2, $leveldiff, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmtLeft->bind( 3, $moveNodeLeftBegin, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmtLeft->bind( 4, $moveNodeLeftEnd, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmtLeft->bind( 1, $movesize, $this->searchConfig['left']['internaltype'] );
+			$stmtLeft->bind( 2, $leveldiff, $this->searchConfig['level']['internaltype'] );
+			$stmtLeft->bind( 3, $moveNodeLeftBegin, $this->searchConfig['left']['internaltype'] );
+			$stmtLeft->bind( 4, $moveNodeLeftEnd, $this->searchConfig['left']['internaltype'] );
 			$stmtLeft->execute()->finish();
 
-			$stmtRight->bind( 1, $movesize, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmtRight->bind( 2, $moveNodeRightBegin, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmtRight->bind( 3, $moveNodeRightEnd, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmtRight->bind( 1, $movesize, $this->searchConfig['right']['internaltype'] );
+			$stmtRight->bind( 2, $moveNodeRightBegin, $this->searchConfig['right']['internaltype'] );
+			$stmtRight->bind( 3, $moveNodeRightEnd, $this->searchConfig['right']['internaltype'] );
 			$stmtRight->execute()->finish();
 
 			// close gap opened by moving the node or subtree to the new location
 
-			$stmtLeft->bind( 1, -$diff, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmtLeft->bind( 2, 0, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmtLeft->bind( 3, $closeNodeLeftBegin, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmtLeft->bind( 4, 0x7FFFFFFF, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmtLeft->bind( 1, -$diff, $this->searchConfig['left']['internaltype'] );
+			$stmtLeft->bind( 2, 0, $this->searchConfig['level']['internaltype'] );
+			$stmtLeft->bind( 3, $closeNodeLeftBegin, $this->searchConfig['left']['internaltype'] );
+			$stmtLeft->bind( 4, 0x7FFFFFFF, $this->searchConfig['left']['internaltype'] );
 			$stmtLeft->execute()->finish();
 
-			$stmtRight->bind( 1, -$diff, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmtRight->bind( 2, $closeNodeRightBegin, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmtRight->bind( 3, 0x7FFFFFFF, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmtRight->bind( 1, -$diff, $this->searchConfig['right']['internaltype'] );
+			$stmtRight->bind( 2, $closeNodeRightBegin, $this->searchConfig['right']['internaltype'] );
+			$stmtRight->bind( 3, 0x7FFFFFFF, $this->searchConfig['right']['internaltype'] );
 			$stmtRight->execute()->finish();
 
 
-			$updateParentId->bind( 1, $newParentId, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$updateParentId->bind( 2, $id, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$updateParentId->bind( 1, $newParentId, $this->searchConfig['parentid']['internaltype'] );
+			$updateParentId->bind( 2, $id, $this->searchConfig['id']['internaltype'] );
 			$updateParentId->execute()->finish();
 
 			$this->dbm->release( $conn, $this->dbname );
@@ -487,6 +494,8 @@ class DBNestedSet extends \Aimeos\MW\Tree\Manager\Base
 			$this->dbm->release( $conn, $this->dbname );
 			throw $e;
 		}
+
+		return $this;
 	}
 
 
@@ -497,15 +506,16 @@ class DBNestedSet extends \Aimeos\MW\Tree\Manager\Base
 	 * the tree layout by adding, moving or deleting nodes.
 	 *
 	 * @param \Aimeos\MW\Tree\Node\Iface $node Tree node object
+	 * @return \Aimeos\MW\Tree\Node\Iface Updated node item
 	 */
-	public function saveNode( \Aimeos\MW\Tree\Node\Iface $node )
+	public function saveNode( \Aimeos\MW\Tree\Node\Iface $node ) : \Aimeos\MW\Tree\Node\Iface
 	{
 		if( $node->getId() === null ) {
 			throw new \Aimeos\MW\Tree\Exception( sprintf( 'Unable to save newly created nodes, use insert method instead' ) );
 		}
 
 		if( $node->isModified() === false ) {
-			return;
+			return $node;
 		}
 
 		$conn = $this->dbm->acquire( $this->dbname );
@@ -513,10 +523,10 @@ class DBNestedSet extends \Aimeos\MW\Tree\Manager\Base
 		try
 		{
 			$stmt = $conn->create( $this->config['update'] );
-			$stmt->bind( 1, $node->getLabel() );
-			$stmt->bind( 2, $node->getCode() );
-			$stmt->bind( 3, $node->getStatus() );
-			$stmt->bind( 4, $node->getId() );
+			$stmt->bind( 1, $node->getLabel(), $this->searchConfig['label']['internaltype'] );
+			$stmt->bind( 2, $node->getCode(), $this->searchConfig['code']['internaltype'] );
+			$stmt->bind( 3, $node->getStatus(), $this->searchConfig['status']['internaltype'] );
+			$stmt->bind( 4, $node->getId(), $this->searchConfig['id']['internaltype'] );
 			$stmt->execute()->finish();
 
 			$this->dbm->release( $conn, $this->dbname );
@@ -526,6 +536,8 @@ class DBNestedSet extends \Aimeos\MW\Tree\Manager\Base
 			$this->dbm->release( $conn, $this->dbname );
 			throw $e;
 		}
+
+		return $node;
 	}
 
 
@@ -533,26 +545,30 @@ class DBNestedSet extends \Aimeos\MW\Tree\Manager\Base
 	 * Retrieves a list of nodes from the storage matching the given search criteria.
 	 *
 	 * @param \Aimeos\MW\Criteria\Iface $search Search criteria object
-	 * @param integer|null $id Search nodes starting at the node with the given ID
-	 * @return array List of nodes implementing \Aimeos\MW\Tree\Node\Iface
+	 * @param string|null $id Search nodes starting at the node with the given ID
+	 * @return \Aimeos\MW\Tree\Node\Iface[] List of tree nodes
 	 */
-	public function searchNodes( \Aimeos\MW\Criteria\Iface $search, $id = null )
+	public function searchNodes( \Aimeos\MW\Criteria\Iface $search, string $id = null ) : array
 	{
-		$left =  1;
+		$left = 1;
 		$right = 0x7FFFFFFF;
 
 		if( $id !== null )
 		{
 			$node = $this->getNodeById( $id );
 
-			$left =  $node->left;
+			$left = $node->left;
 			$right = $node->right;
+		}
+
+		if( $search->getSortations() === [] ) {
+			$search->setSortations( [$search->sort( '+', $this->searchConfig['left']['code'] )] );
 		}
 
 		$types = $this->getSearchTypes( $this->searchConfig );
 		$translations = $this->getSearchTranslations( $this->searchConfig );
-		$conditions = $search->getConditionString( $types, $translations );
-		$sortations = $search->getSortationString( $types, $translations );
+		$conditions = $search->getConditionSource( $types, $translations );
+		$sortations = $search->getSortationSource( $types, $translations );
 
 		$sql = str_replace(
 			array( ':cond', ':order' ),
@@ -565,13 +581,13 @@ class DBNestedSet extends \Aimeos\MW\Tree\Manager\Base
 		try
 		{
 			$stmt = $conn->create( $sql );
-			$stmt->bind( 1, $left, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 2, $right, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmt->bind( 1, $left, $this->searchConfig['left']['internaltype'] );
+			$stmt->bind( 2, $right, $this->searchConfig['right']['internaltype'] );
 			$result = $stmt->execute();
 
 			try
 			{
-				$nodes = array();
+				$nodes = [];
 				while( ( $row = $result->fetch() ) !== false ) {
 					$nodes[$row['id']] = $this->createNodeBase( $row );
 				}
@@ -597,12 +613,12 @@ class DBNestedSet extends \Aimeos\MW\Tree\Manager\Base
 	/**
 	 * Returns a list if node IDs, that are in the path of given node ID.
 	 *
-	 * @param integer $id ID of node to get the path for
-	 * @return array Associative list of nodes implementing \Aimeos\MW\Tree\Node\Iface with IDs as keys
+	 * @param string $id ID of node to get the path for
+	 * @return \Aimeos\MW\Tree\Node\Iface[] List of tree nodes
 	 */
-	public function getPath( $id )
+	public function getPath( string $id ) : array
 	{
-		$result = array();
+		$result = [];
 		$node = $this->getNode( $id, \Aimeos\MW\Tree\Manager\Base::LEVEL_ONE );
 
 		$search = $this->createSearch();
@@ -617,7 +633,7 @@ class DBNestedSet extends \Aimeos\MW\Tree\Manager\Base
 
 		$results = $this->searchNodes( $search );
 
-		foreach ( $results as $item ) {
+		foreach( $results as $item ) {
 			$result[$item->getId()] = $item;
 		}
 
@@ -681,11 +697,11 @@ class DBNestedSet extends \Aimeos\MW\Tree\Manager\Base
 	/**
 	 * Creates a new node object.
 	 *
-	 * @param array List of attributes that should be stored in the new node
-	 * @param array List of children implementing \Aimeos\MW\Tree\Node\Iface
+	 * @param array $values List of attributes that should be stored in the new node
+	 * @param \Aimeos\MW\Tree\Node\Iface[] $children List of child nodes
 	 * @return \Aimeos\MW\Tree\Node\Iface Empty node object
 	 */
-	protected function createNodeBase( array $values = array(), array $children = array() )
+	protected function createNodeBase( array $values = [], array $children = [] ) : \Aimeos\MW\Tree\Node\Iface
 	{
 		return new \Aimeos\MW\Tree\Node\DBNestedSet( $values, $children );
 	}
@@ -696,9 +712,8 @@ class DBNestedSet extends \Aimeos\MW\Tree\Manager\Base
 	 *
 	 * @param \Aimeos\MW\DB\Result\Iface $result Database result
 	 * @param \Aimeos\MW\Tree\Node\Iface $node Current node to add children to
-	 * @return \Aimeos\MW\Tree\Node\Iface Parent node containing the children
 	 */
-	protected function createTree( \Aimeos\MW\DB\Result\Iface $result, \Aimeos\MW\Tree\Node\Iface $node )
+	protected function createTree( \Aimeos\MW\DB\Result\Iface $result, \Aimeos\MW\Tree\Node\Iface $node ) : ?\Aimeos\MW\Tree\Node\Iface
 	{
 		while( ( $record = $result->fetch() ) !== false )
 		{
@@ -708,15 +723,15 @@ class DBNestedSet extends \Aimeos\MW\Tree\Manager\Base
 			{
 				$node->addChild( $newNode );
 
-				if( ( $newNode = $this->createTree( $result, $newNode ) ) === false ) {
-					return false;
+				if( ( $newNode = $this->createTree( $result, $newNode ) ) === null ) {
+					return null;
 				}
 			}
 
 			return $newNode;
 		}
 
-		return false;
+		return null;
 	}
 
 
@@ -725,21 +740,22 @@ class DBNestedSet extends \Aimeos\MW\Tree\Manager\Base
 	 *
 	 * @param \Aimeos\MW\Tree\Node\Iface $node Node to test
 	 * @param \Aimeos\MW\Tree\Node\Iface $parent Parent node
-	 * @return boolean True if not is a child of the second node, false if not
+	 * @return bool True if not is a child of the second node, false if not
 	 */
-	protected function isChild( \Aimeos\MW\Tree\Node\Iface $node, \Aimeos\MW\Tree\Node\Iface $parent )
+	protected function isChild( \Aimeos\MW\Tree\Node\Iface $node, \Aimeos\MW\Tree\Node\Iface $parent ) : bool
 	{
-		return $node->__get('left') > $parent->__get('left') && $node->__get('right') < $parent->__get('right');
+		return $node->__get( 'left' ) > $parent->__get( 'left' ) && $node->__get( 'right' ) < $parent->__get( 'right' );
 	}
 
 
 	/**
 	 * Converts the level constant to the depth of the tree.
 	 *
-	 * @param integer $level Level constant from \Aimeos\MW\Tree\Manager\Base
+	 * @param int $level Level constant from \Aimeos\MW\Tree\Manager\Base
+	 * @return int Number of tree levels
 	 * @throws \Aimeos\MW\Tree\Exception if level constant is invalid
 	 */
-	protected function getLevelFromConstant( $level )
+	protected function getLevelFromConstant( int $level ) : int
 	{
 		switch( $level )
 		{
@@ -748,7 +764,7 @@ class DBNestedSet extends \Aimeos\MW\Tree\Manager\Base
 			case \Aimeos\MW\Tree\Manager\Base::LEVEL_LIST:
 				return 1;
 			case \Aimeos\MW\Tree\Manager\Base::LEVEL_TREE:
-				return 0x7FFFFFFF; // max. possible level
+				return 0x3FFFFFFF; // max. possible level / 2 to prevent integer overflow
 			default:
 				throw new \Aimeos\MW\Tree\Exception( sprintf( 'Invalid level constant "%1$d"', $level ) );
 		}
@@ -759,19 +775,19 @@ class DBNestedSet extends \Aimeos\MW\Tree\Manager\Base
 	 * Returns a single node identified by its ID.
 	 *
 	 * @param string $id Unique ID
+	 * @return \Aimeos\MW\Tree\Node\Iface Tree node
 	 * @throws \Aimeos\MW\Tree\Exception If node is not found
 	 * @throws \Exception If anything unexcepted occurs
-	 * @return \Aimeos\MW\Tree\Node\Iface Tree node
 	 */
-	protected function getNodeById( $id )
+	protected function getNodeById( string $id ) : \Aimeos\MW\Tree\Node\Iface
 	{
 		$conn = $this->dbm->acquire( $this->dbname );
 
 		try
 		{
 			$stmt = $conn->create( str_replace( ':cond', '1=1', $this->config['get'] ) );
-			$stmt->bind( 1, $id, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 2, 0, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmt->bind( 1, $id, $this->searchConfig['parentid']['internaltype'] );
+			$stmt->bind( 2, 0, $this->searchConfig['level']['internaltype'] );
 			$result = $stmt->execute();
 
 			if( ( $row = $result->fetch() ) === false ) {
@@ -798,7 +814,7 @@ class DBNestedSet extends \Aimeos\MW\Tree\Manager\Base
 	 * @param string $sort Sort direction, '+' is ascending, '-' is descending
 	 * @return \Aimeos\MW\Tree\Node\Iface|null Tree root node
 	 */
-	protected function getRootNode( $sort = '+' )
+	protected function getRootNode( string $sort = '+' ) : ?\Aimeos\MW\Tree\Node\Iface
 	{
 		$search = $this->createSearch();
 		$search->setConditions( $search->compare( '==', $this->searchConfig['level']['code'], 0 ) );

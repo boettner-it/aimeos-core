@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2012
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2012
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Translation
  */
@@ -22,8 +22,8 @@ class SerializedArray
 	extends \Aimeos\MW\Translation\Base
 	implements \Aimeos\MW\Translation\Iface
 {
-	private $translations = array();
-	private $translationSources = array();
+	private $translations = [];
+	private $translationSources = [];
 
 
 	/**
@@ -66,16 +66,16 @@ class SerializedArray
 		{
 			foreach( $this->getTranslations( $domain ) as $content )
 			{
-				if ( isset( $content[$string][0] ) && is_array( $content[$string] ) ) {
+				if( isset( $content[$string][0] ) && is_array( $content[$string] ) ) {
 					return $content[$string][0];
 				}
 
-				if ( isset( $content[$string] ) && is_string( $content[$string] ) ) {
+				if( isset( $content[$string] ) && is_string( $content[$string] ) ) {
 					return $content[$string];
 				}
 			}
 		}
-		catch( \Exception $e ) { ; } // no translation found
+		catch( \Exception $e ) {; } // no translation found
 
 		return (string) $string;
 	}
@@ -99,12 +99,12 @@ class SerializedArray
 		{
 			foreach( $this->getTranslations( $domain ) as $content )
 			{
-				if ( isset( $content[$singular][$index] ) && is_array( $content[$singular] ) ) {
+				if( isset( $content[$singular][$index] ) && is_array( $content[$singular] ) ) {
 					return $content[$singular][$index];
 				}
 			}
 		}
-		catch( \Exception $e ) { ; } // no translation found
+		catch( \Exception $e ) {; } // no translation found
 
 		if( $index > 0 ) {
 			return (string) $plural;
@@ -124,7 +124,7 @@ class SerializedArray
 	 */
 	public function getAll( $domain )
 	{
-		$messages = array();
+		$messages = [];
 
 		foreach( $this->getTranslations( $domain ) as $list ) {
 			$messages = $messages + $list;

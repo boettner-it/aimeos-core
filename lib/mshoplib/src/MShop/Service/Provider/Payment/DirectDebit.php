@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2013
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2013
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Service
  */
@@ -25,39 +25,39 @@ class DirectDebit
 	private $feConfig = array(
 		'directdebit.accountowner' => array(
 			'code' => 'directdebit.accountowner',
-			'internalcode'=> 'accountowner',
-			'label'=> 'Account owner',
-			'type'=> 'string',
-			'internaltype'=> 'string',
-			'default'=> '',
-			'required'=> true
+			'internalcode' => 'accountowner',
+			'label' => 'Account owner',
+			'type' => 'string',
+			'internaltype' => 'string',
+			'default' => '',
+			'required' => true
 		),
 		'directdebit.accountno' => array(
 			'code' => 'directdebit.accountno',
-			'internalcode'=> 'accountno',
-			'label'=> 'Account number',
-			'type'=> 'string',
-			'internaltype'=> 'string',
-			'default'=> '',
-			'required'=> true
+			'internalcode' => 'accountno',
+			'label' => 'Account number',
+			'type' => 'string',
+			'internaltype' => 'string',
+			'default' => '',
+			'required' => true
 		),
 		'directdebit.bankcode' => array(
 			'code' => 'directdebit.bankcode',
-			'internalcode'=> 'bankcode',
-			'label'=> 'Bank code',
-			'type'=> 'string',
-			'internaltype'=> 'string',
-			'default'=> '',
-			'required'=> true
+			'internalcode' => 'bankcode',
+			'label' => 'Bank code',
+			'type' => 'string',
+			'internaltype' => 'string',
+			'default' => '',
+			'required' => true
 		),
 		'directdebit.bankname' => array(
 			'code' => 'directdebit.bankname',
-			'internalcode'=> 'bankname',
-			'label'=> 'Bank name',
-			'type'=> 'string',
-			'internaltype'=> 'string',
-			'default'=> '',
-			'required'=> true
+			'internalcode' => 'bankname',
+			'label' => 'Bank name',
+			'type' => 'string',
+			'internaltype' => 'string',
+			'default' => '',
+			'required' => true
 		),
 	);
 
@@ -71,12 +71,11 @@ class DirectDebit
 	 */
 	public function getConfigFE( \Aimeos\MShop\Order\Item\Base\Iface $basket )
 	{
-		$list = array();
 		$feconfig = $this->feConfig;
 
 		try
 		{
-			$address = $basket->getAddress();
+			$address = $basket->getAddress( \Aimeos\MShop\Order\Item\Base\Address\Base::TYPE_PAYMENT, 0 );
 
 			if( ( $fn = $address->getFirstname() ) !== '' && ( $ln = $address->getLastname() ) !== '' ) {
 				$feconfig['directdebit.accountowner']['default'] = $fn . ' ' . $ln;
@@ -84,11 +83,7 @@ class DirectDebit
 		}
 		catch( \Aimeos\MShop\Order\Exception $e ) { ; } // If address isn't available
 
-		foreach( $feconfig as $key => $config ) {
-			$list[$key] = new \Aimeos\MW\Criteria\Attribute\Standard( $config );
-		}
-
-		return $list;
+		return $this->getConfigItems( $feconfig );
 	}
 
 
@@ -104,45 +99,68 @@ class DirectDebit
 		return $this->checkConfig( $this->feConfig, $attributes );
 	}
 
+
 	/**
 	 * Sets the payment attributes in the given service.
 	 *
 	 * @param \Aimeos\MShop\Order\Item\Base\Service\Iface $orderServiceItem Order service item that will be added to the basket
 	 * @param array $attributes Attribute key/value pairs entered by the customer during the checkout process
+	 * @return \Aimeos\MShop\Order\Item\Base\Service\Iface Order service item with attributes added
 	 */
 	public function setConfigFE( \Aimeos\MShop\Order\Item\Base\Service\Iface $orderServiceItem, array $attributes )
 	{
-		$this->setAttributes( $orderServiceItem, $attributes, 'payment' );
+		$orderServiceItem = $this->setAttributes( $orderServiceItem, $attributes, 'payment' );
 
 		if( ( $attrItem = $orderServiceItem->getAttributeItem( 'directdebit.accountno', 'payment' ) ) !== null )
 		{
 			$attrList = array( $attrItem->getCode() => $attrItem->getValue() );
 			$this->setAttributes( $orderServiceItem, $attrList, 'payment/hidden' );
-
 			$value = $attrItem->getValue();
-			$len = strlen( $value );
-			$xstr = ( $len > 3 ? str_repeat( 'X', $len - 3 ) : '' );
 
-			$attrItem->setValue( $xstr . substr( $value, -3 ) );
-			$orderServiceItem->setAttributeItem( $attrItem );
+			if( is_string( $value ) )
+			{
+				$len = strlen( $value );
+				$xstr = ( $len > 3 ? str_repeat( 'X', $len - 3 ) : '' );
+
+				$attrItem->setValue( $xstr . substr( $value, -3 ) );
+				$orderServiceItem->setAttributeItem( $attrItem );
+			}
 		}
+
+		return $orderServiceItem;
 	}
 
 
 	/**
-	 * Tries to get an authorization or captures the money immediately for the given order if capturing the money
-	 * separately isn't supported or not configured by the shop owner.
+	 * Executes the payment again for the given order if supported.
+	 * This requires support of the payment gateway and token based payment
 	 *
 	 * @param \Aimeos\MShop\Order\Item\Iface $order Order invoice object
-	 * @param array $params Request parameter if available
-	 * @return \Aimeos\MShop\Common\Item\Helper\Form\Standard Form object with URL, action and parameters to redirect to
-	 * 	(e.g. to an external server of the payment provider or to a local success page)
+	 * @return void
 	 */
-	public function process( \Aimeos\MShop\Order\Item\Iface $order, array $params = array() )
+	public function repay( \Aimeos\MShop\Order\Item\Iface $order )
 	{
 		$order->setPaymentStatus( \Aimeos\MShop\Order\Item\Base::PAY_AUTHORIZED );
 		$this->saveOrder( $order );
+	}
 
-		return parent::process( $order, $params );
+
+	/**
+	 * Updates the orders for whose status updates have been received by the confirmation page
+	 *
+	 * @param \Psr\Http\Message\ServerRequestInterface $request Request object with parameters and request body
+	 * @param \Aimeos\MShop\Order\Item\Iface $order Order item that should be updated
+	 * @return \Aimeos\MShop\Order\Item\Iface Updated order item
+	 * @throws \Aimeos\MShop\Service\Exception If updating the orders failed
+	 */
+	public function updateSync( \Psr\Http\Message\ServerRequestInterface $request, \Aimeos\MShop\Order\Item\Iface $order )
+	{
+		if( $order->getPaymentStatus() === \Aimeos\MShop\Order\Item\Base::PAY_UNFINISHED )
+		{
+			$order->setPaymentStatus( \Aimeos\MShop\Order\Item\Base::PAY_AUTHORIZED );
+			$this->saveOrder( $order );
+		}
+
+		return $order;
 	}
 }

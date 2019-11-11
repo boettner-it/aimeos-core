@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Customer
  */
@@ -18,11 +18,8 @@ namespace Aimeos\MShop\Customer\Item;
  * @package MShop
  * @subpackage Customer
  */
-class Standard
-	extends \Aimeos\MShop\Common\Item\ListRef\Base
-	implements \Aimeos\MShop\Customer\Item\Iface
+class Standard extends Base implements Iface
 {
-	private $billingaddress;
 	private $values;
 	private $helper;
 	private $salt;
@@ -31,48 +28,21 @@ class Standard
 	/**
 	 * Initializes the customer item object
 	 *
-	 * @param array $values List of attributes that belong to the customer item
 	 * @param \Aimeos\MShop\Common\Item\Address\Iface $address Payment address item object
-	 * @param \Aimeos\MShop\Common\Lists\Item\Iface[] $listItems List of list items
+	 * @param array $values List of attributes that belong to the customer item
+	 * @param \Aimeos\MShop\Common\Item\Lists\Iface[] $listItems List of list items
 	 * @param \Aimeos\MShop\Common\Item\Iface[] $refItems List of referenced items
-	 * @param string $salt Password salt (optional)
-	 * @param \Aimeos\MShop\Common\Item\Helper\Password\Iface $helper Password encryption helper object
+	 * @param \Aimeos\MShop\Common\Item\Address\Iface[] $addrItems List of delivery addresses
+	 * @param \Aimeos\MShop\Common\Item\Property\Iface[] $propItems List of property items
+	 * @param \Aimeos\MShop\Common\Helper\Password\Iface|null $helper Password encryption helper object
+	 * @param string|null $salt Password salt
 	 */
-	public function __construct( \Aimeos\MShop\Common\Item\Address\Iface $address, array $values = array(),
-		array $listItems = array(), array $refItems = array(), $salt = '',
-		\Aimeos\MShop\Common\Item\Helper\Password\Iface $helper = null )
+	public function __construct( \Aimeos\MShop\Common\Item\Address\Iface $address, array $values = [],
+		array $listItems = [], array $refItems = [], array $addrItems = [], array $propItems = [],
+		\Aimeos\MShop\Common\Helper\Password\Iface $helper = null, $salt = null )
 	{
-		parent::__construct( 'customer.', $values, $listItems, $refItems );
+		parent::__construct( $address, $values, $listItems, $refItems, $addrItems, $propItems );
 
-		foreach( $values as $name => $value )
-		{
-			switch( $name )
-			{
-				case 'salutation': $address->setSalutation( $value ); break;
-				case 'company': $address->setCompany( $value ); break;
-				case 'vatid': $address->setVatID( $value ); break;
-				case 'title': $address->setTitle( $value ); break;
-				case 'firstname': $address->setFirstname( $value ); break;
-				case 'lastname': $address->setLastname( $value ); break;
-				case 'address1': $address->setAddress1( $value ); break;
-				case 'address2': $address->setAddress2( $value ); break;
-				case 'address3': $address->setAddress3( $value ); break;
-				case 'postal': $address->setPostal( $value ); break;
-				case 'city': $address->setCity( $value ); break;
-				case 'state': $address->setState( $value ); break;
-				case 'langid': $address->setLanguageId( $value ); break;
-				case 'countryid': $address->setCountryId( $value ); break;
-				case 'telephone': $address->setTelephone( $value ); break;
-				case 'telefax': $address->setTelefax( $value ); break;
-				case 'website': $address->setWebsite( $value ); break;
-				case 'email': $address->setEmail( $value ); break;
-			}
-		}
-
-		// set modified flag to false
-		$address->setId( $this->getId() );
-
-		$this->billingaddress = $address;
 		$this->values = $values;
 		$this->helper = $helper;
 		$this->salt = $salt;
@@ -88,9 +58,10 @@ class Standard
 	{
 		parent::setId( $id );
 
-		// set modified flag
-		$this->billingaddress->setId( null );
-		$this->billingaddress->setId( $this->getId() );
+		// set new ID and modified flag
+		$this->getPaymentAddress()->setId( null )->setId( $this->getId() );
+
+		return $this;
 	}
 
 
@@ -101,7 +72,7 @@ class Standard
 	 */
 	public function getLabel()
 	{
-		return ( isset( $this->values['label'] ) ? (string) $this->values['label'] : '' );
+		return (string) $this->get( 'customer.label', '' );
 	}
 
 
@@ -109,13 +80,11 @@ class Standard
 	 * Sets the new label of the customer item.
 	 *
 	 * @param string $value Label of the customer item
+	 * @return \Aimeos\MShop\Customer\Item\Iface Customer item for chaining method calls
 	 */
 	public function setLabel( $value )
 	{
-		if( $value == $this->getLabel() ) { return; }
-
-		$this->values['label'] = (string) $value;
-		$this->setModified();
+		return $this->set( 'customer.label', (string) $value );
 	}
 
 
@@ -126,7 +95,7 @@ class Standard
 	 */
 	public function getStatus()
 	{
-		return ( isset( $this->values['status'] ) ? (int) $this->values['status'] : 0 );
+		return (int) $this->get( 'customer.status', 1 );
 	}
 
 
@@ -134,13 +103,11 @@ class Standard
 	 * Sets the status of the item.
 	 *
 	 * @param integer $value Status of the item
+	 * @return \Aimeos\MShop\Customer\Item\Iface Customer item for chaining method calls
 	 */
 	public function setStatus( $value )
 	{
-		if( $value == $this->getStatus() ) { return; }
-
-		$this->values['status'] = (int) $value;
-		$this->setModified();
+		return $this->set( 'customer.status', (int) $value );
 	}
 
 
@@ -151,7 +118,7 @@ class Standard
 	 */
 	public function getCode()
 	{
-		return ( isset( $this->values['code'] ) ? (string) $this->values['code'] : '' );
+		return (string) $this->get( 'customer.code', '' );
 	}
 
 
@@ -159,71 +126,34 @@ class Standard
 	 * Sets the new code of the customer item.
 	 *
 	 * @param string $value Code of the customer item
+	 * @return \Aimeos\MShop\Customer\Item\Iface Customer item for chaining method calls
 	 */
 	public function setCode( $value )
 	{
-		$this->checkCode( $value );
-
-		if( $value == $this->getCode() ) { return; }
-
-		$this->values['code'] = (string) $value;
-		$this->setModified();
-	}
-
-
-	/**
-	 * Returns the billingaddress of the customer item.
-	 *
-	 * @return \Aimeos\MShop\Common\Item\Address\Iface
-	 */
-	public function getPaymentAddress()
-	{
-		return $this->billingaddress;
-	}
-
-
-	/**
-	 * Sets the billingaddress of the customer item.
-	 *
-	 * @param \Aimeos\MShop\Common\Item\Address\Iface $address Billingaddress of the customer item
-	 */
-	public function setPaymentAddress( \Aimeos\MShop\Common\Item\Address\Iface $address )
-	{
-		if( $address === $this->billingaddress && $address->isModified() === false ) { return; }
-
-		$this->billingaddress = $address;
-		$this->setModified();
+		return $this->set( 'customer.code', $this->checkCode( $value, 255 ) );
 	}
 
 
 	/**
 	 * Returns the birthday of the customer item.
 	 *
-	 * @return string
+	 * @return string|null Birthday in YYYY-MM-DD format
 	 */
 	public function getBirthday()
 	{
-		return ( isset( $this->values['birthday'] ) ? (string) $this->values['birthday'] : null );
+		return $this->get( 'customer.birthday' );
 	}
 
 
 	/**
 	 * Sets the birthday of the customer item.
 	 *
-	 * @param string $value Birthday of the customer item
+	 * @param string|null $value Birthday of the customer item
+	 * @return \Aimeos\MShop\Customer\Item\Iface Customer item for chaining method calls
 	 */
 	public function setBirthday( $value )
 	{
-		if( $value === $this->getBirthday() ) { return; }
-
-		if( $value !== null )
-		{
-			$this->checkDateOnlyFormat( $value );
-			$value = (string) $value;
-		}
-
-		$this->values['birthday'] = $value;
-		$this->setModified();
+		return $this->set( 'customer.birthday', $this->checkDateOnlyFormat( $value ) );
 	}
 
 
@@ -234,7 +164,7 @@ class Standard
 	 */
 	public function getPassword()
 	{
-		return ( isset( $this->values['password'] ) ? (string) $this->values['password'] : '' );
+		return (string) $this->get( 'customer.password', '' );
 	}
 
 
@@ -242,17 +172,15 @@ class Standard
 	 * Sets the password of the customer item.
 	 *
 	 * @param string $value password of the customer item
+	 * @return \Aimeos\MShop\Customer\Item\Iface Customer item for chaining method calls
 	 */
 	public function setPassword( $value )
 	{
-		if( $value == $this->getPassword() ) { return; }
-
-		if( $this->helper !== null ) {
+		if( (string) $value !== $this->getPassword() && $this->helper !== null ) {
 			$value = $this->helper->encode( $value, $this->salt );
 		}
 
-		$this->values['password'] = $value;
-		$this->setModified();
+		return $this->set( 'customer.password', (string) $value );
 	}
 
 
@@ -263,7 +191,7 @@ class Standard
 	 */
 	public function getDateVerified()
 	{
-		return ( isset( $this->values['vdate'] ) ? (string) $this->values['vdate'] : null );
+		return $this->get( 'customer.dateverified' );
 	}
 
 
@@ -271,15 +199,11 @@ class Standard
 	 * Sets the latest verification date of the customer.
 	 *
 	 * @param string|null $value Latest verification date of the customer (YYYY-MM-DD) or null if unknown
+	 * @return \Aimeos\MShop\Customer\Item\Iface Customer item for chaining method calls
 	 */
 	public function setDateVerified( $value )
 	{
-		if( $value === $this->getDateVerified() ) { return; }
-
-		$this->checkDateOnlyFormat( $value );
-
-		$this->values['vdate'] = ( $value ? (string) $value : null );
-		$this->setModified();
+		return $this->set( 'customer.dateverified', $this->checkDateOnlyFormat( $value ) );
 	}
 
 
@@ -290,110 +214,99 @@ class Standard
 	 */
 	public function getGroups()
 	{
-		if( !isset( $this->values['groups'] ) )
+		if( ( $list = (array) $this->get( 'customer.groups', [] ) ) === [] )
 		{
-			$this->values['groups'] = array();
-
-			foreach( $this->getListItems( 'customer/group' ) as $listItem ) {
-				$this->values['groups'][] = $listItem->getRefId();
+			foreach( $this->getListItems( 'customer/group', 'default' ) as $listItem ) {
+				$list[] = $listItem->getRefId();
 			}
 		}
 
-		return (array) $this->values['groups'];
+		return $list;
 	}
 
 
 	/**
-	 * Sets the item values from the given array.
+	 * Sets the group IDs the customer belongs to
 	 *
-	 * @param array $list Associative list of item keys and their values
-	 * @return array Associative list of keys and their values that are unknown
+	 * @param string[] $ids List of group IDs
+	 * @return \Aimeos\MShop\Customer\Item\Iface Customer item for chaining method calls
 	 */
-	public function fromArray( array $list )
+	public function setGroups( array $ids )
 	{
-		$unknown = array();
-		$list = parent::fromArray( $list );
-		$addr = $this->getPaymentAddress();
+		if( $ids !== $this->getGroups() ) {
+			return $this->set( 'customer.groups', $ids );
+		}
+
+		return $this;
+	}
+
+
+	/**
+	 * Tests if the item is available based on status, time, language and currency
+	 *
+	 * @return boolean True if available, false if not
+	 */
+	public function isAvailable()
+	{
+		return parent::isAvailable() && $this->getStatus() > 0;
+	}
+
+
+	/*
+	 * Sets the item values from the given array and removes that entries from the list
+	 *
+	 * @param array &$list Associative list of item keys and their values
+	 * @param boolean True to set private properties too, false for public only
+	 * @return \Aimeos\MShop\Customer\Item\Iface Customer item for chaining method calls
+	 */
+	public function fromArray( array &$list, $private = false )
+	{
+		$item = parent::fromArray( $list, $private );
 
 		foreach( $list as $key => $value )
 		{
 			switch( $key )
 			{
-				case 'customer.label': $this->setLabel( $value ); break;
-				case 'customer.code': $this->setCode( $value ); break;
-				case 'customer.birthday': $this->setBirthday( $value ); break;
-				case 'customer.status': $this->setStatus( $value ); break;
-				case 'customer.password': $this->setPassword( $value ); break;
-				case 'customer.dateverified': $this->setDateVerified( $value ); break;
-				case 'customer.salutation': $addr->setSalutation( $value ); break;
-				case 'customer.company': $addr->setCompany( $value ); break;
-				case 'customer.vatid': $addr->setVatID( $value ); break;
-				case 'customer.title': $addr->setTitle( $value ); break;
-				case 'customer.firstname': $addr->setFirstname( $value ); break;
-				case 'customer.lastname': $addr->setLastname( $value ); break;
-				case 'customer.address1': $addr->setAddress1( $value ); break;
-				case 'customer.address2': $addr->setAddress2( $value ); break;
-				case 'customer.address3': $addr->setAddress3( $value ); break;
-				case 'customer.postal': $addr->setPostal( $value ); break;
-				case 'customer.city': $addr->setCity( $value ); break;
-				case 'customer.state': $addr->setState( $value ); break;
-				case 'customer.languageid': $addr->setLanguageId( $value ); break;
-				case 'customer.countryid': $addr->setCountryId( $value ); break;
-				case 'customer.telephone': $addr->setTelephone( $value ); break;
-				case 'customer.email': $addr->setEmail( $value ); break;
-				case 'customer.telefax': $addr->setTelefax( $value ); break;
-				case 'customer.website': $addr->setWebsite( $value ); break;
-				default: $unknown[$key] = $value;
+				case 'customer.label': $item = $item->setLabel( $value ); break;
+				case 'customer.code': $item = $item->setCode( $value ); break;
+				case 'customer.birthday': $item = $item->setBirthday( $value ); break;
+				case 'customer.status': $item = $item->setStatus( $value ); break;
+				case 'customer.groups': $item = $item->setGroups( $value ); break;
+				case 'customer.password': !$private ?: $item = $item->setPassword( $value ); break;
+				case 'customer.dateverified': !$private ?: $item = $item->setDateVerified( $value ); break;
+				default: continue 2;
 			}
+
+			unset( $list[$key] );
 		}
 
-		return $unknown;
+		return $item;
 	}
 
 
 	/**
 	 * Returns the item values as array.
 	 *
+	 * @param boolean True to return private properties, false for public only
 	 * @return array Associative list of item properties and their values
 	 */
-	public function toArray()
+	public function toArray( $private = false )
 	{
-		$list = parent::toArray();
+		$list = parent::toArray( $private );
 
 		$list['customer.label'] = $this->getLabel();
 		$list['customer.code'] = $this->getCode();
 		$list['customer.birthday'] = $this->getBirthday();
 		$list['customer.status'] = $this->getStatus();
-		$list['customer.password'] = $this->getPassword();
-		$list['customer.dateverified'] = $this->getDateVerified();
-		$list['customer.salutation'] = $this->getPaymentAddress()->getSalutation();
-		$list['customer.company'] = $this->getPaymentAddress()->getCompany();
-		$list['customer.vatid'] = $this->getPaymentAddress()->getVatID();
-		$list['customer.title'] = $this->getPaymentAddress()->getTitle();
-		$list['customer.firstname'] = $this->getPaymentAddress()->getFirstname();
-		$list['customer.lastname'] = $this->getPaymentAddress()->getLastname();
-		$list['customer.address1'] = $this->getPaymentAddress()->getAddress1();
-		$list['customer.address2'] = $this->getPaymentAddress()->getAddress2();
-		$list['customer.address3'] = $this->getPaymentAddress()->getAddress3();
-		$list['customer.postal'] = $this->getPaymentAddress()->getPostal();
-		$list['customer.city'] = $this->getPaymentAddress()->getCity();
-		$list['customer.state'] = $this->getPaymentAddress()->getState();
-		$list['customer.languageid'] = $this->getPaymentAddress()->getLanguageId();
-		$list['customer.countryid'] = $this->getPaymentAddress()->getCountryId();
-		$list['customer.telephone'] = $this->getPaymentAddress()->getTelephone();
-		$list['customer.email'] = $this->getPaymentAddress()->getEmail();
-		$list['customer.telefax'] = $this->getPaymentAddress()->getTelefax();
-		$list['customer.website'] = $this->getPaymentAddress()->getWebsite();
+		$list['customer.groups'] = $this->getGroups();
+
+		if( $private === true )
+		{
+			$list['customer.password'] = $this->getPassword();
+			$list['customer.dateverified'] = $this->getDateVerified();
+		}
+
 		return $list;
-	}
-
-
-	/**
-	 * Implements deep copies for clones.
-	 */
-	public function __clone()
-	{
-		$this->billingaddress = clone $this->billingaddress;
 	}
 
 
@@ -404,8 +317,13 @@ class Standard
 	 */
 	protected function checkDateOnlyFormat( $date )
 	{
-		if( $date !== null && preg_match( '/^[0-9]{4}-[0-1][0-9]-[0-3][0-9]$/', $date ) !== 1 ) {
-			throw new \Aimeos\MShop\Exception( sprintf( 'Invalid characters in date "%1$s". ISO format "YYYY-MM-DD" expected.', $date ) );
+		if( $date !== null && $date !== '' )
+		{
+			if( preg_match( '/^[0-9]{4}-[0-1][0-9]-[0-3][0-9]$/', (string) $date ) !== 1 ) {
+				throw new \Aimeos\MShop\Exception( sprintf( 'Invalid characters in date "%1$s". ISO format "YYYY-MM-DD" expected.', $date ) );
+			}
+
+			return (string) $date;
 		}
 	}
 }

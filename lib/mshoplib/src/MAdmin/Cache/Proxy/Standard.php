@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2014
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2014
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage MAdmin
  */
@@ -41,11 +41,24 @@ class Standard
 	 *
 	 * @inheritDoc
 	 *
-	 * @throws \Aimeos\MW\Cache\Exception If the cache server doesn't respond
+	 * @return bool True on success and false on failure
 	 */
-	public function cleanup()
+	public function cleanup() : bool
 	{
-		$this->getObject()->cleanup();
+		return $this->getObject()->cleanup();
+	}
+
+
+	/**
+	 * Removes all entries of the site from the cache.
+	 *
+	 * @inheritDoc
+	 *
+	 * @return bool True on success and false on failure
+	 */
+	public function clear() : bool
+	{
+		return $this->getObject()->clear();
 	}
 
 
@@ -55,11 +68,12 @@ class Standard
 	 * @inheritDoc
 	 *
 	 * @param string $key Key string that identifies the single cache entry
-	 * @throws \Aimeos\MW\Cache\Exception If the cache server doesn't respond
+	 * @return bool True if the item was successfully removed. False if there was an error
+	 * @throws \Psr\SimpleCache\InvalidArgumentException
 	 */
-	public function delete( $key )
+	public function delete( string $key ) : bool
 	{
-		$this->getObject()->delete( $key );
+		return $this->getObject()->delete( $key );
 	}
 
 
@@ -68,13 +82,13 @@ class Standard
 	 *
 	 * @inheritDoc
 	 *
-	 * @param string[] $keys List of key strings that identify the cache entries
-	 * 	that should be removed
-	 * @throws \Aimeos\MW\Cache\Exception If the cache server doesn't respond
+	 * @param iterable $keys List of key strings that identify the cache entries that should be removed
+	 * @return bool True if the items were successfully removed. False if there was an error.
+	 * @throws \Psr\SimpleCache\InvalidArgumentException
 	 */
-	public function deleteList( array $keys )
+	public function deleteMultiple( iterable $keys ) : bool
 	{
-		$this->getObject()->deleteList( $keys );
+		return $this->getObject()->deleteMultiple( $keys );
 	}
 
 
@@ -83,26 +97,14 @@ class Standard
 	 *
 	 * @inheritDoc
 	 *
-	 * @param string[] $tags List of tag strings that are associated to one or more
-	 * 	cache entries that should be removed
-	 * @throws \Aimeos\MW\Cache\Exception If the cache server doesn't respond
+	 * @param iterable $tags List of tag strings that are associated to one or
+	 *  more cache entries that should be removed
+	 * @return bool True if the items were successfully removed. False if there was an error.
+	 * @throws \Psr\SimpleCache\InvalidArgumentException
 	 */
-	public function deleteByTags( array $tags )
+	public function deleteByTags( iterable $tags ) : bool
 	{
-		$this->getObject()->deleteByTags( $tags );
-	}
-
-
-	/**
-	 * Removes all entries of the site from the cache.
-	 *
-	 * @inheritDoc
-	 *
-	 * @throws \Aimeos\MW\Cache\Exception If the cache server doesn't respond
-	 */
-	public function flush()
-	{
-		$this->getObject()->flush();
+		return $this->getObject()->deleteByTags( $tags );
 	}
 
 
@@ -114,10 +116,10 @@ class Standard
 	 * @param string $key Path to the requested value like product/id/123
 	 * @param mixed $default Value returned if requested key isn't found
 	 * @return mixed Value associated to the requested key. If no value for the
-	 * key is found in the cache, the given default value is returned
-	 * @throws \Aimeos\MW\Cache\Exception If the cache server doesn't respond
+	 *	key is found in the cache, the given default value is returned
+	 * @throws \Psr\SimpleCache\InvalidArgumentException
 	 */
-	public function get( $key, $default = null )
+	public function get( string $key, $default = null )
 	{
 		return $this->getObject()->get( $key, $default );
 	}
@@ -128,32 +130,29 @@ class Standard
 	 *
 	 * @inheritDoc
 	 *
-	 * @param string[] $keys List of key strings for the requested cache entries
-	 * @return array Associative list of key/value pairs for the requested cache
-	 * 	entries. If a cache entry doesn't exist, neither its key nor a value
-	 * 	will be in the result list
-	 * @throws \Aimeos\MW\Cache\Exception If the cache server doesn't respond
+	 * @param iterable $keys List of key strings for the requested cache entries
+	 * @param mixed $default Default value to return for keys that do not exist
+	 * @return iterable A list of key => value pairs. Cache keys that do not exist or are stale will have $default as value.
+	 * @throws \Psr\SimpleCache\InvalidArgumentException
 	 */
-	public function getList( array $keys )
+	public function getMultiple( iterable $keys, $default = null ) : iterable
 	{
-		return $this->getObject()->getList( $keys );
+		return $this->getObject()->getMultiple( $keys, $default );
 	}
 
 
 	/**
-	 * Returns the cached keys and values associated to the given tags if available.
+	 * Determines whether an item is present in the cache.
 	 *
 	 * @inheritDoc
 	 *
-	 * @param string[] $tags List of tag strings associated to the requested cache entries
-	 * @return array Associative list of key/value pairs for the requested cache
-	 * 	entries. If a tag isn't associated to any cache entry, nothing is returned
-	 * 	for that tag
-	 * @throws \Aimeos\MW\Cache\Exception If the cache server doesn't respond
+	 * @param string $key The cache item key
+	 * @return bool True if cache entry is available, false if not
+	 * @throws \Psr\SimpleCache\InvalidArgumentException
 	 */
-	public function getListByTags( array $tags )
+	public function has( string $key ) : bool
 	{
-		return $this->getObject()->getListByTags( $tags );
+		return $this->getObject()->has( $key );
 	}
 
 
@@ -163,16 +162,17 @@ class Standard
 	 * @inheritDoc
 	 *
 	 * @param string $key Key string for the given value like product/id/123
-	 * @param string $value Value string that should be stored for the given key
-	 * @param string[] $tags List of tag strings that should be assoicated to the
-	 * 	given value in the cache
-	 * @param string|null $expires Date/time string in "YYYY-MM-DD HH:mm:ss"
-	 * 	format when the cache entry expires
-	 * @throws \Aimeos\MW\Cache\Exception If the cache server doesn't respond
+	 * @param mixed $value Value string that should be stored for the given key
+	 * @param \DateInterval|int|string|null $expires Date interval object,
+	 *  date/time string in "YYYY-MM-DD HH:mm:ss" format or as integer TTL value
+	 *  when the cache entry will expiry
+	 * @param iterable $tags List of tag strings that should be assoicated to the cache entry
+	 * @return bool True on success and false on failure.
+	 * @throws \Psr\SimpleCache\InvalidArgumentException
 	 */
-	public function set( $key, $value, array $tags = array(), $expires = null )
+	public function set( string $key, $value, $expires = null, iterable $tags = [] ) : bool
 	{
-		$this->getObject()->set( $key, $value, $tags, $expires );
+		return $this->getObject()->set( $key, $value, $expires, $tags );
 	}
 
 
@@ -182,17 +182,17 @@ class Standard
 	 *
 	 * @inheritDoc
 	 *
-	 * @param array $pairs Associative list of key/value pairs. Both must be
-	 * 	a string
-	 * @param string[] $tags Associative list of key/tag or key/tags pairs that should be
-	 * 	associated to the values identified by their key. The value associated
-	 * 	to the key can either be a tag string or an array of tag strings
-	 * @param array $expires Associative list of key/datetime pairs.
-	 * @throws \Aimeos\MW\Cache\Exception If the cache server doesn't respond
+	 * @param iterable $pairs Associative list of key/value pairs. Both must be a string
+	 * @param \DateInterval|int|string|null $expires Date interval object,
+	 *  date/time string in "YYYY-MM-DD HH:mm:ss" format or as integer TTL value
+	 *  when the cache entry will expiry
+	 * @param iterable $tags List of tags that should be associated to the cache entries
+	 * @return bool True on success and false on failure.
+	 * @throws \Psr\SimpleCache\InvalidArgumentException
 	 */
-	public function setList( array $pairs, array $tags = array(), array $expires = array() )
+	public function setMultiple( iterable $pairs, $expires = null, iterable $tags = [] ) : bool
 	{
-		$this->getObject()->setList( $pairs, $tags, $expires );
+		return $this->getObject()->setMultiple( $pairs, $expires, $tags );
 	}
 
 
@@ -204,7 +204,7 @@ class Standard
 	protected function getObject()
 	{
 		if( !isset( $this->object ) ) {
-			$this->object = \Aimeos\MAdmin\Cache\Manager\Factory::createManager( $this->context )->getCache();
+			$this->object = \Aimeos\MAdmin::create( $this->context, 'cache' )->getCache();
 		}
 
 		return $this->object;

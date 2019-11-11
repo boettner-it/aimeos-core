@@ -6,11 +6,11 @@ namespace Aimeos\MW\Container;
 /**
  * Test class for \Aimeos\MW\Container\Zip.
  *
- * @copyright Metaways Infosystems GmbH, 2013
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2013
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
-class ZipTest extends \PHPUnit_Framework_TestCase
+class ZipTest extends \PHPUnit\Framework\TestCase
 {
 	protected function setUp()
 	{
@@ -66,7 +66,7 @@ class ZipTest extends \PHPUnit_Framework_TestCase
 	{
 		$zip = new \Aimeos\MW\Container\Zip( __DIR__ . DIRECTORY_SEPARATOR . 'testfile', 'CSV' );
 
-		$this->assertInstanceOf( '\\Aimeos\\MW\\Container\\Content\\Iface', $zip->get( 'tempfile.csv' ) );
+		$this->assertInstanceOf( \Aimeos\MW\Container\Content\Iface::class, $zip->get( 'tempfile.csv' ) );
 	}
 
 
@@ -79,21 +79,21 @@ class ZipTest extends \PHPUnit_Framework_TestCase
 			'testfile.csv' => 2,
 		);
 
-		$actual = array();
+		$actual = [];
 		foreach( $zip as $entry )
 		{
-			$rows = array();
+			$rows = [];
 			foreach( $entry as $row ) {
 				$rows[] = $row;
 			}
 
 			// test if rewind or reopen works
-			$rows = array();
+			$rows = [];
 			foreach( $entry as $row ) {
 				$rows[] = $row;
 			}
 
-			$actual[ $entry->getName() ] = count( $rows );
+			$actual[$entry->getName()] = count( $rows );
 		}
 
 		$this->assertEquals( $expected, $actual );

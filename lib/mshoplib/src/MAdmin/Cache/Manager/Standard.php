@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2014
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2014
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MAdmin
  * @subpackage Cache
  */
@@ -20,7 +20,7 @@ namespace Aimeos\MAdmin\Cache\Manager;
  */
 class Standard
 	extends \Aimeos\MAdmin\Common\Manager\Base
-	implements \Aimeos\MAdmin\Cache\Manager\Iface
+	implements \Aimeos\MAdmin\Cache\Manager\Iface, \Aimeos\MShop\Common\Manager\Factory\Iface
 {
 	private $object;
 
@@ -28,40 +28,38 @@ class Standard
 		'cache.id' => array(
 			'code' => 'cache.id',
 			'internalcode' => '"id"',
-			'label' => 'Cache ID',
+			'label' => 'ID',
 			'type' => 'string',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
 		'cache.siteid' => array(
 			'code' => 'cache.siteid',
 			'internalcode' => '"siteid"',
-			'label' => 'Cache site ID',
+			'label' => 'Site ID',
 			'type' => 'integer',
 			'public' => false,
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
+			'public' => false,
 		),
 		'cache.value' => array(
 			'code' => 'cache.value',
 			'internalcode' => '"value"',
 			'label' => 'Cached value',
 			'type' => 'string',
-			'public' => false,
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
 		'cache.expire' => array(
 			'code' => 'cache.expire',
 			'internalcode' => '"expire"',
-			'label' => 'Cache expiration date/time',
+			'label' => 'Expiration date/time',
 			'type' => 'datetime',
-			'public' => false,
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
 		'cache.tag.name' => array(
 			'code' => 'cache.tag.name',
 			'internalcode' => '"tname"',
-			'label' => 'Cache tag name',
+			'label' => 'Tag name',
 			'type' => 'string',
-			'public' => false,
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
 	);
@@ -88,7 +86,13 @@ class Standard
 	{
 		if( !isset( $this->object ) )
 		{
-			/** madmin/cache/manager/standard/deletebytag
+			/** madmin/cache/manager/standard/deletebytag/mysql
+			 * Deletes the items from the database matched by the given tags
+			 *
+			 * @see madmin/cache/manager/standard/deletebytag/ansi
+			 */
+
+			/** madmin/cache/manager/standard/deletebytag/ansi
 			 * Deletes the items from the database matched by the given tags
 			 *
 			 * Removes the records specified by the given tags from the cache database.
@@ -105,16 +109,22 @@ class Standard
 			 * @param string SQL statement for deleting items by tags
 			 * @since 2014.03
 			 * @category Developer
-			 * @see madmin/cache/manager/standard/delete
-			 * @see madmin/cache/manager/standard/get
-			 * @see madmin/cache/manager/standard/getbytag
-			 * @see madmin/cache/manager/standard/set
-			 * @see madmin/cache/manager/standard/settag
-			 * @see madmin/cache/manager/standard/search
-			 * @see madmin/cache/manager/standard/count
+			 * @see madmin/cache/manager/standard/delete/ansi
+			 * @see madmin/cache/manager/standard/get/ansi
+			 * @see madmin/cache/manager/standard/getbytag/ansi
+			 * @see madmin/cache/manager/standard/set/ansi
+			 * @see madmin/cache/manager/standard/settag/ansi
+			 * @see madmin/cache/manager/standard/search/ansi
+			 * @see madmin/cache/manager/standard/count/ansi
 			 */
 
-			/** madmin/cache/manager/standard/getbytag
+			/** madmin/cache/manager/standard/getbytag/mysql
+			 * Retrieves the records from the database matched by the given tags
+			 *
+			 * @see madmin/cache/manager/standard/getbytag/ansi
+			 */
+
+			/** madmin/cache/manager/standard/getbytag/ansi
 			 * Retrieves the records from the database matched by the given tags
 			 *
 			 * Fetches the records matched by the given tags from the cache
@@ -128,16 +138,22 @@ class Standard
 			 * @param string SQL statement for retrieving items by tag
 			 * @since 2014.03
 			 * @category Developer
-			 * @see madmin/cache/manager/standard/delete
-			 * @see madmin/cache/manager/standard/deletebytag
-			 * @see madmin/cache/manager/standard/get
-			 * @see madmin/cache/manager/standard/set
-			 * @see madmin/cache/manager/standard/settag
-			 * @see madmin/cache/manager/standard/search
-			 * @see madmin/cache/manager/standard/count
+			 * @see madmin/cache/manager/standard/delete/ansi
+			 * @see madmin/cache/manager/standard/deletebytag/ansi
+			 * @see madmin/cache/manager/standard/get/ansi
+			 * @see madmin/cache/manager/standard/set/ansi
+			 * @see madmin/cache/manager/standard/settag/ansi
+			 * @see madmin/cache/manager/standard/search/ansi
+			 * @see madmin/cache/manager/standard/count/ansi
 			 */
 
-			/** madmin/cache/manager/standard/get
+			/** madmin/cache/manager/standard/get/mysql
+			 * Retrieves the records matched by the given criteria in the database
+			 *
+			 * @see madmin/cache/manager/standard/get/ansi
+			 */
+
+			/** madmin/cache/manager/standard/get/ansi
 			 * Retrieves the records matched by the given criteria in the database
 			 *
 			 * Fetches the records matched by the given criteria from the cache
@@ -158,13 +174,13 @@ class Standard
 			 * @param string SQL statement for searching items
 			 * @since 2014.03
 			 * @category Developer
-			 * @see madmin/cache/manager/standard/getbytag
-			 * @see madmin/cache/manager/standard/delete
-			 * @see madmin/cache/manager/standard/deletebytag
-			 * @see madmin/cache/manager/standard/set
-			 * @see madmin/cache/manager/standard/settag
-			 * @see madmin/cache/manager/standard/search
-			 * @see madmin/cache/manager/standard/count
+			 * @see madmin/cache/manager/standard/getbytag/ansi
+			 * @see madmin/cache/manager/standard/delete/ansi
+			 * @see madmin/cache/manager/standard/deletebytag/ansi
+			 * @see madmin/cache/manager/standard/set/ansi
+			 * @see madmin/cache/manager/standard/settag/ansi
+			 * @see madmin/cache/manager/standard/search/ansi
+			 * @see madmin/cache/manager/standard/count/ansi
 			 */
 
 			$context = $this->getContext();
@@ -202,9 +218,9 @@ class Standard
 			$dbm = $context->getDatabaseManager();
 
 			try {
-				$this->object = \Aimeos\MW\Cache\Factory::createManager( $name, $config, $dbm );
+				$this->object = \Aimeos\MW\Cache\Factory::create( $name, $config, $dbm );
 			} catch( \Exception $e ) {
-				$this->object = \Aimeos\MW\Cache\Factory::createManager( 'DB', $config, $dbm );
+				$this->object = \Aimeos\MW\Cache\Factory::create( 'DB', $config, $dbm );
 			}
 		}
 
@@ -215,19 +231,26 @@ class Standard
 	/**
 	 * Removes old entries from the storage.
 	 *
-	 * @param integer[] $siteids List of IDs for sites whose entries should be deleted
+	 * @param string[] $siteids List of IDs for sites whose entries should be deleted
+	 * @return \Aimeos\MAdmin\Cache\Manager\Iface Manager object for chaining method calls
 	 */
-	public function cleanup( array $siteids )
+	public function clear( array $siteids )
 	{
 		$context = $this->getContext();
 		$config = $context->getConfig();
 
 		$path = 'madmin/cache/manager/submanagers';
-		foreach( $config->get( $path, array() ) as $domain ) {
-			$this->getSubManager( $domain )->cleanup( $siteids );
+		foreach( $config->get( $path, [] ) as $domain ) {
+			$this->getObject()->getSubManager( $domain )->clear( $siteids );
 		}
 
-		/** madmin/cache/manager/standard/delete
+		/** madmin/cache/manager/standard/delete/mysql
+		 * Deletes the items matched by the given IDs from the database
+		 *
+		 * @see madmin/cache/manager/standard/delete/ansi
+		 */
+
+		/** madmin/cache/manager/standard/delete/ansi
 		 * Deletes the items matched by the given IDs from the database
 		 *
 		 * Removes the records specified by the given IDs from the cache database.
@@ -245,30 +268,31 @@ class Standard
 		 * @param string SQL statement for deleting items
 		 * @since 2014.03
 		 * @category Developer
-		 * @see madmin/cache/manager/standard/deletebytag
-		 * @see madmin/cache/manager/standard/get
-		 * @see madmin/cache/manager/standard/getbytag
-		 * @see madmin/cache/manager/standard/set
-		 * @see madmin/cache/manager/standard/settag
-		 * @see madmin/cache/manager/standard/search
-		 * @see madmin/cache/manager/standard/count
+		 * @see madmin/cache/manager/standard/deletebytag/ansi
+		 * @see madmin/cache/manager/standard/get/ansi
+		 * @see madmin/cache/manager/standard/getbytag/ansi
+		 * @see madmin/cache/manager/standard/set/ansi
+		 * @see madmin/cache/manager/standard/settag/ansi
+		 * @see madmin/cache/manager/standard/search/ansi
+		 * @see madmin/cache/manager/standard/count/ansi
 		 */
 
-		$this->cleanupBase( $siteids, 'madmin/cache/manager/standard/delete' );
+		return $this->clearBase( $siteids, 'madmin/cache/manager/standard/delete' );
 	}
 
 
 	/**
-	 * Create new cache item object.
+	 * Creates a new empty item instance
 	 *
-	 * @return \Aimeos\MAdmin\Cache\Item\Iface
+	 * @param array $values Values the item should be initialized with
+	 * @return \Aimeos\MAdmin\Cache\Item\Iface New cache item object
 	 */
-	public function createItem()
+	public function createItem( array $values = [] )
 	{
 		try {
-			$values = array( 'siteid' => $this->getContext()->getLocale()->getSiteId() );
+			$values['siteid'] = $this->getContext()->getLocale()->getSiteId();
 		} catch( \Exception $e ) {
-			$values = array( 'siteid' => null );
+			$values['siteid'] = null;
 		}
 
 		return $this->createItemBase( $values );
@@ -280,19 +304,25 @@ class Standard
 	 *
 	 * @param \Aimeos\MAdmin\Cache\Item\Iface $item Cache item that should be saved to the storage
 	 * @param boolean $fetch True if the new ID should be returned in the item
+	 * @return \Aimeos\MAdmin\Cache\Item\Iface Updated item including the generated ID
 	 */
-	public function saveItem( \Aimeos\MShop\Common\Item\Iface $item, $fetch = true )
+	public function saveItem( \Aimeos\MAdmin\Cache\Item\Iface $item, $fetch = true )
 	{
-		$iface = '\\Aimeos\\MAdmin\\Cache\\Item\\Iface';
-		if( !( $item instanceof $iface ) ) {
-			throw new \Aimeos\MAdmin\Cache\Exception( sprintf( 'Object is not of required type "%1$s"', $iface ) );
+		if( $item->getId() === null ) {
+			throw new \Aimeos\MAdmin\Cache\Exception( 'ID is required for caching' );
 		}
 
 		if( !$item->isModified() ) {
-			return;
+			return $item;
 		}
 
-		/** madmin/cache/manager/standard/set
+		/** madmin/cache/manager/standard/set/mysql
+		 * Inserts the cache entry into the database
+		 *
+		 * @see madmin/cache/manager/standard/set/ansi
+		 */
+
+		/** madmin/cache/manager/standard/set/ansi
 		 * Inserts the cache entry into the database
 		 *
 		 * The ID, value and expiration timestamp are inserted as new record
@@ -315,16 +345,22 @@ class Standard
 		 * @param string SQL statement for inserting a new cache entry
 		 * @since 2014.03
 		 * @category Developer
-		 * @see madmin/cache/manager/standard/delete
-		 * @see madmin/cache/manager/standard/deletebytag
-		 * @see madmin/cache/manager/standard/get
-		 * @see madmin/cache/manager/standard/getbytag
-		 * @see madmin/cache/manager/standard/settag
-		 * @see madmin/cache/manager/standard/search
-		 * @see madmin/cache/manager/standard/count
+		 * @see madmin/cache/manager/standard/delete/ansi
+		 * @see madmin/cache/manager/standard/deletebytag/ansi
+		 * @see madmin/cache/manager/standard/get/ansi
+		 * @see madmin/cache/manager/standard/getbytag/ansi
+		 * @see madmin/cache/manager/standard/settag/ansi
+		 * @see madmin/cache/manager/standard/search/ansi
+		 * @see madmin/cache/manager/standard/count/ansi
 		 */
 
-		/** madmin/cache/manager/standard/settag
+		/** madmin/cache/manager/standard/settag/mysql
+		 * Inserts a new tag to an existing cache entry
+		 *
+		 * @see madmin/cache/manager/standard/settag/ansi
+		 */
+
+		/** madmin/cache/manager/standard/settag/ansi
 		 * Inserts a new tag to an existing cache entry
 		 *
 		 * The ID of the cache entry and the tag name are inserted as a new
@@ -347,43 +383,48 @@ class Standard
 		 * @param string SQL statement for inserting a new tag to an existing cache entry
 		 * @since 2014.03
 		 * @category Developer
-		 * @see madmin/cache/manager/standard/delete
-		 * @see madmin/cache/manager/standard/deletebytag
-		 * @see madmin/cache/manager/standard/get
-		 * @see madmin/cache/manager/standard/getbytag
-		 * @see madmin/cache/manager/standard/set
-		 * @see madmin/cache/manager/standard/search
-		 * @see madmin/cache/manager/standard/count
+		 * @see madmin/cache/manager/standard/delete/ansi
+		 * @see madmin/cache/manager/standard/deletebytag/ansi
+		 * @see madmin/cache/manager/standard/get/ansi
+		 * @see madmin/cache/manager/standard/getbytag/ansi
+		 * @see madmin/cache/manager/standard/set/ansi
+		 * @see madmin/cache/manager/standard/search/ansi
+		 * @see madmin/cache/manager/standard/count/ansi
 		 */
 
 		$id = $item->getId();
 		$cache = $this->getCache();
 
 		$cache->delete( $id );
-		$cache->set( $id, $item->getValue(), $item->getTags(), $item->getTimeExpire() );
+		$cache->set( $id, $item->getValue(), $item->getTimeExpire(), $item->getTags() );
+
+		return $item;
 	}
 
 
 	/**
-	 * Removes multiple items specified by ids in the array.
+	 * Removes multiple items.
 	 *
-	 * @param array $ids List of IDs
+	 * @param \Aimeos\MShop\Common\Item\Iface[]|string[] $itemIds List of item objects or IDs of the items
+	 * @return \Aimeos\MAdmin\Cache\Manager\Iface Manager object for chaining method calls
 	 */
-	public function deleteItems( array $ids )
+	public function deleteItems( array $itemIds )
 	{
-		$this->getCache()->deleteList( $ids );
+		$this->getCache()->deleteMultiple( $itemIds );
+		return $this;
 	}
 
 
 	/**
 	 * Creates the cache object for the given cache id.
 	 *
-	 * @param integer $id Cache ID to fetch cache object for
-	 * @param array $ref List of domains to fetch list items and referenced items for
+	 * @param string $id Cache ID to fetch cache object for
+	 * @param string[] $ref List of domains to fetch list items and referenced items for
+	 * @param boolean $default Add default criteria
 	 * @return \Aimeos\MAdmin\Cache\Item\Iface Returns the cache item of the given id
 	 * @throws \Aimeos\MAdmin\Cache\Exception If item couldn't be found
 	 */
-	public function getItem( $id, array $ref = array() )
+	public function getItem( $id, array $ref = [], $default = false )
 	{
 		if( ( $value = $this->getCache()->get( $id ) ) === null ) {
 			throw new \Aimeos\MAdmin\Cache\Exception( sprintf( 'Item with ID "%1$s" not found', $id ) );
@@ -397,13 +438,13 @@ class Standard
 	 * Search for cache entries based on the given criteria.
 	 *
 	 * @param \Aimeos\MW\Criteria\Iface $search Search object containing the conditions
-	 * @param array $ref List of domains to fetch list items and referenced items for
+	 * @param string[] $ref List of domains to fetch list items and referenced items for
 	 * @param integer &$total Number of items that are available in total
-	 * @return array List of cache items implementing \Aimeos\MAdmin\Cache\Item\Iface
+	 * @return \Aimeos\MAdmin\Cache\Item\Iface[] List of cache items
 	 */
-	public function searchItems( \Aimeos\MW\Criteria\Iface $search, array $ref = array(), &$total = null )
+	public function searchItems( \Aimeos\MW\Criteria\Iface $search, array $ref = [], &$total = null )
 	{
-		$items = array();
+		$items = [];
 		$context = $this->getContext();
 
 		$dbm = $context->getDatabaseManager();
@@ -415,7 +456,13 @@ class Standard
 			$required = array( 'cache' );
 			$level = \Aimeos\MShop\Locale\Manager\Base::SITE_ONE;
 
-			/** madmin/cache/manager/standard/search
+			/** madmin/cache/manager/standard/search/mysql
+			 * Retrieves the records matched by the given criteria in the database
+			 *
+			 * @see madmin/cache/manager/standard/search/ansi
+			 */
+
+			/** madmin/cache/manager/standard/search/ansi
 			 * Retrieves the records matched by the given criteria in the database
 			 *
 			 * Fetches the records matched by the given criteria from the cache
@@ -442,17 +489,23 @@ class Standard
 			 * @param string SQL statement for searching items
 			 * @since 2014.03
 			 * @category Developer
-			 * @see madmin/cache/manager/standard/get
-			 * @see madmin/cache/manager/standard/getbytag
-			 * @see madmin/cache/manager/standard/delete
-			 * @see madmin/cache/manager/standard/deletebytag
-			 * @see madmin/cache/manager/standard/set
-			 * @see madmin/cache/manager/standard/settag
-			 * @see madmin/cache/manager/standard/count
+			 * @see madmin/cache/manager/standard/get/ansi
+			 * @see madmin/cache/manager/standard/getbytag/ansi
+			 * @see madmin/cache/manager/standard/delete/ansi
+			 * @see madmin/cache/manager/standard/deletebytag/ansi
+			 * @see madmin/cache/manager/standard/set/ansi
+			 * @see madmin/cache/manager/standard/settag/ansi
+			 * @see madmin/cache/manager/standard/count/ansi
 			 */
 			$cfgPathSearch = 'madmin/cache/manager/standard/search';
 
-			/** madmin/cache/manager/standard/count
+			/** madmin/cache/manager/standard/count/mysql
+			 * Retrieves the records matched by the given criteria in the database
+			 *
+			 * @see madmin/cache/manager/standard/count/ansi
+			 */
+
+			/** madmin/cache/manager/standard/count/ansi
 			 * Retrieves the records matched by the given criteria in the database
 			 *
 			 * Fetches the records matched by the given criteria from the cache
@@ -478,20 +531,20 @@ class Standard
 			 * @param string SQL statement for searching items
 			 * @since 2014.03
 			 * @category Developer
-			 * @see madmin/cache/manager/standard/get
-			 * @see madmin/cache/manager/standard/getbytag
-			 * @see madmin/cache/manager/standard/delete
-			 * @see madmin/cache/manager/standard/deletebytag
-			 * @see madmin/cache/manager/standard/set
-			 * @see madmin/cache/manager/standard/settag
-			 * @see madmin/cache/manager/standard/search
+			 * @see madmin/cache/manager/standard/get/ansi
+			 * @see madmin/cache/manager/standard/getbytag/ansi
+			 * @see madmin/cache/manager/standard/delete/ansi
+			 * @see madmin/cache/manager/standard/deletebytag/ansi
+			 * @see madmin/cache/manager/standard/set/ansi
+			 * @see madmin/cache/manager/standard/settag/ansi
+			 * @see madmin/cache/manager/standard/search/ansi
 			 */
 			$cfgPathCount = 'madmin/cache/manager/standard/count';
 
 			$results = $this->searchItemsBase( $conn, $search, $cfgPathSearch, $cfgPathCount, $required, $total, $level );
 
 			while( ( $row = $results->fetch() ) !== false ) {
-				$items[$row['id']] = $this->createItemBase( $row );
+				$items[(string) $row['id']] = $this->createItemBase( $row );
 			}
 
 			$dbm->release( $conn, $dbname );
@@ -507,10 +560,23 @@ class Standard
 
 
 	/**
+	 * Returns the available manager types
+	 *
+	 * @param boolean $withsub Return also the resource type of sub-managers if true
+	 * @return string[] Type of the manager and submanagers, subtypes are separated by slashes
+	 */
+	public function getResourceType( $withsub = true )
+	{
+		$path = 'madmin/cache/manager/submanagers';
+		return $this->getResourceTypeBase( 'cache', $path, [], $withsub );
+	}
+
+
+	/**
 	 * Returns the attributes that can be used for searching.
 	 *
 	 * @param boolean $withsub Return also attributes of sub-managers if true
-	 * @return array Returns a list of attribtes implementing \Aimeos\MW\Criteria\Attribute\Iface
+	 * @return \Aimeos\MW\Criteria\Attribute\Iface[] Returns a list of attributes
 	 */
 	public function getSearchAttributes( $withsub = true )
 	{
@@ -533,7 +599,7 @@ class Standard
 		 */
 		$path = 'madmin/cache/manager/submanagers';
 
-		return $this->getSearchAttributesBase( $this->searchConfig, $path, array(), $withsub );
+		return $this->getSearchAttributesBase( $this->searchConfig, $path, [], $withsub );
 	}
 
 
@@ -554,12 +620,11 @@ class Standard
 	 * Create new admin cache item object initialized with given parameters.
 	 *
 	 * @param array $values Associative list of key/value pairs of a job
-	 * @return \Aimeos\MAdmin\Cache\Item\Iface
+	 * @return \Aimeos\MAdmin\Cache\Item\Iface New cache item
 	 */
-	protected function createItemBase( array $values = array() )
+	protected function createItemBase( array $values = [] )
 	{
 		$values['siteid'] = $this->getContext()->getLocale()->getSiteId();
-
 		return new \Aimeos\MAdmin\Cache\Item\Standard( $values );
 	}
 }

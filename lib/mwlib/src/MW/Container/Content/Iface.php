@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2013
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2013
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Container
  */
@@ -24,13 +24,13 @@ interface Iface extends \Iterator
 	 * Adds data to the content object.
 	 *
 	 * @param mixed $data Content data
-	 * @return void
+	 * @return \Aimeos\MW\Container\Content\Iface Container content instance for method chaining
 	 */
 	public function add( $data );
 
 	/**
 	 * Cleans up and saves the content.
-	 * @return void
+	 * @return \Aimeos\MW\Container\Content\Iface Container content instance for method chaining
 	 */
 	public function close();
 

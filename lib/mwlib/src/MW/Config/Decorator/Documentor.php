@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2014
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2014
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Config
  */
@@ -49,7 +49,7 @@ class Documentor
 	 */
 	public function get( $name, $default = null )
 	{
-		$value = $this->getObject()->get( $name, $default );
+		$value = parent::get( $name, $default );
 
 		$this->file->set( $name, $value, $default );
 
@@ -66,7 +66,7 @@ class Documentor
  */
 class ConfigFile
 {
-	private $config = array();
+	private $config = [];
 	private $file;
 
 
@@ -89,11 +89,14 @@ class ConfigFile
 	 */
 	public function __destruct()
 	{
-		if( fwrite( $this->file, serialize( $this->config ) ) === false ) {
-			echo 'Unable to write collected configuration to file' . PHP_EOL;
-		}
+		if( is_resource( $this->file ) )
+		{
+			if( fwrite( $this->file, serialize( $this->config ) ) === false ) {
+				echo 'Unable to write collected configuration to file' . PHP_EOL;
+			}
 
-		fclose( $this->file );
+			fclose( $this->file );
+		}
 	}
 
 

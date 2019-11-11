@@ -1,13 +1,15 @@
 <?php
 
+/**
+ * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
+ * @copyright Aimeos (aimeos.org), 2015-2018
+ */
+
+
 namespace Aimeos\MShop\Service\Provider\Payment;
 
 
-/**
- * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
- */
-class BaseTest extends \PHPUnit_Framework_TestCase
+class BaseTest extends \PHPUnit\Framework\TestCase
 {
 	private $object;
 	private $context;
@@ -15,27 +17,21 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 
 	protected function setUp()
 	{
-		$this->context = \TestHelper::getContext();
+		$this->context = \TestHelperMShop::getContext();
 
-		$servManager = \Aimeos\MShop\Service\Manager\Factory::createManager( $this->context );
+		$servManager = \Aimeos\MShop\Service\Manager\Factory::create( $this->context );
 		$search = $servManager->createSearch();
-		$search->setConditions($search->compare('==', 'service.provider', 'Standard'));
-		$result = $servManager->searchItems($search, array('price'));
+		$search->setConditions( $search->compare( '==', 'service.provider', 'Standard' ) );
+		$result = $servManager->searchItems( $search, array( 'price' ) );
 
 		if( ( $item = reset( $result ) ) === false ) {
-			throw new \Exception( 'No order base item found' );
+			throw new \RuntimeException( 'No order base item found' );
 		}
 
 		$this->object = new TestBase( $this->context, $item );
 	}
 
 
-	/**
-	 * Tears down the fixture, for example, closes a network connection.
-	 * This method is called after a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function tearDown()
 	{
 		unset( $this->object );
@@ -46,8 +42,7 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 	{
 		$result = $this->object->checkConfigBE( array( 'payment.url-success' => true ) );
 
-		$this->assertInternalType( 'array', $result );
-		$this->assertArrayHasKey( 'payment.url-success', $result );
+		$this->assertEquals( 0, count( $result ) );
 	}
 
 
@@ -55,55 +50,61 @@ class BaseTest extends \PHPUnit_Framework_TestCase
 	{
 		$result = $this->object->getConfigBE();
 
+		$this->assertEquals( 0, count( $result ) );
 		$this->assertInternalType( 'array', $result );
-		$this->assertArrayHasKey( 'payment.url-success', $result );
-		$this->assertArrayHasKey( 'payment.url-failure', $result );
-		$this->assertArrayHasKey( 'payment.url-cancel', $result );
-		$this->assertArrayHasKey( 'payment.url-update', $result );
 	}
 
 
 	public function testCancel()
 	{
-		$item = \Aimeos\MShop\Order\Manager\Factory::createManager( $this->context )->createItem();
+		$item = \Aimeos\MShop\Order\Manager\Factory::create( $this->context )->createItem();
 
-		$this->setExpectedException( '\\Aimeos\\MShop\\Service\\Exception' );
+		$this->setExpectedException( \Aimeos\MShop\Service\Exception::class );
 		$this->object->cancel( $item );
 	}
 
 
 	public function testCapture()
 	{
-		$item = \Aimeos\MShop\Order\Manager\Factory::createManager( $this->context )->createItem();
+		$item = \Aimeos\MShop\Order\Manager\Factory::create( $this->context )->createItem();
 
-		$this->setExpectedException( '\\Aimeos\\MShop\\Service\\Exception' );
+		$this->setExpectedException( \Aimeos\MShop\Service\Exception::class );
 		$this->object->capture( $item );
 	}
 
 	public function testProcess()
 	{
-		$item = \Aimeos\MShop\Order\Manager\Factory::createManager( $this->context )->createItem();
+		$item = \Aimeos\MShop\Order\Manager\Factory::create( $this->context )->createItem();
 
-		$result = $this->object->process( $item, array() );
-		$this->assertInstanceOf( '\\Aimeos\\MShop\\Common\\Item\\Helper\\Form\\Iface', $result );
+		$result = $this->object->process( $item, [] );
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Helper\Form\Iface::class, $result );
 	}
 
 
 	public function testRefund()
 	{
-		$item = \Aimeos\MShop\Order\Manager\Factory::createManager( $this->context )->createItem();
+		$item = \Aimeos\MShop\Order\Manager\Factory::create( $this->context )->createItem();
 
-		$this->setExpectedException( '\\Aimeos\\MShop\\Service\\Exception' );
+		$this->setExpectedException( \Aimeos\MShop\Service\Exception::class );
 		$this->object->refund( $item );
+	}
+
+
+	public function testRepay()
+	{
+		$item = \Aimeos\MShop\Order\Manager\Factory::create( $this->context )->createItem();
+
+		$this->setExpectedException( \Aimeos\MShop\Service\Exception::class );
+		$this->object->repay( $item );
 	}
 
 
 	public function testSetConfigFE()
 	{
-		$item = \Aimeos\MShop\Order\Manager\Factory::createManager( $this->context )
+		$item = \Aimeos\MShop\Order\Manager\Factory::create( $this->context )
 			->getSubManager( 'base' )->getSubManager( 'service' )->createItem();
 
-		$this->object->setConfigFE( $item, array() );
+		$this->object->setConfigFE( $item, [] );
 	}
 }
 

@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 
@@ -33,14 +33,14 @@ class MShopAddPluginData extends \Aimeos\MW\Setup\Task\Base
 	 */
 	public function getPostDependencies()
 	{
-		return array();
+		return [];
 	}
 
 
 	/**
 	 * Executes the task for MySQL databases.
 	 */
-	protected function mysql()
+	public function migrate()
 	{
 		// executed by tasks in sub-directories for specific sites
 	}
@@ -51,17 +51,14 @@ class MShopAddPluginData extends \Aimeos\MW\Setup\Task\Base
 	 */
 	protected function process()
 	{
-		$iface = '\\Aimeos\\MShop\\Context\\Item\\Iface';
-		if( !( $this->additional instanceof $iface ) ) {
-			throw new \Aimeos\MW\Setup\Exception( sprintf( 'Additionally provided object is not of type "%1$s"', $iface ) );
-		}
+		\Aimeos\MW\Common\Base::checkClass( \Aimeos\MShop\Context\Item\Iface::class, $this->additional );
 
 		$this->msg( 'Adding default plugin data', 0 );
 		$this->status( '' );
 
 
 		$ds = DIRECTORY_SEPARATOR;
-		$pluginManager = \Aimeos\MShop\Plugin\Manager\Factory::createManager( $this->additional, 'Standard' );
+		$pluginManager = \Aimeos\MShop\Plugin\Manager\Factory::create( $this->additional, 'Standard' );
 
 
 		$filename = __DIR__ . $ds . 'default' . $ds . 'data' . $ds . 'plugin.php';
@@ -86,7 +83,7 @@ class MShopAddPluginData extends \Aimeos\MW\Setup\Task\Base
 	{
 		$this->msg( 'Adding data for MShop plugins', 1 );
 
-		$types = array();
+		$types = [];
 		$manager = $pluginManager->getSubManager( 'type' );
 
 		foreach( $manager->searchItems( $manager->createSearch() ) as $item ) {
@@ -100,12 +97,8 @@ class MShopAddPluginData extends \Aimeos\MW\Setup\Task\Base
 		{
 			$total++;
 
-			if( !isset( $types[$dataset['typeid']] ) ) {
-				throw new \Exception( sprintf( 'No plugin type "%1$s" found', $dataset['typeid'] ) );
-			}
-
 			$item->setId( null );
-			$item->setTypeId( $types[$dataset['typeid']]->getId() );
+			$item->setType( $dataset['type'] );
 			$item->setProvider( $dataset['provider'] );
 			$item->setLabel( $dataset['label'] );
 			$item->setConfig( $dataset['config'] );

@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Template
  */
@@ -26,7 +26,7 @@ interface Iface
 	 * @param string $text Template as text
 	 * @param string $begin Marker for start sequence with '*' as wildcard
 	 * @param string $end Marker for stop sequence with '*' as wildcard
-	 * @return \Aimeos\MW\Template\Iface
+	 * @return null
 	 */
 	public function __construct( $text, $begin = '', $end = '' );
 
@@ -71,7 +71,7 @@ interface Iface
 	/**
 	 * Substitutes the marker by given text.
 	 *
-	 * @param array $substitute Array of marker names (keys) and text to substitute (values)
+	 * @param string[] $substitute Array of marker names (keys) and text to substitute (values)
 	 * @return \Aimeos\MW\Template\Iface Own Instance for method chaining
 	 */
 	public function substitute( array $substitute );

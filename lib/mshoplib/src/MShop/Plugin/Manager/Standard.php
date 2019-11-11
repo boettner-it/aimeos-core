@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Plugin
  */
@@ -20,89 +20,92 @@ namespace Aimeos\MShop\Plugin\Manager;
  */
 class Standard
 	extends \Aimeos\MShop\Plugin\Manager\Base
-	implements \Aimeos\MShop\Plugin\Manager\Iface
+	implements \Aimeos\MShop\Plugin\Manager\Iface, \Aimeos\MShop\Common\Manager\Factory\Iface
 {
-	private $plugins = array();
-
 	private $searchConfig = array(
 		'plugin.id' => array(
-			'label' => 'Plugin ID',
+			'label' => 'ID',
 			'code' => 'plugin.id',
 			'internalcode' => 'mplu."id"',
 			'type' => 'integer',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
+			'public' => false,
 		),
 		'plugin.siteid' => array(
-			'label' => 'Plugin site ID',
+			'label' => 'Site ID',
 			'code' => 'plugin.siteid',
 			'internalcode' => 'mplu."siteid"',
 			'type' => 'integer',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 			'public' => false,
 		),
-		'plugin.typeid' => array(
-			'label' => 'Plugin type ID',
-			'code' => 'plugin.typeid',
-			'internalcode' => 'mplu."typeid"',
+		'plugin.type' => array(
+			'label' => 'Type ID',
+			'code' => 'plugin.type',
+			'internalcode' => 'mplu."type"',
 			'type' => 'string',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 			'public' => false,
 		),
 		'plugin.label' => array(
-			'label' => 'Plugin label',
+			'label' => 'Label',
 			'code' => 'plugin.label',
 			'internalcode' => 'mplu."label"',
 			'type' => 'string',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
 		'plugin.provider' => array(
-			'label' => 'Plugin provider',
+			'label' => 'Provider',
 			'code' => 'plugin.provider',
 			'internalcode' => 'mplu."provider"',
 			'type' => 'string',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
-		'plugin.config' => array(
-			'label' => 'Plugin config',
-			'code' => 'plugin.config',
-			'internalcode' => 'mplu."config"',
-			'type' => 'string',
-			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
-		),
 		'plugin.position' => array(
-			'label' => 'Plugin position',
+			'label' => 'Position',
 			'code' => 'plugin.position',
 			'internalcode' => 'mplu."pos"',
 			'type' => 'integer',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 		),
 		'plugin.status' => array(
-			'label' => 'Plugin status',
+			'label' => 'Status',
 			'code' => 'plugin.status',
 			'internalcode' => 'mplu."status"',
 			'type' => 'integer',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 		),
-		'plugin.mtime'=> array(
-			'code'=>'plugin.mtime',
-			'internalcode'=>'mplu."mtime"',
-			'label'=>'Plugin modification date',
-			'type'=> 'datetime',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'plugin.config' => array(
+			'label' => 'Config',
+			'code' => 'plugin.config',
+			'internalcode' => 'mplu."config"',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
-		'plugin.ctime'=> array(
-			'code'=>'plugin.ctime',
-			'internalcode'=>'mplu."ctime"',
-			'label'=>'Plugin creation date/time',
-			'type'=> 'datetime',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'plugin.ctime' => array(
+			'code' => 'plugin.ctime',
+			'internalcode' => 'mplu."ctime"',
+			'label' => 'Create date/time',
+			'type' => 'datetime',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
-		'plugin.editor'=> array(
-			'code'=>'plugin.editor',
-			'internalcode'=>'mplu."editor"',
-			'label'=>'Plugin editor',
-			'type'=> 'string',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'plugin.mtime' => array(
+			'code' => 'plugin.mtime',
+			'internalcode' => 'mplu."mtime"',
+			'label' => 'Modify date/time',
+			'type' => 'datetime',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
+		),
+		'plugin.editor' => array(
+			'code' => 'plugin.editor',
+			'internalcode' => 'mplu."editor"',
+			'label' => 'Editor',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
 	);
 
@@ -122,36 +125,38 @@ class Standard
 	/**
 	 * Removes old entries from the storage.
 	 *
-	 * @param array $siteids List of IDs for sites whose entries should be deleted
+	 * @param string[] $siteids List of IDs for sites whose entries should be deleted
+	 * @return \Aimeos\MShop\Plugin\Manager\Iface Manager object for chaining method calls
 	 */
-	public function cleanup( array $siteids )
+	public function clear( array $siteids )
 	{
 		$path = 'mshop/plugin/manager/submanagers';
-		foreach( $this->getContext()->getConfig()->get( $path, array( 'type' ) ) as $domain ) {
-			$this->getSubManager( $domain )->cleanup( $siteids );
+		foreach( $this->getContext()->getConfig()->get( $path, ['type'] ) as $domain ) {
+			$this->getObject()->getSubManager( $domain )->clear( $siteids );
 		}
 
-		$this->cleanupBase( $siteids, 'mshop/plugin/manager/standard/delete' );
+		return $this->clearBase( $siteids, 'mshop/plugin/manager/standard/delete' );
 	}
 
 
 	/**
-	 * Creates a new plugin object.
+	 * Creates a new empty item instance
 	 *
-	 * @return \Aimeos\MShop\Plugin\Item\Iface New plugin object
+	 * @param array $values Values the item should be initialized with
+	 * @return \Aimeos\MShop\Plugin\Item\Iface New plugin item object
 	 */
-	public function createItem()
+	public function createItem( array $values = [] )
 	{
-		$values = array( 'siteid' => $this->getContext()->getLocale()->getSiteId() );
+		$values['plugin.siteid'] = $this->getContext()->getLocale()->getSiteId();
 		return $this->createItemBase( $values );
 	}
 
 
 	/**
-	 * Creates a criteria object for searching.
+	 * Creates a search critera object
 	 *
-	 * @param boolean $default Prepopulate object with default criterias
-	 * @return \Aimeos\MW\Criteria\Iface
+	 * @param boolean $default Add default criteria (optional)
+	 * @return \Aimeos\MW\Criteria\Iface New search criteria object
 	 */
 	public function createSearch( $default = false )
 	{
@@ -164,13 +169,20 @@ class Standard
 
 
 	/**
-	 * Removes multiple items specified by ids in the array.
+	 * Removes multiple items.
 	 *
-	 * @param array $ids List of IDs
+	 * @param \Aimeos\MShop\Common\Item\Iface[]|string[] $itemIds List of item objects or IDs of the items
+	 * @return \Aimeos\MShop\Plugin\Manager\Iface Manager object for chaining method calls
 	 */
-	public function deleteItems( array $ids )
+	public function deleteItems( array $itemIds )
 	{
-		/** mshop/plugin/manager/standard/delete
+		/** mshop/plugin/manager/standard/delete/mysql
+		 * Deletes the items matched by the given IDs from the database
+		 *
+		 * @see mshop/plugin/manager/standard/delete/ansi
+		 */
+
+		/** mshop/plugin/manager/standard/delete/ansi
 		 * Deletes the items matched by the given IDs from the database
 		 *
 		 * Removes the records specified by the given IDs from the plugin database.
@@ -188,14 +200,28 @@ class Standard
 		 * @param string SQL statement for deleting items
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/plugin/manager/standard/insert
-		 * @see mshop/plugin/manager/standard/update
-		 * @see mshop/plugin/manager/standard/newid
-		 * @see mshop/plugin/manager/standard/search
-		 * @see mshop/plugin/manager/standard/count
+		 * @see mshop/plugin/manager/standard/insert/ansi
+		 * @see mshop/plugin/manager/standard/update/ansi
+		 * @see mshop/plugin/manager/standard/newid/ansi
+		 * @see mshop/plugin/manager/standard/search/ansi
+		 * @see mshop/plugin/manager/standard/count/ansi
 		 */
 		$path = 'mshop/plugin/manager/standard/delete';
-		$this->deleteItemsBase( $ids, $path );
+
+		return $this->deleteItemsBase( $itemIds, $path );
+	}
+
+
+	/**
+	 * Returns the available manager types
+	 *
+	 * @param boolean $withsub Return also the resource type of sub-managers if true
+	 * @return string[] Type of the manager and submanagers, subtypes are separated by slashes
+	 */
+	public function getResourceType( $withsub = true )
+	{
+		$path = 'mshop/plugin/manager/submanagers';
+		return $this->getResourceTypeBase( 'plugin', $path, [], $withsub );
 	}
 
 
@@ -203,7 +229,7 @@ class Standard
 	 * Returns the attributes that can be used for searching.
 	 *
 	 * @param boolean $withsub Return also attributes of sub-managers if true
-	 * @return array List of attribute items implementing \Aimeos\MW\Criteria\Attribute\Iface
+	 * @return \Aimeos\MW\Criteria\Attribute\Iface[] List of search attribute items
 	 */
 	public function getSearchAttributes( $withsub = true )
 	{
@@ -226,7 +252,7 @@ class Standard
 		 */
 		$path = 'mshop/plugin/manager/submanagers';
 
-		return $this->getSearchAttributesBase( $this->searchConfig, $path, array( 'type' ), $withsub );
+		return $this->getSearchAttributesBase( $this->searchConfig, $path, [], $withsub );
 	}
 
 
@@ -246,134 +272,30 @@ class Standard
 	/**
 	 * Returns plugin item specified by the given ID.
 	 *
-	 * @param integer $id Unique ID of the plugin item
-	 * @param array $ref List of domains to fetch list items and referenced items for
+	 * @param string $id Unique ID of the plugin item
+	 * @param string[] $ref List of domains to fetch list items and referenced items for
+	 * @param boolean $default Add default criteria
 	 * @return \Aimeos\MShop\Plugin\Item\Iface Returns the plugin item of the given id
 	 * @throws \Aimeos\MShop\Exception If item couldn't be found
 	 */
-	public function getItem( $id, array $ref = array() )
+	public function getItem( $id, array $ref = [], $default = false )
 	{
-		return $this->getItemBase( 'plugin.id', $id, $ref );
-	}
-
-
-	/**
-	 * Returns the plugin provider which is responsible for the plugin item.
-	 *
-	 * @param \Aimeos\MShop\Plugin\Item\Iface $item Plugin item object
-	 * @return \Aimeos\MShop\Plugin\Provider\Iface Returns the decoratad plugin provider object
-	 * @throws \Aimeos\MShop\Plugin\Exception If provider couldn't be found
-	 */
-	public function getProvider( \Aimeos\MShop\Plugin\Item\Iface $item )
-	{
-		$type = ucwords( $item->getType() );
-		$names = explode( ',', $item->getProvider() );
-
-		if( ctype_alnum( $type ) === false ) {
-			throw new \Aimeos\MShop\Plugin\Exception( sprintf( 'Invalid characters in type name "%1$s"', $type ) );
-		}
-
-		if( ( $provider = array_shift( $names ) ) === null ) {
-			throw new \Aimeos\MShop\Plugin\Exception( sprintf( 'Provider in "%1$s" not available', $item->getProvider() ) );
-		}
-
-		if( ctype_alnum( $provider ) === false ) {
-			throw new \Aimeos\MShop\Plugin\Exception( sprintf( 'Invalid characters in provider name "%1$s"', $provider ) );
-		}
-
-		$interface = '\\Aimeos\\MShop\\Plugin\\Provider\\Factory\\Iface';
-		$classname = '\\Aimeos\\MShop\\Plugin\\Provider\\' . $type . '\\' . $provider;
-
-		if( class_exists( $classname ) === false ) {
-			throw new \Aimeos\MShop\Plugin\Exception( sprintf( 'Class "%1$s" not available', $classname ) );
-		}
-
-		$context = $this->getContext();
-		$config = $context->getConfig();
-		$provider = new $classname( $context, $item );
-
-		if( ( $provider instanceof $interface ) === false )
-		{
-			$msg = sprintf( 'Class "%1$s" does not implement interface "%2$s"', $classname, $interface );
-			throw new \Aimeos\MShop\Plugin\Exception( $msg );
-		}
-
-		/** mshop/plugin/provider/order/decorators
-		 * Adds a list of decorators to all order plugin provider objects automatcally
-		 *
-		 * Decorators extend the functionality of a class by adding new aspects
-		 * (e.g. log what is currently done), executing the methods of the underlying
-		 * class only in certain conditions (e.g. only for logged in users) or
-		 * modify what is returned to the caller.
-		 *
-		 * This option allows you to wrap decorators
-		 * ("\Aimeos\MShop\Plugin\Provider\Decorator\*") around the order provider.
-		 *
-		 *  mshop/plugin/provider/order/decorators = array( 'decorator1' )
-		 *
-		 * This would add the decorator named "decorator1" defined by
-		 * "\Aimeos\MShop\Plugin\Provider\Decorator\Decorator1" to all order provider
-		 * objects.
-		 *
-		 * @param array List of decorator names
-		 * @since 2014.03
-		 * @category Developer
-		 * @see mshop/plugin/provider/order/decorators
-		 */
-		$decorators = $config->get( 'mshop/plugin/provider/' . $item->getType() . '/decorators', array() );
-
-		$provider = $this->addPluginDecorators( $item, $provider, $names );
-		return $this->addPluginDecorators( $item, $provider, $decorators );
-	}
-
-
-	/**
-	 * Registers plugins to the given publisher.
-	 *
-	 * @param \Aimeos\MW\Observer\Publisher\Iface $publisher Publisher object
-	 * @param string $type Unique plugin type code
-	 */
-	public function register( \Aimeos\MW\Observer\Publisher\Iface $publisher, $type )
-	{
-		if( !isset( $this->plugins[$type] ) )
-		{
-			$search = $this->createSearch( true );
-
-			$expr = array(
-				$search->compare( '==', 'plugin.type.code', $type ),
-				$search->getConditions(),
-			);
-
-			$search->setConditions( $search->combine( '&&', $expr ) );
-			$search->setSortations( array( $search->sort( '+', 'plugin.position' ) ) );
-
-			$this->plugins[$type] = array();
-
-			foreach( $this->searchItems( $search ) as $item ) {
-				$this->plugins[$type][$item->getId()] = $this->getProvider( $item );
-			}
-		}
-
-		foreach( $this->plugins[$type] as $plugin ) {
-			$plugin->register( $publisher );
-		}
+		return $this->getItemBase( 'plugin.id', $id, $ref, $default );
 	}
 
 
 	/**
 	 * Saves a new or modified plugin to the storage.
 	 *
-	 * @param \Aimeos\MShop\Common\Item\Iface $item Plugin item
+	 * @param \Aimeos\MShop\Plugin\Item\Iface $item Plugin item
 	 * @param boolean $fetch True if the new ID should be returned in the item
+	 * @return \Aimeos\MShop\Plugin\Item\Iface $item Updated item including the generated ID
 	 */
-	public function saveItem( \Aimeos\MShop\Common\Item\Iface $item, $fetch = true )
+	public function saveItem( \Aimeos\MShop\Plugin\Item\Iface $item, $fetch = true )
 	{
-		$iface = '\\Aimeos\\MShop\\Plugin\\Item\\Iface';
-		if( !( $item instanceof $iface ) ) {
-			throw new \Aimeos\MShop\Plugin\Exception( sprintf( 'Object is not of required type "%1$s"', $iface ) );
+		if( !$item->isModified() ) {
+			return $item;
 		}
-
-		if( !$item->isModified() ) { return; }
 
 		$context = $this->getContext();
 
@@ -385,10 +307,17 @@ class Standard
 		{
 			$id = $item->getId();
 			$date = date( 'Y-m-d H:i:s' );
+			$columns = $this->getObject()->getSaveAttributes();
 
 			if( $id === null )
 			{
-				/** mshop/plugin/manager/standard/insert
+				/** mshop/plugin/manager/standard/insert/mysql
+				 * Inserts a new plugin record into the database table
+				 *
+				 * @see mshop/plugin/manager/standard/insert/ansi
+				 */
+
+				/** mshop/plugin/manager/standard/insert/ansi
 				 * Inserts a new plugin record into the database table
 				 *
 				 * Items with no ID yet (i.e. the ID is NULL) will be created in
@@ -411,17 +340,24 @@ class Standard
 				 * @param string SQL statement for inserting records
 				 * @since 2014.03
 				 * @category Developer
-				 * @see mshop/plugin/manager/standard/update
-				 * @see mshop/plugin/manager/standard/newid
-				 * @see mshop/plugin/manager/standard/delete
-				 * @see mshop/plugin/manager/standard/search
-				 * @see mshop/plugin/manager/standard/count
+				 * @see mshop/plugin/manager/standard/update/ansi
+				 * @see mshop/plugin/manager/standard/newid/ansi
+				 * @see mshop/plugin/manager/standard/delete/ansi
+				 * @see mshop/plugin/manager/standard/search/ansi
+				 * @see mshop/plugin/manager/standard/count/ansi
 				 */
 				$path = 'mshop/plugin/manager/standard/insert';
+				$sql = $this->addSqlColumns( array_keys( $columns ), $this->getSqlConfig( $path ) );
 			}
 			else
 			{
-				/** mshop/plugin/manager/standard/update
+				/** mshop/plugin/manager/standard/update/mysql
+				 * Updates an existing plugin record in the database
+				 *
+				 * @see mshop/plugin/manager/standard/update/ansi
+				 */
+
+				/** mshop/plugin/manager/standard/update/ansi
 				 * Updates an existing plugin record in the database
 				 *
 				 * Items which already have an ID (i.e. the ID is not NULL) will
@@ -441,38 +377,51 @@ class Standard
 				 * @param string SQL statement for updating records
 				 * @since 2014.03
 				 * @category Developer
-				 * @see mshop/plugin/manager/standard/insert
-				 * @see mshop/plugin/manager/standard/newid
-				 * @see mshop/plugin/manager/standard/delete
-				 * @see mshop/plugin/manager/standard/search
-				 * @see mshop/plugin/manager/standard/count
+				 * @see mshop/plugin/manager/standard/insert/ansi
+				 * @see mshop/plugin/manager/standard/newid/ansi
+				 * @see mshop/plugin/manager/standard/delete/ansi
+				 * @see mshop/plugin/manager/standard/search/ansi
+				 * @see mshop/plugin/manager/standard/count/ansi
 				 */
 				$path = 'mshop/plugin/manager/standard/update';
+				$sql = $this->addSqlColumns( array_keys( $columns ), $this->getSqlConfig( $path ), false );
 			}
 
-			$stmt = $this->getCachedStatement( $conn, $path );
-			$stmt->bind( 1, $context->getLocale()->getSiteId(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 2, $item->getTypeId() );
-			$stmt->bind( 3, $item->getLabel() );
-			$stmt->bind( 4, $item->getProvider() );
-			$stmt->bind( 5, json_encode( $item->getConfig() ) );
-			$stmt->bind( 6, $item->getPosition(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 7, $item->getStatus(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 8, $date ); //mtime
-			$stmt->bind( 9, $context->getEditor() );
+			$idx = 1;
+			$stmt = $this->getCachedStatement( $conn, $path, $sql );
+
+			foreach( $columns as $name => $entry ) {
+				$stmt->bind( $idx++, $item->get( $name ), $entry->getInternalType() );
+			}
+
+			$stmt->bind( $idx++, $item->getType() );
+			$stmt->bind( $idx++, $item->getLabel() );
+			$stmt->bind( $idx++, $item->getProvider() );
+			$stmt->bind( $idx++, json_encode( $item->getConfig() ) );
+			$stmt->bind( $idx++, $item->getPosition(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmt->bind( $idx++, $item->getStatus(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmt->bind( $idx++, $date ); //mtime
+			$stmt->bind( $idx++, $context->getEditor() );
+			$stmt->bind( $idx++, $context->getLocale()->getSiteId(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 
 			if( $id !== null ) {
-				$stmt->bind( 10, $id, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+				$stmt->bind( $idx++, $id, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 				$item->setId( $id );
 			} else {
-				$stmt->bind( 10, $date ); //ctime
+				$stmt->bind( $idx++, $date ); //ctime
 			}
 
 			$stmt->execute()->finish();
 
 			if( $id === null && $fetch === true )
 			{
-				/** mshop/plugin/manager/standard/newid
+				/** mshop/plugin/manager/standard/newid/mysql
+				 * Retrieves the ID generated by the database when inserting a new record
+				 *
+				 * @see mshop/plugin/manager/standard/newid/ansi
+				 */
+
+				/** mshop/plugin/manager/standard/newid/ansi
 				 * Retrieves the ID generated by the database when inserting a new record
 				 *
 				 * As soon as a new record is inserted into the database table,
@@ -496,17 +445,15 @@ class Standard
 				 * @param string SQL statement for retrieving the last inserted record ID
 				 * @since 2014.03
 				 * @category Developer
-				 * @see mshop/plugin/manager/standard/insert
-				 * @see mshop/plugin/manager/standard/update
-				 * @see mshop/plugin/manager/standard/delete
-				 * @see mshop/plugin/manager/standard/search
-				 * @see mshop/plugin/manager/standard/count
+				 * @see mshop/plugin/manager/standard/insert/ansi
+				 * @see mshop/plugin/manager/standard/update/ansi
+				 * @see mshop/plugin/manager/standard/delete/ansi
+				 * @see mshop/plugin/manager/standard/search/ansi
+				 * @see mshop/plugin/manager/standard/count/ansi
 				 */
 				$path = 'mshop/plugin/manager/standard/newid';
 				$item->setId( $this->newId( $conn, $path ) );
 			}
-
-			$this->plugins[$id] = $item;
 
 			$dbm->release( $conn, $dbname );
 		}
@@ -515,6 +462,8 @@ class Standard
 			$dbm->release( $conn, $dbname );
 			throw $e;
 		}
+
+		return $item;
 	}
 
 
@@ -522,13 +471,13 @@ class Standard
 	 * Searches for plugin items matching the given criteria.
 	 *
 	 * @param \Aimeos\MW\Criteria\Iface $search Search criteria object
-	 * @param integer &$total Number of items that are available in total
-	 *
-	 * @return array List of plugin items implementing \Aimeos\MShop\Plugin\Item\Iface
+	 * @param string[] $ref List of domains to fetch list items and referenced items for
+	 * @param integer|null &$total Number of items that are available in total
+	 * @return \Aimeos\MShop\Plugin\Item\Iface[] List of plugin items
 	 */
-	public function searchItems( \Aimeos\MW\Criteria\Iface $search, array $ref = array(), &$total = null )
+	public function searchItems( \Aimeos\MW\Criteria\Iface $search, array $ref = [], &$total = null )
 	{
-		$items = $map = $typeIds = array();
+		$items = [];
 		$context = $this->getContext();
 
 		$dbm = $context->getDatabaseManager();
@@ -538,9 +487,46 @@ class Standard
 		try
 		{
 			$required = array( 'plugin' );
-			$level = \Aimeos\MShop\Locale\Manager\Base::SITE_PATH;
 
-			/** mshop/plugin/manager/standard/search
+			/** mshop/plugin/manager/sitemode
+			 * Mode how items from levels below or above in the site tree are handled
+			 *
+			 * By default, only items from the current site are fetched from the
+			 * storage. If the ai-sites extension is installed, you can create a
+			 * tree of sites. Then, this setting allows you to define for the
+			 * whole plugin domain if items from parent sites are inherited,
+			 * sites from child sites are aggregated or both.
+			 *
+			 * Available constants for the site mode are:
+			 * * 0 = only items from the current site
+			 * * 1 = inherit items from parent sites
+			 * * 2 = aggregate items from child sites
+			 * * 3 = inherit and aggregate items at the same time
+			 *
+			 * You also need to set the mode in the locale manager
+			 * (mshop/locale/manager/standard/sitelevel) to one of the constants.
+			 * If you set it to the same value, it will work as described but you
+			 * can also use different modes. For example, if inheritance and
+			 * aggregation is configured the locale manager but only inheritance
+			 * in the domain manager because aggregating items makes no sense in
+			 * this domain, then items wil be only inherited. Thus, you have full
+			 * control over inheritance and aggregation in each domain.
+			 *
+			 * @param integer Constant from Aimeos\MShop\Locale\Manager\Base class
+			 * @category Developer
+			 * @since 2018.01
+			 * @see mshop/locale/manager/standard/sitelevel
+			 */
+			$level = \Aimeos\MShop\Locale\Manager\Base::SITE_PATH;
+			$level = $context->getConfig()->get( 'mshop/plugin/manager/sitemode', $level );
+
+			/** mshop/plugin/manager/standard/search/mysql
+			 * Retrieves the records matched by the given criteria in the database
+			 *
+			 * @see mshop/plugin/manager/standard/search/ansi
+			 */
+
+			/** mshop/plugin/manager/standard/search/ansi
 			 * Retrieves the records matched by the given criteria in the database
 			 *
 			 * Fetches the records matched by the given criteria from the plugin
@@ -585,15 +571,21 @@ class Standard
 			 * @param string SQL statement for searching items
 			 * @since 2014.03
 			 * @category Developer
-			 * @see mshop/plugin/manager/standard/insert
-			 * @see mshop/plugin/manager/standard/update
-			 * @see mshop/plugin/manager/standard/newid
-			 * @see mshop/plugin/manager/standard/delete
-			 * @see mshop/plugin/manager/standard/count
+			 * @see mshop/plugin/manager/standard/insert/ansi
+			 * @see mshop/plugin/manager/standard/update/ansi
+			 * @see mshop/plugin/manager/standard/newid/ansi
+			 * @see mshop/plugin/manager/standard/delete/ansi
+			 * @see mshop/plugin/manager/standard/count/ansi
 			 */
 			$cfgPathSearch = 'mshop/plugin/manager/standard/search';
 
-			/** mshop/plugin/manager/standard/count
+			/** mshop/plugin/manager/standard/count/mysql
+			 * Counts the number of records matched by the given criteria in the database
+			 *
+			 * @see mshop/plugin/manager/standard/count/ansi
+			 */
+
+			/** mshop/plugin/manager/standard/count/ansi
 			 * Counts the number of records matched by the given criteria in the database
 			 *
 			 * Counts all records matched by the given criteria from the plugin
@@ -632,11 +624,11 @@ class Standard
 			 * @param string SQL statement for counting items
 			 * @since 2014.03
 			 * @category Developer
-			 * @see mshop/plugin/manager/standard/insert
-			 * @see mshop/plugin/manager/standard/update
-			 * @see mshop/plugin/manager/standard/newid
-			 * @see mshop/plugin/manager/standard/delete
-			 * @see mshop/plugin/manager/standard/search
+			 * @see mshop/plugin/manager/standard/insert/ansi
+			 * @see mshop/plugin/manager/standard/update/ansi
+			 * @see mshop/plugin/manager/standard/newid/ansi
+			 * @see mshop/plugin/manager/standard/delete/ansi
+			 * @see mshop/plugin/manager/standard/search/ansi
 			 */
 			$cfgPathCount = 'mshop/plugin/manager/standard/count';
 
@@ -644,15 +636,13 @@ class Standard
 
 			while( ( $row = $results->fetch() ) !== false )
 			{
-				$config = $row['config'];
-				if( ( $row['config'] = json_decode( $row['config'], true ) ) === null )
+				if( ( $row['plugin.config'] = json_decode( $config = $row['plugin.config'], true ) ) === null )
 				{
-					$msg = sprintf( 'Invalid JSON as result of search for ID "%2$s" in "%1$s": %3$s', 'plugin.config', $row['id'], $config );
+					$msg = sprintf( 'Invalid JSON as result of search for ID "%2$s" in "%1$s": %3$s', 'plugin.config', $row['plugin.id'], $config );
 					$this->getContext()->getLogger()->log( $msg, \Aimeos\MW\Logger\Base::WARN );
 				}
 
-				$map[$row['id']] = $row;
-				$typeIds[$row['typeid']] = null;
+				$items[(string) $row['plugin.id']] = $this->createItemBase( $row );
 			}
 
 			$dbm->release( $conn, $dbname );
@@ -663,24 +653,6 @@ class Standard
 			throw $e;
 		}
 
-		if( !empty( $typeIds ) )
-		{
-			$typeManager = $this->getSubManager( 'type' );
-			$typeSearch = $typeManager->createSearch();
-			$typeSearch->setConditions( $typeSearch->compare( '==', 'plugin.type.id', array_keys( $typeIds ) ) );
-			$typeSearch->setSlice( 0, $search->getSliceSize() );
-			$typeItems = $typeManager->searchItems( $typeSearch );
-
-			foreach( $map as $id => $row )
-			{
-				if( isset( $typeItems[$row['typeid']] ) ) {
-					$row['type'] = $typeItems[$row['typeid']]->getCode();
-				}
-
-				$items[$id] = $this->createItemBase( $row );
-			}
-		}
-
 		return $items;
 	}
 
@@ -688,9 +660,10 @@ class Standard
 	/**
 	 * Creates a new plugin object.
 	 *
+	 * @param array $values Associative list of item key/value pairs
 	 * @return \Aimeos\MShop\Plugin\Item\Iface New plugin object
 	 */
-	protected function createItemBase( array $values = array() )
+	protected function createItemBase( array $values = [] )
 	{
 		return new \Aimeos\MShop\Plugin\Item\Standard( $values );
 	}

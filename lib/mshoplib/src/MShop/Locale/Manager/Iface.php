@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Locale
  */
@@ -19,7 +19,7 @@ namespace Aimeos\MShop\Locale\Manager;
  * @subpackage Locale
  */
 interface Iface
-	extends \Aimeos\MShop\Common\Manager\Factory\Iface
+	extends \Aimeos\MShop\Common\Manager\Iface
 {
 	/**
 	 * Returns the locale item for the given site code, language code and currency code.
@@ -30,8 +30,18 @@ interface Iface
 	 * @param boolean $active Flag to get only active items (optional)
 	 * @param integer|null $level Constant from abstract class which site ID levels should be available (optional),
 	 * 	based on config or value for SITE_PATH if null
+	 * @param boolean $bare Allow locale items with sites only
 	 * @return \Aimeos\MShop\Locale\Item\Iface Locale item for the given parameters
 	 * @throws \Aimeos\MShop\Locale\Exception If no locale item is found
 	 */
-	public function bootstrap( $site, $lang = '', $currency = '', $active = true, $level = null );
+	public function bootstrap( $site, $lang = '', $currency = '', $active = true, $level = null, $bare = false );
+
+	/**
+	 * Adds or updates an item object.
+	 *
+	 * @param \Aimeos\MShop\Locale\Item\Iface $item Item object whose data should be saved
+	 * @param boolean $fetch True if the new ID should be returned in the item
+	 * @return \Aimeos\MShop\Locale\Item\Iface $item Updated item including the generated ID
+	 */
+	public function saveItem( \Aimeos\MShop\Locale\Item\Iface $item, $fetch = true );
 }

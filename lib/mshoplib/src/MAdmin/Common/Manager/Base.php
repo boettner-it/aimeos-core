@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MAdmin
  * @subpackage Common
  */
@@ -54,8 +54,8 @@ abstract class Base extends \Aimeos\MShop\Common\Manager\Base
 		 * @since 2014.03
 		 * @category Developer
 		 */
-		$decorators = $config->get( 'madmin/common/manager/decorators/default', array() );
-		$excludes = $config->get( 'madmin/' . $domain . '/manager/' . $managerpath . '/decorators/excludes', array() );
+		$decorators = $config->get( 'madmin/common/manager/decorators/default', [] );
+		$excludes = $config->get( 'madmin/' . $domain . '/manager/' . $managerpath . '/decorators/excludes', [] );
 
 		foreach( $decorators as $key => $name )
 		{
@@ -64,16 +64,16 @@ abstract class Base extends \Aimeos\MShop\Common\Manager\Base
 			}
 		}
 
-		$classprefix = '\\Aimeos\\MShop\\Common\\Manager\\Decorator\\';
+		$classprefix = '\Aimeos\MShop\Common\Manager\Decorator\\';
 		$manager = $this->addDecorators( $context, $manager, $decorators, $classprefix );
 
-		$classprefix = '\\Aimeos\\MShop\\Common\\Manager\\Decorator\\';
-		$decorators = $config->get( 'madmin/' . $domain . '/manager/' . $managerpath . '/decorators/global', array() );
+		$classprefix = '\Aimeos\MShop\Common\Manager\Decorator\\';
+		$decorators = $config->get( 'madmin/' . $domain . '/manager/' . $managerpath . '/decorators/global', [] );
 		$manager = $this->addDecorators( $context, $manager, $decorators, $classprefix );
 
 		$subpath = $this->createSubNames( $managerpath );
 		$classprefix = 'MShop_' . ucfirst( $domain ) . '_Manager_' . $subpath . '_Decorator_';
-		$decorators = $config->get( 'madmin/' . $domain . '/manager/' . $managerpath . '/decorators/local', array() );
+		$decorators = $config->get( 'madmin/' . $domain . '/manager/' . $managerpath . '/decorators/local', [] );
 
 		return $this->addDecorators( $context, $manager, $decorators, $classprefix );
 	}
@@ -109,19 +109,13 @@ abstract class Base extends \Aimeos\MShop\Common\Manager\Base
 		$domainname = ucfirst( $domain );
 		$subnames = $this->createSubNames( $manager );
 
-		$classname = '\\Aimeos\\MAdmin\\' . $domainname . '\\Manager\\' . $subnames . '\\' . $name;
-		$interface = '\\Aimeos\\MAdmin\\' . $domainname . '\\Manager\\' . $subnames . '\\Iface';
+		$classname = '\Aimeos\MAdmin\\' . $domainname . '\Manager\\' . $subnames . '\\' . $name;
+		$interface = '\Aimeos\MAdmin\\' . $domainname . '\Manager\\' . $subnames . '\Iface';
 
 		if( class_exists( $classname ) === false ) {
 			throw new \Aimeos\MAdmin\Exception( sprintf( 'Class "%1$s" not available', $classname ) );
 		}
 
-		$subManager = new $classname( $this->getContext() );
-
-		if( ( $subManager instanceof $interface ) === false ) {
-			throw new \Aimeos\MAdmin\Exception( sprintf( 'Class "%1$s" does not implement interface "%2$s"', $classname, $interface ) );
-		}
-
-		return $subManager;
+		return self::checkClass( $interface, new $classname( $this->getContext() ) );
 	}
 }

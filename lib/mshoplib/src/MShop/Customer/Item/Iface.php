@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Customer
  */
@@ -19,7 +19,9 @@ namespace Aimeos\MShop\Customer\Item;
  * @subpackage Customer
  */
 interface Iface
-	extends \Aimeos\MShop\Common\Item\ListRef\Iface
+	extends \Aimeos\MShop\Common\Item\Iface, \Aimeos\MShop\Common\Item\AddressRef\Iface,
+		\Aimeos\MShop\Common\Item\ListRef\Iface, \Aimeos\MShop\Common\Item\PropertyRef\Iface,
+		\Aimeos\MShop\Common\Item\Status\Iface
 {
 	/**
 	 * Returns the label of the customer item.
@@ -32,24 +34,9 @@ interface Iface
 	 * Sets the new label of the customer item.
 	 *
 	 * @param string $value Label of the customer item
-	 * @return void
+	 * @return \Aimeos\MShop\Customer\Item\Iface Customer item for chaining method calls
 	 */
 	public function setLabel( $value );
-
-	/**
-	 * Returns the status of the item.
-	 *
-	 * @return integer Status of the item
-	 */
-	public function getStatus();
-
-	/**
-	 * Sets the status of the item.
-	 *
-	 * @param integer $value Status of the item
-	 * @return void
-	 */
-	public function setStatus( $value );
 
 	/**
 	 * Returns the unique code of the customer item.
@@ -63,22 +50,22 @@ interface Iface
 	 * Sets the code of the customer item.
 	 *
 	 * @param string $value Code of the customer item
-	 * @return void
+	 * @return \Aimeos\MShop\Customer\Item\Iface Customer item for chaining method calls
 	 */
 	public function setCode( $value );
 
 	/**
 	 * Returns the birthday of the customer item.
 	 *
-	 * @return string Birthday date of the customer (YYYY-MM-DD format)
+	 * @return string|null Birthday date of the customer (YYYY-MM-DD format)
 	 */
 	public function getBirthday();
 
 	/**
 	 * Sets the birthday of the customer item.
 	 *
-	 * @param date $value Birthday of the customer item (YYYY-MM-DD format)
-	 * @return void
+	 * @param string|null $value Birthday of the customer item (YYYY-MM-DD format)
+	 * @return \Aimeos\MShop\Customer\Item\Iface Customer item for chaining method calls
 	 */
 	public function setBirthday( $value );
 
@@ -93,7 +80,7 @@ interface Iface
 	 * Sets the billing address of the customer item.
 	 *
 	 * @param \Aimeos\MShop\Common\Item\Address\Iface $address Billing address of the customer item
-	 * @return void
+	 * @return \Aimeos\MShop\Customer\Item\Iface Customer item for chaining method calls
 	 */
 	public function setPaymentAddress( \Aimeos\MShop\Common\Item\Address\Iface $address );
 
@@ -108,7 +95,7 @@ interface Iface
 	 * Sets the password of the customer item.
 	 *
 	 * @param string $value Password of the customer item
-	 * @return void
+	 * @return \Aimeos\MShop\Customer\Item\Iface Customer item for chaining method calls
 	 */
 	public function setPassword( $value );
 
@@ -123,7 +110,7 @@ interface Iface
 	 * Sets the latest verification date of the customer.
 	 *
 	 * @param string|null $value Latest verification date of the customer (YYYY-MM-DD format) or null if unknown
-	 * @return void
+	 * @return \Aimeos\MShop\Customer\Item\Iface Customer item for chaining method calls
 	 */
 	public function setDateVerified( $value );
 
@@ -133,4 +120,12 @@ interface Iface
 	 * @return array List of group IDs
 	 */
 	public function getGroups();
+
+	/**
+	 * Sets the group IDs the customer belongs to
+	 *
+	 * @param string[] $ids List of group IDs
+	 * @return \Aimeos\MShop\Customer\Item\Iface Customer item for chaining method calls
+	 */
+	public function setGroups( array $ids );
 }

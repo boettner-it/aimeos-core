@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2013
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2013
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Service
  */
@@ -19,14 +19,13 @@ namespace Aimeos\MShop\Service\Manager\Lists;
  */
 class Standard
 	extends \Aimeos\MShop\Common\Manager\Lists\Base
-	implements \Aimeos\MShop\Service\Manager\Lists\Iface
+	implements \Aimeos\MShop\Service\Manager\Lists\Iface, \Aimeos\MShop\Common\Manager\Factory\Iface
 {
 	private $searchConfig = array(
 		'service.lists.id' => array(
 			'code' => 'service.lists.id',
 			'internalcode' => 'mserli."id"',
-			'internaldeps' => array( 'LEFT JOIN "mshop_service_list" AS mserli ON ( mser."id" = mserli."parentid" )' ),
-			'label' => 'Service list ID',
+			'label' => 'List ID',
 			'type' => 'integer',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 			'public' => false,
@@ -34,7 +33,7 @@ class Standard
 		'service.lists.siteid' => array(
 			'code' => 'service.lists.siteid',
 			'internalcode' => 'mserli."siteid"',
-			'label' => 'Service list site ID',
+			'label' => 'List site ID',
 			'type' => 'integer',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 			'public' => false,
@@ -42,88 +41,91 @@ class Standard
 		'service.lists.parentid' => array(
 			'code' => 'service.lists.parentid',
 			'internalcode' => 'mserli."parentid"',
-			'label' => 'Service list parent ID',
+			'label' => 'List parent ID',
 			'type' => 'integer',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 			'public' => false,
 		),
-		'service.lists.domain' => array(
-			'code' => 'service.lists.domain',
-			'internalcode' => 'mserli."domain"',
-			'label' => 'Service list domain',
+		'service.lists.type' => array(
+			'code' => 'service.lists.type',
+			'internalcode' => 'mserli."type"',
+			'label' => 'List type',
 			'type' => 'string',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
-		),
-		'service.lists.typeid' => array(
-			'code' => 'service.lists.typeid',
-			'internalcode' => 'mserli."typeid"',
-			'label' => 'Service list type ID',
-			'type' => 'integer',
-			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
-			'public' => false,
 		),
 		'service.lists.refid' => array(
 			'code' => 'service.lists.refid',
 			'internalcode' => 'mserli."refid"',
-			'label' => 'Service list reference ID',
+			'label' => 'List reference ID',
 			'type' => 'string',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
 		'service.lists.datestart' => array(
 			'code' => 'service.lists.datestart',
 			'internalcode' => 'mserli."start"',
-			'label' => 'Service list start date',
+			'label' => 'List start date',
 			'type' => 'datetime',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
 		'service.lists.dateend' => array(
 			'code' => 'service.lists.dateend',
 			'internalcode' => 'mserli."end"',
-			'label' => 'Service list end date',
+			'label' => 'List end date',
 			'type' => 'datetime',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
-		'service.lists.config' => array(
-			'code' => 'service.lists.config',
-			'internalcode' => 'mserli."config"',
-			'label' => 'Service list config',
+		'service.lists.domain' => array(
+			'code' => 'service.lists.domain',
+			'internalcode' => 'mserli."domain"',
+			'label' => 'List domain',
 			'type' => 'string',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
 		'service.lists.position' => array(
 			'code' => 'service.lists.position',
 			'internalcode' => 'mserli."pos"',
-			'label' => 'Service list position',
+			'label' => 'List position',
 			'type' => 'integer',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 		),
 		'service.lists.status' => array(
 			'code' => 'service.lists.status',
 			'internalcode' => 'mserli."status"',
-			'label' => 'Service list status',
+			'label' => 'List status',
 			'type' => 'integer',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 		),
-		'service.lists.ctime'=> array(
-			'code'=>'service.lists.ctime',
-			'internalcode'=>'mserli."ctime"',
-			'label'=>'Service list create date/time',
-			'type'=> 'datetime',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'service.lists.config' => array(
+			'code' => 'service.lists.config',
+			'internalcode' => 'mserli."config"',
+			'label' => 'List config',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
-		'service.lists.mtime'=> array(
-			'code'=>'service.lists.mtime',
-			'internalcode'=>'mserli."mtime"',
-			'label'=>'Service list modification date/time',
-			'type'=> 'datetime',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'service.lists.ctime' => array(
+			'code' => 'service.lists.ctime',
+			'internalcode' => 'mserli."ctime"',
+			'label' => 'List create date/time',
+			'type' => 'datetime',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
-		'service.lists.editor'=> array(
-			'code'=>'service.lists.editor',
-			'internalcode'=>'mserli."editor"',
-			'label'=>'Service list editor',
-			'type'=> 'string',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'service.lists.mtime' => array(
+			'code' => 'service.lists.mtime',
+			'internalcode' => 'mserli."mtime"',
+			'label' => 'List modify date/time',
+			'type' => 'datetime',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
+		),
+		'service.lists.editor' => array(
+			'code' => 'service.lists.editor',
+			'internalcode' => 'mserli."editor"',
+			'label' => 'List editor',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
 	);
 
@@ -143,16 +145,30 @@ class Standard
 	/**
 	 * Removes old entries from the storage.
 	 *
-	 * @param array $siteids List of IDs for sites whose entries should be deleted
+	 * @param string[] $siteids List of IDs for sites whose entries should be deleted
+	 * @return \Aimeos\MShop\Service\Manager\Lists\Iface Manager object for chaining method calls
 	 */
-	public function cleanup( array $siteids )
+	public function clear( array $siteids )
 	{
 		$path = 'mshop/service/manager/lists/submanagers';
-		foreach( $this->getContext()->getConfig()->get( $path, array( 'type' ) ) as $domain ) {
-			$this->getSubManager( $domain )->cleanup( $siteids );
+		foreach( $this->getContext()->getConfig()->get( $path, ['type'] ) as $domain ) {
+			$this->getObject()->getSubManager( $domain )->clear( $siteids );
 		}
 
-		$this->cleanupBase( $siteids, 'mshop/service/manager/lists/standard/delete' );
+		return $this->clearBase( $siteids, 'mshop/service/manager/lists/standard/delete' );
+	}
+
+
+	/**
+	 * Returns the available manager types
+	 *
+	 * @param boolean $withsub Return also the resource type of sub-managers if true
+	 * @return string[] Type of the manager and submanagers, subtypes are separated by slashes
+	 */
+	public function getResourceType( $withsub = true )
+	{
+		$path = 'mshop/service/manager/lists/submanagers';
+		return $this->getResourceTypeBase( 'service/lists', $path, [], $withsub );
 	}
 
 
@@ -160,7 +176,7 @@ class Standard
 	 * Returns the list attributes that can be used for searching.
 	 *
 	 * @param boolean $withsub Return also attributes of sub-managers if true
-	 * @return array List of attribute items implementing \Aimeos\MW\Criteria\Attribute\Iface
+	 * @return \Aimeos\MW\Criteria\Attribute\Iface[] List of search attribute items
 	 */
 	public function getSearchAttributes( $withsub = true )
 	{
@@ -183,7 +199,7 @@ class Standard
 		 */
 		$path = 'mshop/service/manager/lists/submanagers';
 
-		return $this->getSearchAttributesBase( $this->searchConfig, $path, array( 'type' ), $withsub );
+		return $this->getSearchAttributesBase( $this->searchConfig, $path, [], $withsub );
 	}
 
 
@@ -265,12 +281,14 @@ class Standard
 		 * modify what is returned to the caller.
 		 *
 		 * This option allows you to wrap global decorators
-		 * ("\Aimeos\MShop\Common\Manager\Decorator\*") around the service list manager.
+		 * ("\Aimeos\MShop\Common\Manager\Decorator\*") around the service list
+		 * manager.
 		 *
 		 *  mshop/service/manager/lists/decorators/global = array( 'decorator1' )
 		 *
 		 * This would add the decorator named "decorator1" defined by
-		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator1" only to the service controller.
+		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator1" only to the service
+		 * list manager.
 		 *
 		 * @param array List of decorator names
 		 * @since 2014.03
@@ -289,13 +307,14 @@ class Standard
 		 * modify what is returned to the caller.
 		 *
 		 * This option allows you to wrap local decorators
-		 * ("\Aimeos\MShop\Common\Manager\Decorator\*") around the service list manager.
+		 * ("\Aimeos\MShop\Service\Manager\Lists\Decorator\*") around the service
+		 * list manager.
 		 *
 		 *  mshop/service/manager/lists/decorators/local = array( 'decorator2' )
 		 *
 		 * This would add the decorator named "decorator2" defined by
-		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator2" only to the service
-		 * controller.
+		 * "\Aimeos\MShop\Service\Manager\Lists\Decorator\Decorator2" only to the
+		 * service list manager.
 		 *
 		 * @param array List of decorator names
 		 * @since 2014.03
@@ -316,7 +335,13 @@ class Standard
 	 */
 	protected function getConfigPath()
 	{
-		/** mshop/service/manager/lists/standard/insert
+		/** mshop/service/manager/lists/standard/insert/mysql
+		 * Inserts a new service list record into the database table
+		 *
+		 * @see mshop/service/manager/lists/standard/insert/ansi
+		 */
+
+		/** mshop/service/manager/lists/standard/insert/ansi
 		 * Inserts a new service list record into the database table
 		 *
 		 * Items with no ID yet (i.e. the ID is NULL) will be created in
@@ -339,18 +364,21 @@ class Standard
 		 * @param string SQL statement for inserting records
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/service/manager/lists/standard/update
-		 * @see mshop/service/manager/lists/standard/newid
-		 * @see mshop/service/manager/lists/standard/delete
-		 * @see mshop/service/manager/lists/standard/search
-		 * @see mshop/service/manager/lists/standard/count
-		 * @see mshop/service/manager/lists/standard/aggregate
-		 * @see mshop/service/manager/lists/standard/getposmax
-		 * @see mshop/service/manager/lists/standard/move
-		 * @see mshop/service/manager/lists/standard/updatepos
+		 * @see mshop/service/manager/lists/standard/update/ansi
+		 * @see mshop/service/manager/lists/standard/newid/ansi
+		 * @see mshop/service/manager/lists/standard/delete/ansi
+		 * @see mshop/service/manager/lists/standard/search/ansi
+		 * @see mshop/service/manager/lists/standard/count/ansi
+		 * @see mshop/service/manager/lists/standard/aggregate/ansi
 		 */
 
-		/** mshop/service/manager/lists/standard/update
+		/** mshop/service/manager/lists/standard/update/mysql
+		 * Updates an existing service list record in the database
+		 *
+		 * @see mshop/service/manager/lists/standard/update/ansi
+		 */
+
+		/** mshop/service/manager/lists/standard/update/ansi
 		 * Updates an existing service list record in the database
 		 *
 		 * Items which already have an ID (i.e. the ID is not NULL) will
@@ -370,18 +398,21 @@ class Standard
 		 * @param string SQL statement for updating records
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/service/manager/lists/standard/insert
-		 * @see mshop/service/manager/lists/standard/newid
-		 * @see mshop/service/manager/lists/standard/delete
-		 * @see mshop/service/manager/lists/standard/search
-		 * @see mshop/service/manager/lists/standard/count
-		 * @see mshop/service/manager/lists/standard/aggregate
-		 * @see mshop/service/manager/lists/standard/getposmax
-		 * @see mshop/service/manager/lists/standard/move
-		 * @see mshop/service/manager/lists/standard/updatepos
+		 * @see mshop/service/manager/lists/standard/insert/ansi
+		 * @see mshop/service/manager/lists/standard/newid/ansi
+		 * @see mshop/service/manager/lists/standard/delete/ansi
+		 * @see mshop/service/manager/lists/standard/search/ansi
+		 * @see mshop/service/manager/lists/standard/count/ansi
+		 * @see mshop/service/manager/lists/standard/aggregate/ansi
 		 */
 
-		/** mshop/service/manager/lists/standard/newid
+		/** mshop/service/manager/lists/standard/newid/mysql
+		 * Retrieves the ID generated by the database when inserting a new record
+		 *
+		 * @see mshop/service/manager/lists/standard/newid/ansi
+		 */
+
+		/** mshop/service/manager/lists/standard/newid/ansi
 		 * Retrieves the ID generated by the database when inserting a new record
 		 *
 		 * As soon as a new record is inserted into the database table,
@@ -405,18 +436,21 @@ class Standard
 		 * @param string SQL statement for retrieving the last inserted record ID
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/service/manager/lists/standard/insert
-		 * @see mshop/service/manager/lists/standard/update
-		 * @see mshop/service/manager/lists/standard/delete
-		 * @see mshop/service/manager/lists/standard/search
-		 * @see mshop/service/manager/lists/standard/count
-		 * @see mshop/service/manager/lists/standard/aggregate
-		 * @see mshop/service/manager/lists/standard/getposmax
-		 * @see mshop/service/manager/lists/standard/move
-		 * @see mshop/service/manager/lists/standard/updatepos
+		 * @see mshop/service/manager/lists/standard/insert/ansi
+		 * @see mshop/service/manager/lists/standard/update/ansi
+		 * @see mshop/service/manager/lists/standard/delete/ansi
+		 * @see mshop/service/manager/lists/standard/search/ansi
+		 * @see mshop/service/manager/lists/standard/count/ansi
+		 * @see mshop/service/manager/lists/standard/aggregate/ansi
 		 */
 
-		/** mshop/service/manager/lists/standard/delete
+		/** mshop/service/manager/lists/standard/delete/mysql
+		 * Deletes the items matched by the given IDs from the database
+		 *
+		 * @see mshop/service/manager/lists/standard/delete/ansi
+		 */
+
+		/** mshop/service/manager/lists/standard/delete/ansi
 		 * Deletes the items matched by the given IDs from the database
 		 *
 		 * Removes the records specified by the given IDs from the service database.
@@ -434,18 +468,21 @@ class Standard
 		 * @param string SQL statement for deleting items
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/service/manager/lists/standard/insert
-		 * @see mshop/service/manager/lists/standard/update
-		 * @see mshop/service/manager/lists/standard/newid
-		 * @see mshop/service/manager/lists/standard/search
-		 * @see mshop/service/manager/lists/standard/count
-		 * @see mshop/service/manager/lists/standard/aggregate
-		 * @see mshop/service/manager/lists/standard/getposmax
-		 * @see mshop/service/manager/lists/standard/move
-		 * @see mshop/service/manager/lists/standard/updatepos
+		 * @see mshop/service/manager/lists/standard/insert/ansi
+		 * @see mshop/service/manager/lists/standard/update/ansi
+		 * @see mshop/service/manager/lists/standard/newid/ansi
+		 * @see mshop/service/manager/lists/standard/search/ansi
+		 * @see mshop/service/manager/lists/standard/count/ansi
+		 * @see mshop/service/manager/lists/standard/aggregate/ansi
 		 */
 
-		/** mshop/service/manager/lists/standard/search
+		/** mshop/service/manager/lists/standard/search/mysql
+		 * Retrieves the records matched by the given criteria in the database
+		 *
+		 * @see mshop/service/manager/lists/standard/search/ansi
+		 */
+
+		/** mshop/service/manager/lists/standard/search/ansi
 		 * Retrieves the records matched by the given criteria in the database
 		 *
 		 * Fetches the records matched by the given criteria from the service
@@ -490,18 +527,21 @@ class Standard
 		 * @param string SQL statement for searching items
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/service/manager/lists/standard/insert
-		 * @see mshop/service/manager/lists/standard/update
-		 * @see mshop/service/manager/lists/standard/newid
-		 * @see mshop/service/manager/lists/standard/delete
-		 * @see mshop/service/manager/lists/standard/count
-		 * @see mshop/service/manager/lists/standard/aggregate
-		 * @see mshop/service/manager/lists/standard/getposmax
-		 * @see mshop/service/manager/lists/standard/move
-		 * @see mshop/service/manager/lists/standard/updatepos
+		 * @see mshop/service/manager/lists/standard/insert/ansi
+		 * @see mshop/service/manager/lists/standard/update/ansi
+		 * @see mshop/service/manager/lists/standard/newid/ansi
+		 * @see mshop/service/manager/lists/standard/delete/ansi
+		 * @see mshop/service/manager/lists/standard/count/ansi
+		 * @see mshop/service/manager/lists/standard/aggregate/ansi
 		 */
 
-		/** mshop/service/manager/lists/standard/count
+		/** mshop/service/manager/lists/standard/count/mysql
+		 * Counts the number of records matched by the given criteria in the database
+		 *
+		 * @see mshop/service/manager/lists/standard/count/ansi
+		 */
+
+		/** mshop/service/manager/lists/standard/count/ansi
 		 * Counts the number of records matched by the given criteria in the database
 		 *
 		 * Counts all records matched by the given criteria from the service
@@ -540,18 +580,21 @@ class Standard
 		 * @param string SQL statement for counting items
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/service/manager/lists/standard/insert
-		 * @see mshop/service/manager/lists/standard/update
-		 * @see mshop/service/manager/lists/standard/newid
-		 * @see mshop/service/manager/lists/standard/delete
-		 * @see mshop/service/manager/lists/standard/search
-		 * @see mshop/service/manager/lists/standard/aggregate
-		 * @see mshop/service/manager/lists/standard/getposmax
-		 * @see mshop/service/manager/lists/standard/move
-		 * @see mshop/service/manager/lists/standard/updatepos
+		 * @see mshop/service/manager/lists/standard/insert/ansi
+		 * @see mshop/service/manager/lists/standard/update/ansi
+		 * @see mshop/service/manager/lists/standard/newid/ansi
+		 * @see mshop/service/manager/lists/standard/delete/ansi
+		 * @see mshop/service/manager/lists/standard/search/ansi
+		 * @see mshop/service/manager/lists/standard/aggregate/ansi
 		 */
 
-		/** mshop/service/manager/lists/standard/aggregate
+		/** mshop/service/manager/lists/standard/aggregate/mysql
+		 * Counts the number of records grouped by the values in the key column and matched by the given criteria
+		 *
+		 * @see mshop/service/manager/lists/standard/aggregate/ansi
+		 */
+
+		/** mshop/service/manager/lists/standard/aggregate/ansi
 		 * Counts the number of records grouped by the values in the key column and matched by the given criteria
 		 *
 		 * Groups all records by the values in the key column and counts their
@@ -587,111 +630,12 @@ class Standard
 		 * @param string SQL statement for aggregating order items
 		 * @since 2014.07
 		 * @category Developer
-		 * @see mshop/service/manager/lists/standard/insert
-		 * @see mshop/service/manager/lists/standard/update
-		 * @see mshop/service/manager/lists/standard/newid
-		 * @see mshop/service/manager/lists/standard/delete
-		 * @see mshop/service/manager/lists/standard/search
-		 * @see mshop/service/manager/lists/standard/count
-		 * @see mshop/service/manager/lists/standard/getposmax
-		 * @see mshop/service/manager/lists/standard/move
-		 * @see mshop/service/manager/lists/standard/updatepos
-		 */
-
-		/** mshop/service/manager/lists/standard/getposmax
-		 * Retrieves the position of the list record with the highest number
-		 *
-		 * When moving or inserting records into the list, the highest position
-		 * number must be known to append records at the end. Only records from
-		 * the same site that is configured via the conservice item are considered.
-		 *
-		 * The SQL statement must be a string suitable for being used as
-		 * prepared statement. It must include question marks for binding the
-		 * required values to the statement before they are sent to the
-		 * database server. The number of question marks must be the same as
-		 * used in the moveItem() method and their order must correspond to the
-		 * order in the same method.
-		 *
-		 * The SQL statement should conform to the ANSI standard to be
-		 * with most relational database systems. This also includes using
-		 * double quotes for table and column names.
-		 *
-		 * @param string SQL statement for determining the position with the highest number
-		 * @since 2014.07
-		 * @category Developer
-		 * @see mshop/service/manager/lists/standard/insert
-		 * @see mshop/service/manager/lists/standard/update
-		 * @see mshop/service/manager/lists/standard/newid
-		 * @see mshop/service/manager/lists/standard/delete
-		 * @see mshop/service/manager/lists/standard/search
-		 * @see mshop/service/manager/lists/standard/count
-		 * @see mshop/service/manager/lists/standard/aggregate
-		 * @see mshop/service/manager/lists/standard/move
-		 * @see mshop/service/manager/lists/standard/updatepos
-		 */
-
-		/** mshop/service/manager/lists/standard/move
-		 * Moves a list item to another position and updates the other items accordingly
-		 *
-		 * Reorders the records in the list table by updating their position
-		 * field. The records must be from the site that is configured via the
-		 * conservice item.
-		 *
-		 * The SQL statement must be a string suitable for being used as
-		 * prepared statement. It must include question marks for binding the
-		 * required values to the statement before they are sent to the
-		 * database server. The number of question marks must be the same as
-		 * used in the moveItem() method and their order must correspond to the
-		 * order in the same method.
-		 *
-		 * The SQL statement should conform to the ANSI standard to be
-		 * with most relational database systems. This also includes using
-		 * double quotes for table and column names.
-		 *
-		 * @param string SQL statement for moving items
-		 * @since 2014.07
-		 * @category Developer
-		 * @see mshop/service/manager/lists/standard/insert
-		 * @see mshop/service/manager/lists/standard/update
-		 * @see mshop/service/manager/lists/standard/newid
-		 * @see mshop/service/manager/lists/standard/delete
-		 * @see mshop/service/manager/lists/standard/search
-		 * @see mshop/service/manager/lists/standard/count
-		 * @see mshop/service/manager/lists/standard/aggregate
-		 * @see mshop/service/manager/lists/standard/getposmax
-		 * @see mshop/service/manager/lists/standard/updatepos
-		 */
-
-		/** mshop/service/manager/lists/standard/updatepos
-		 * Updates the position value of a single list record
-		 *
-		 * The moveItem() method needs to set the position value of a sinlge
-		 * record in some cases. The records must be from the site that is
-		 * configured via the conservice item.
-		 *
-		 * The SQL statement must be a string suitable for being used as
-		 * prepared statement. It must include question marks for binding the
-		 * required values to the statement before they are sent to the
-		 * database server. The number of question marks must be the same as
-		 * used in the moveItem() method and their order must correspond to the
-		 * order in the same method.
-		 *
-		 * The SQL statement should conform to the ANSI standard to be
-		 * with most relational database systems. This also includes using
-		 * double quotes for table and column names.
-		 *
-		 * @param string SQL statement for moving items
-		 * @since 2014.07
-		 * @category Developer
-		 * @see mshop/service/manager/lists/standard/insert
-		 * @see mshop/service/manager/lists/standard/update
-		 * @see mshop/service/manager/lists/standard/newid
-		 * @see mshop/service/manager/lists/standard/delete
-		 * @see mshop/service/manager/lists/standard/search
-		 * @see mshop/service/manager/lists/standard/count
-		 * @see mshop/service/manager/lists/standard/aggregate
-		 * @see mshop/service/manager/lists/standard/getposmax
-		 * @see mshop/service/manager/lists/standard/move
+		 * @see mshop/service/manager/lists/standard/insert/ansi
+		 * @see mshop/service/manager/lists/standard/update/ansi
+		 * @see mshop/service/manager/lists/standard/newid/ansi
+		 * @see mshop/service/manager/lists/standard/delete/ansi
+		 * @see mshop/service/manager/lists/standard/search/ansi
+		 * @see mshop/service/manager/lists/standard/count/ansi
 		 */
 
 		return 'mshop/service/manager/lists/standard/';

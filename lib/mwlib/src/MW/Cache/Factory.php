@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2014
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2014
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Cache
  */
@@ -29,27 +29,27 @@ class Factory
 	 * @return \Aimeos\MW\Cache\Iface Cache object of the requested type
 	 * @throws \Aimeos\MW\Cache\Exception if class isn't found
 	 */
-	static public function createManager( $name, array $config, $resource )
+	public static function create( $name, array $config = [], $resource = null )
 	{
 		if( ctype_alnum( $name ) === false )
 		{
-			$classname = is_string( $name ) ? '\\Aimeos\\MW\\Cache\\' . $name : '<not a string>';
+			$classname = is_string( $name ) ? '\Aimeos\MW\Cache\\' . $name : '<not a string>';
 			throw new \Aimeos\MW\Cache\Exception( sprintf( 'Invalid characters in class name "%1$s"', $classname ) );
 		}
 
-		$iface = '\\Aimeos\\MW\\Cache\\Iface';
-		$classname = '\\Aimeos\\MW\\Cache\\' . ucwords( $name );
+		$iface = \Aimeos\MW\Cache\Iface::class;
+		$classname = '\Aimeos\MW\Cache\\' . ucwords( $name );
 
 		if( class_exists( $classname ) === false ) {
 			throw new \Aimeos\MW\Cache\Exception( sprintf( 'Class "%1$s" not available', $classname ) );
 		}
 
-		$manager =  new $classname( $config, $resource );
+		$object = new $classname( $config, $resource );
 
-		if( !( $manager instanceof $iface ) ) {
+		if( !( $object instanceof $iface ) ) {
 			throw new \Aimeos\MW\Cache\Exception( sprintf( 'Class "%1$s" does not implement interface "%2$s"', $classname, $iface ) );
 		}
 
-		return $manager;
+		return $object;
 	}
 }

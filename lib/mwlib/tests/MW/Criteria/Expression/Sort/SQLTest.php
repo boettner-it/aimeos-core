@@ -1,48 +1,38 @@
 <?php
 
+/**
+ * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
+ */
+
+
 namespace Aimeos\MW\Criteria\Expression\Sort;
 
 
-/**
- * Test class for \Aimeos\MW\Criteria\Expression\Sort\SQL.
- *
- * @copyright Metaways Infosystems GmbH, 2011
- * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
- */
-class SQLTest extends \PHPUnit_Framework_TestCase
+class SQLTest extends \PHPUnit\Framework\TestCase
 {
 	private $conn = null;
 
 
-	/**
-	 * Sets up the fixture, for example, opens a network connection.
-	 * This method is called before a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function setUp()
 	{
-		if( \TestHelper::getConfig()->get( 'resource/db/adapter', false ) === false ) {
+		if( \TestHelperMw::getConfig()->get( 'resource/db/adapter', false ) === false ) {
 			$this->markTestSkipped( 'No database configured' );
 		}
 
 
-		$dbm = \TestHelper::getDBManager();
+		$dbm = \TestHelperMw::getDBManager();
 		$this->conn = $dbm->acquire();
 	}
 
-	/**
-	 * Tears down the fixture, for example, closes a network connection.
-	 * This method is called after a test is executed.
-	 *
-	 * @access protected
-	 */
+
 	protected function tearDown()
 	{
-		$dbm = \TestHelper::getDBManager();
+		$dbm = \TestHelperMw::getDBManager();
 		$dbm->release( $this->conn );
 	}
+
 
 	public function testGetOperators()
 	{
@@ -51,17 +41,20 @@ class SQLTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals( $expected, $actual );
 	}
 
+
 	public function testGetOperator()
 	{
 		$expr = new \Aimeos\MW\Criteria\Expression\Sort\SQL( $this->conn, '+', 'test' );
 		$this->assertEquals( '+', $expr->getOperator() );
 	}
 
+
 	public function testGetName()
 	{
 		$expr = new \Aimeos\MW\Criteria\Expression\Sort\SQL( $this->conn, '-', 'test' );
 		$this->assertEquals( 'test', $expr->getName() );
 	}
+
 
 	public function testToString()
 	{
@@ -75,12 +68,12 @@ class SQLTest extends \PHPUnit_Framework_TestCase
 		);
 
 		$object = new \Aimeos\MW\Criteria\Expression\Sort\SQL( $this->conn, '-', 'test' );
-		$this->assertEquals( 'test DESC', $object->toString( $types ) );
+		$this->assertEquals( 'test DESC', $object->toSource( $types ) );
 
 		$object = new \Aimeos\MW\Criteria\Expression\Sort\SQL( $this->conn, '+', 'test(1,2.1)' );
-		$this->assertEquals( 'testfunc(1,2.1) ASC', $object->toString( $types, $translations ) );
+		$this->assertEquals( 'testfunc(1,2.1) ASC', $object->toSource( $types, $translations ) );
 
 		$object = new \Aimeos\MW\Criteria\Expression\Sort\SQL( $this->conn, '-', 'test("a",2)' );
-		$this->assertEquals( 'testfunc(\'a\',2) DESC', $object->toString( $types, $translations ) );
+		$this->assertEquals( 'testfunc(\'a\',2) DESC', $object->toSource( $types, $translations ) );
 	}
 }

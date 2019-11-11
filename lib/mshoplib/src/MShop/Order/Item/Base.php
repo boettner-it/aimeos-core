@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Order
  */
@@ -154,16 +154,13 @@ abstract class Base extends \Aimeos\MShop\Common\Item\Base
 
 
 	/**
-	 * Tests if the date parameter represents an ISO date format.
+	 * Returns the item type
 	 *
-	 * @param string $date ISO date in yyyy-mm-dd HH:ii:ss format
-	 * @throws \Aimeos\MShop\Order\Exception If validating the date string failed
+	 * @return string Item type, subtypes are separated by slashes
 	 */
-	protected function checkDateFormat( $date )
+	public function getResourceType()
 	{
-		if( preg_match( '/^[0-9]{4}-[0-1][0-9]-[0-3][0-9] [0-2][0-9]:[0-5][0-9]:[0-5][0-9]$/', $date ) !== 1 ) {
-			throw new \Aimeos\MShop\Order\Exception( sprintf( 'Invalid characters in date "%1$s". ISO format "YYYY-MM-DD hh:mm:ss" expected.', $date ) );
-		}
+		return 'order';
 	}
 
 
@@ -175,11 +172,11 @@ abstract class Base extends \Aimeos\MShop\Common\Item\Base
 	 */
 	protected function checkDeliveryStatus( $value )
 	{
-		$temp = (int) $value;
-
-		if( $temp < \Aimeos\MShop\Order\Item\Base::STAT_UNFINISHED || $temp > \Aimeos\MShop\Order\Item\Base::STAT_RETURNED ) {
+		if( $value < \Aimeos\MShop\Order\Item\Base::STAT_UNFINISHED || $value > \Aimeos\MShop\Order\Item\Base::STAT_RETURNED ) {
 			throw new \Aimeos\MShop\Order\Exception( sprintf( 'Order delivery status "%1$s" not within allowed range', $value ) );
 		}
+
+		return (int) $value;
 	}
 
 
@@ -191,30 +188,10 @@ abstract class Base extends \Aimeos\MShop\Common\Item\Base
 	 */
 	protected function checkPaymentStatus( $value )
 	{
-		$temp = (int) $value;
-
-		if( $temp < \Aimeos\MShop\Order\Item\Base::PAY_UNFINISHED || $temp > \Aimeos\MShop\Order\Item\Base::PAY_RECEIVED ) {
+		if( $value < \Aimeos\MShop\Order\Item\Base::PAY_UNFINISHED || $value > \Aimeos\MShop\Order\Item\Base::PAY_RECEIVED ) {
 			throw new \Aimeos\MShop\Order\Exception( sprintf( 'Order payment status "%1$s" not within allowed range', $value ) );
 		}
-	}
 
-
-	/**
-	 * Checks the given order type is a valid constant.
-	 *
-	 * @param integer $value Type constant defined in \Aimeos\MShop\Order\Item\Base
-	 * @throws \Aimeos\MShop\Order\Exception If order type is invalid
-	 */
-	protected function checkType( $value )
-	{
-		switch( $value )
-		{
-			case \Aimeos\MShop\Order\Item\Base::TYPE_REPEAT:
-			case \Aimeos\MShop\Order\Item\Base::TYPE_WEB:
-			case \Aimeos\MShop\Order\Item\Base::TYPE_PHONE:
-				break;
-			default:
-				throw new \Aimeos\MShop\Order\Exception( sprintf( 'Order type "%1$s" not within allowed range', $value ) );
-		}
+		return (int) $value;
 	}
 }

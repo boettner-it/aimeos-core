@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Session
  */
@@ -18,9 +18,9 @@ namespace Aimeos\MW\Session;
  * @package MW
  * @subpackage Session
  */
-class None implements \Aimeos\MW\Session\Iface
+class None extends Base implements \Aimeos\MW\Session\Iface
 {
-	private $data = array();
+	private $data = [];
 
 
 	/**
@@ -45,9 +45,11 @@ class None implements \Aimeos\MW\Session\Iface
 	 *
 	 * @param string $name Key to the value which should be stored in the session
 	 * @param string $value Value that should be associated with the given key
+	 * @return \Aimeos\MW\Session\Iface Session instance for method chaining
 	 */
 	public function set( $name, $value )
 	{
 		$this->data[$name] = $value;
+		return $this;
 	}
 }

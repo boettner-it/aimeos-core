@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2013
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2013
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Container
  */
@@ -66,7 +66,7 @@ abstract class Base
 	 * Returns the configured value for the given name or the default value if nothing is configured.
 	 *
 	 * @param string $name Name of the configuration option
-	 * @param string $default Default value if option is not configured
+	 * @param mixed $default Default value if option is not configured
 	 * @return mixed Option value
 	 */
 	protected function getOption( $name, $default = null )

@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Common
  */
@@ -26,14 +26,17 @@ class Changelog
 	 *
 	 * @param \Aimeos\MShop\Common\Item\Iface $item Item object whose data should be saved
 	 * @param boolean $fetch True if the new ID should be returned in the item
+	 * @return \Aimeos\MShop\Common\Item\Iface $item Updated item including the generated ID
 	 */
 	public function saveItem( \Aimeos\MShop\Common\Item\Iface $item, $fetch = true )
 	{
 		$manager = $this->getManager();
 
-		$manager->saveItem( $item, $fetch );
+		$item = $manager->saveItem( $item, $fetch );
 		$new = $manager->getItem( $item->getId() );
 
 		$this->getContext()->getLogger()->log( json_encode( $new->toArray() ), \Aimeos\MW\Logger\Base::NOTICE, 'changelog' );
+
+		return $item;
 	}
 }

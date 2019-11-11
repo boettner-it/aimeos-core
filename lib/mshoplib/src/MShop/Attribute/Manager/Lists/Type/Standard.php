@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2013
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2013
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Attribute
  */
@@ -19,74 +19,83 @@ namespace Aimeos\MShop\Attribute\Manager\Lists\Type;
  */
 class Standard
 	extends \Aimeos\MShop\Common\Manager\Type\Base
-	implements \Aimeos\MShop\Attribute\Manager\Lists\Type\Iface
+	implements \Aimeos\MShop\Attribute\Manager\Lists\Type\Iface, \Aimeos\MShop\Common\Manager\Factory\Iface
 {
 	private $searchConfig = array(
 		'attribute.lists.type.id' => array(
-			'code'=>'attribute.lists.type.id',
-			'internalcode'=>'mattlity."id"',
-			'internaldeps' => array( 'LEFT JOIN "mshop_attribute_list_type" AS mattlity ON ( mattli."typeid" = mattlity."id" )' ),
-			'label'=>'Attribute list type Id',
-			'type'=> 'integer',
+			'code' => 'attribute.lists.type.id',
+			'internalcode' => 'mattlity."id"',
+			'label' => 'List type Id',
+			'type' => 'integer',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 			'public' => false,
 		),
 		'attribute.lists.type.siteid' => array(
-			'code'=>'attribute.lists.type.siteid',
-			'internalcode'=>'mattlity."siteid"',
-			'label'=>'Attribute list type site Id',
-			'type'=> 'integer',
+			'code' => 'attribute.lists.type.siteid',
+			'internalcode' => 'mattlity."siteid"',
+			'label' => 'List type site Id',
+			'type' => 'integer',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 			'public' => false,
-		),
-		'attribute.lists.type.code' => array(
-			'code'=>'attribute.lists.type.code',
-			'internalcode'=>'mattlity."code"',
-			'label'=>'Attribute list type code',
-			'type'=> 'string',
-			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
-		),
-		'attribute.lists.type.domain' => array(
-			'code'=>'attribute.lists.type.domain',
-			'internalcode'=>'mattlity."domain"',
-			'label'=>'Attribute list type domain',
-			'type'=> 'string',
-			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
 		'attribute.lists.type.label' => array(
 			'code' => 'attribute.lists.type.label',
 			'internalcode' => 'mattlity."label"',
-			'label' => 'Attribute list type label',
+			'label' => 'List type label',
 			'type' => 'string',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		),
+		'attribute.lists.type.code' => array(
+			'code' => 'attribute.lists.type.code',
+			'internalcode' => 'mattlity."code"',
+			'label' => 'List type code',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		),
+		'attribute.lists.type.domain' => array(
+			'code' => 'attribute.lists.type.domain',
+			'internalcode' => 'mattlity."domain"',
+			'label' => 'List type domain',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		),
+		'attribute.lists.type.position' => array(
+			'code' => 'attribute.lists.type.position',
+			'internalcode' => 'mattlity."pos"',
+			'label' => 'List type position',
+			'type' => 'integer',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 		),
 		'attribute.lists.type.status' => array(
 			'code' => 'attribute.lists.type.status',
 			'internalcode' => 'mattlity."status"',
-			'label' => 'Attribute list type status',
+			'label' => 'List type status',
 			'type' => 'integer',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 		),
-		'attribute.lists.type.ctime'=> array(
-			'code'=>'attribute.lists.type.ctime',
-			'internalcode'=>'mattlity."ctime"',
-			'label'=>'Attribute list type create date/time',
-			'type'=> 'datetime',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'attribute.lists.type.ctime' => array(
+			'code' => 'attribute.lists.type.ctime',
+			'internalcode' => 'mattlity."ctime"',
+			'label' => 'List type create date/time',
+			'type' => 'datetime',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
-		'attribute.lists.type.mtime'=> array(
-			'code'=>'attribute.lists.type.mtime',
-			'internalcode'=>'mattlity."mtime"',
-			'label'=>'Attribute list type modification date/time',
-			'type'=> 'datetime',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'attribute.lists.type.mtime' => array(
+			'code' => 'attribute.lists.type.mtime',
+			'internalcode' => 'mattlity."mtime"',
+			'label' => 'List type modify date/time',
+			'type' => 'datetime',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
-		'attribute.lists.type.editor'=> array(
-			'code'=>'attribute.lists.type.editor',
-			'internalcode'=>'mattlity."editor"',
-			'label'=>'Attribute list type editor',
-			'type'=> 'string',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'attribute.lists.type.editor' => array(
+			'code' => 'attribute.lists.type.editor',
+			'internalcode' => 'mattlity."editor"',
+			'label' => 'List type editor',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
 	);
 
@@ -106,16 +115,30 @@ class Standard
 	/**
 	 * Removes old entries from the storage.
 	 *
-	 * @param array $siteids List of IDs for sites whose entries should be deleted
+	 * @param string[] $siteids List of IDs for sites whose entries should be deleted
+	 * @return \Aimeos\MShop\Attribute\Manager\Lists\Type\Iface Manager object for chaining method calls
 	 */
-	public function cleanup( array $siteids )
+	public function clear( array $siteids )
 	{
 		$path = 'mshop/attribute/manager/lists/type/submanagers';
-		foreach( $this->getContext()->getConfig()->get( $path, array() ) as $domain ) {
-			$this->getSubManager( $domain )->cleanup( $siteids );
+		foreach( $this->getContext()->getConfig()->get( $path, [] ) as $domain ) {
+			$this->getObject()->getSubManager( $domain )->clear( $siteids );
 		}
 
-		$this->cleanupBase( $siteids, 'mshop/attribute/manager/lists/type/standard/delete' );
+		return $this->clearBase( $siteids, 'mshop/attribute/manager/lists/type/standard/delete' );
+	}
+
+
+	/**
+	 * Returns the available manager types
+	 *
+	 * @param boolean $withsub Return also the resource type of sub-managers if true
+	 * @return string[] Type of the manager and submanagers, subtypes are separated by slashes
+	 */
+	public function getResourceType( $withsub = true )
+	{
+		$path = 'mshop/attribute/manager/lists/type/submanagers';
+		return $this->getResourceTypeBase( 'attribute/lists/type', $path, [], $withsub );
 	}
 
 
@@ -123,7 +146,7 @@ class Standard
 	 * Returns the attributes that can be used for searching.
 	 *
 	 * @param boolean $withsub Return also attributes of sub-managers if true
-	 * @return array List of attribute items implementing \Aimeos\MW\Criteria\Attribute\Iface
+	 * @return \Aimeos\MW\Criteria\Attribute\Iface[] List of search attribute items
 	 */
 	public function getSearchAttributes( $withsub = true )
 	{
@@ -146,7 +169,7 @@ class Standard
 		 */
 		$path = 'mshop/attribute/manager/lists/type/submanagers';
 
-		return $this->getSearchAttributesBase( $this->searchConfig, $path, array(), $withsub );
+		return $this->getSearchAttributesBase( $this->searchConfig, $path, [], $withsub );
 	}
 
 
@@ -228,12 +251,14 @@ class Standard
 		 * modify what is returned to the caller.
 		 *
 		 * This option allows you to wrap global decorators
-		 * ("\Aimeos\MShop\Common\Manager\Decorator\*") around the attribute list type manager.
+		 * ("\Aimeos\MShop\Common\Manager\Decorator\*") around the attribute list
+		 * type manager.
 		 *
 		 *  mshop/attribute/manager/lists/type/decorators/global = array( 'decorator1' )
 		 *
 		 * This would add the decorator named "decorator1" defined by
-		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator1" only to the attribute controller.
+		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator1" only to the attribute
+		 * list type manager.
 		 *
 		 * @param array List of decorator names
 		 * @since 2014.03
@@ -252,13 +277,14 @@ class Standard
 		 * modify what is returned to the caller.
 		 *
 		 * This option allows you to wrap local decorators
-		 * ("\Aimeos\MShop\Common\Manager\Decorator\*") around the attribute list type manager.
+		 * ("\Aimeos\MShop\Attribute\Manager\Lists\Type\Decorator\*") around the
+		 * attribute list type manager.
 		 *
 		 *  mshop/attribute/manager/lists/type/decorators/local = array( 'decorator2' )
 		 *
 		 * This would add the decorator named "decorator2" defined by
-		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator2" only to the attribute
-		 * controller.
+		 * "\Aimeos\MShop\Attribute\Manager\Lists\Type\Decorator\Decorator2" only
+		 * to the attribute list type manager.
 		 *
 		 * @param array List of decorator names
 		 * @since 2014.03
@@ -279,7 +305,13 @@ class Standard
 	 */
 	protected function getConfigPath()
 	{
-		/** mshop/attribute/manager/lists/type/standard/insert
+		/** mshop/attribute/manager/lists/type/standard/insert/mysql
+		 * Inserts a new attribute list type record into the database table
+		 *
+		 * @see mshop/attribute/manager/lists/type/standard/insert/ansi
+		 */
+
+		/** mshop/attribute/manager/lists/type/standard/insert/ansi
 		 * Inserts a new attribute list type record into the database table
 		 *
 		 * Items with no ID yet (i.e. the ID is NULL) will be created in
@@ -302,14 +334,20 @@ class Standard
 		 * @param string SQL statement for inserting records
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/attribute/manager/lists/type/standard/update
-		 * @see mshop/attribute/manager/lists/type/standard/newid
-		 * @see mshop/attribute/manager/lists/type/standard/delete
-		 * @see mshop/attribute/manager/lists/type/standard/search
-		 * @see mshop/attribute/manager/lists/type/standard/count
+		 * @see mshop/attribute/manager/lists/type/standard/update/ansi
+		 * @see mshop/attribute/manager/lists/type/standard/newid/ansi
+		 * @see mshop/attribute/manager/lists/type/standard/delete/ansi
+		 * @see mshop/attribute/manager/lists/type/standard/search/ansi
+		 * @see mshop/attribute/manager/lists/type/standard/count/ansi
 		 */
 
-		/** mshop/attribute/manager/lists/type/standard/update
+		/** mshop/attribute/manager/lists/type/standard/update/mysql
+		 * Updates an existing attribute list type record in the database
+		 *
+		 * @see mshop/attribute/manager/lists/type/standard/update/ansi
+		 */
+
+		/** mshop/attribute/manager/lists/type/standard/update/ansi
 		 * Updates an existing attribute list type record in the database
 		 *
 		 * Items which already have an ID (i.e. the ID is not NULL) will
@@ -329,14 +367,20 @@ class Standard
 		 * @param string SQL statement for updating records
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/attribute/manager/lists/type/standard/insert
-		 * @see mshop/attribute/manager/lists/type/standard/newid
-		 * @see mshop/attribute/manager/lists/type/standard/delete
-		 * @see mshop/attribute/manager/lists/type/standard/search
-		 * @see mshop/attribute/manager/lists/type/standard/count
+		 * @see mshop/attribute/manager/lists/type/standard/insert/ansi
+		 * @see mshop/attribute/manager/lists/type/standard/newid/ansi
+		 * @see mshop/attribute/manager/lists/type/standard/delete/ansi
+		 * @see mshop/attribute/manager/lists/type/standard/search/ansi
+		 * @see mshop/attribute/manager/lists/type/standard/count/ansi
 		 */
 
-		/** mshop/attribute/manager/lists/type/standard/newid
+		/** mshop/attribute/manager/lists/type/standard/newid/mysql
+		 * Retrieves the ID generated by the database when inserting a new record
+		 *
+		 * @see mshop/attribute/manager/lists/type/standard/newid/ansi
+		 */
+
+		/** mshop/attribute/manager/lists/type/standard/newid/ansi
 		 * Retrieves the ID generated by the database when inserting a new record
 		 *
 		 * As soon as a new record is inserted into the database table,
@@ -360,14 +404,20 @@ class Standard
 		 * @param string SQL statement for retrieving the last inserted record ID
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/attribute/manager/lists/type/standard/insert
-		 * @see mshop/attribute/manager/lists/type/standard/update
-		 * @see mshop/attribute/manager/lists/type/standard/delete
-		 * @see mshop/attribute/manager/lists/type/standard/search
-		 * @see mshop/attribute/manager/lists/type/standard/count
+		 * @see mshop/attribute/manager/lists/type/standard/insert/ansi
+		 * @see mshop/attribute/manager/lists/type/standard/update/ansi
+		 * @see mshop/attribute/manager/lists/type/standard/delete/ansi
+		 * @see mshop/attribute/manager/lists/type/standard/search/ansi
+		 * @see mshop/attribute/manager/lists/type/standard/count/ansi
 		 */
 
-		/** mshop/attribute/manager/lists/type/standard/delete
+		/** mshop/attribute/manager/lists/type/standard/delete/mysql
+		 * Deletes the items matched by the given IDs from the database
+		 *
+		 * @see mshop/attribute/manager/lists/type/standard/delete/ansi
+		 */
+
+		/** mshop/attribute/manager/lists/type/standard/delete/ansi
 		 * Deletes the items matched by the given IDs from the database
 		 *
 		 * Removes the records specified by the given IDs from the attribute database.
@@ -385,14 +435,20 @@ class Standard
 		 * @param string SQL statement for deleting items
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/attribute/manager/lists/type/standard/insert
-		 * @see mshop/attribute/manager/lists/type/standard/update
-		 * @see mshop/attribute/manager/lists/type/standard/newid
-		 * @see mshop/attribute/manager/lists/type/standard/search
-		 * @see mshop/attribute/manager/lists/type/standard/count
+		 * @see mshop/attribute/manager/lists/type/standard/insert/ansi
+		 * @see mshop/attribute/manager/lists/type/standard/update/ansi
+		 * @see mshop/attribute/manager/lists/type/standard/newid/ansi
+		 * @see mshop/attribute/manager/lists/type/standard/search/ansi
+		 * @see mshop/attribute/manager/lists/type/standard/count/ansi
 		 */
 
-		/** mshop/attribute/manager/lists/type/standard/search
+		/** mshop/attribute/manager/lists/type/standard/search/mysql
+		 * Retrieves the records matched by the given criteria in the database
+		 *
+		 * @see mshop/attribute/manager/lists/type/standard/search/ansi
+		 */
+
+		/** mshop/attribute/manager/lists/type/standard/search/ansi
 		 * Retrieves the records matched by the given criteria in the database
 		 *
 		 * Fetches the records matched by the given criteria from the attribute
@@ -437,14 +493,20 @@ class Standard
 		 * @param string SQL statement for searching items
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/attribute/manager/lists/type/standard/insert
-		 * @see mshop/attribute/manager/lists/type/standard/update
-		 * @see mshop/attribute/manager/lists/type/standard/newid
-		 * @see mshop/attribute/manager/lists/type/standard/delete
-		 * @see mshop/attribute/manager/lists/type/standard/count
+		 * @see mshop/attribute/manager/lists/type/standard/insert/ansi
+		 * @see mshop/attribute/manager/lists/type/standard/update/ansi
+		 * @see mshop/attribute/manager/lists/type/standard/newid/ansi
+		 * @see mshop/attribute/manager/lists/type/standard/delete/ansi
+		 * @see mshop/attribute/manager/lists/type/standard/count/ansi
 		 */
 
-		/** mshop/attribute/manager/lists/type/standard/count
+		/** mshop/attribute/manager/lists/type/standard/count/mysql
+		 * Counts the number of records matched by the given criteria in the database
+		 *
+		 * @see mshop/attribute/manager/lists/type/standard/count/ansi
+		 */
+
+		/** mshop/attribute/manager/lists/type/standard/count/ansi
 		 * Counts the number of records matched by the given criteria in the database
 		 *
 		 * Counts all records matched by the given criteria from the attribute
@@ -483,11 +545,11 @@ class Standard
 		 * @param string SQL statement for counting items
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/attribute/manager/lists/type/standard/insert
-		 * @see mshop/attribute/manager/lists/type/standard/update
-		 * @see mshop/attribute/manager/lists/type/standard/newid
-		 * @see mshop/attribute/manager/lists/type/standard/delete
-		 * @see mshop/attribute/manager/lists/type/standard/search
+		 * @see mshop/attribute/manager/lists/type/standard/insert/ansi
+		 * @see mshop/attribute/manager/lists/type/standard/update/ansi
+		 * @see mshop/attribute/manager/lists/type/standard/newid/ansi
+		 * @see mshop/attribute/manager/lists/type/standard/delete/ansi
+		 * @see mshop/attribute/manager/lists/type/standard/search/ansi
 		 */
 
 		return 'mshop/attribute/manager/lists/type/standard/';

@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Config
  */
@@ -22,6 +22,7 @@ class APC
 	extends \Aimeos\MW\Config\Decorator\Base
 	implements \Aimeos\MW\Config\Decorator\Iface
 {
+	private $enable = false;
 	private $prefix;
 
 
@@ -33,12 +34,13 @@ class APC
 	 */
 	public function __construct( \Aimeos\MW\Config\Iface $object, $prefix = '' )
 	{
-		if( function_exists( 'apc_store' ) === false ) {
-			throw new \Aimeos\MW\Config\Exception( 'APC not available' );
-		}
-
 		parent::__construct( $object );
-		$this->prefix = $prefix;
+
+		if( function_exists( 'apcu_store' ) === true )
+		{
+			$this->enable = true;
+			$this->prefix = $prefix;
+		}
 	}
 
 
@@ -51,11 +53,15 @@ class APC
 	 */
 	public function get( $path, $default = null )
 	{
+		if( $this->enable === false ) {
+			return parent::get( $path, $default );
+		}
+
 		$path = trim( $path, '/' );
 
 		// negative cache
 		$success = false;
-		apc_fetch( '-' . $this->prefix . $path, $success );
+		apcu_fetch( '-' . $this->prefix . $path, $success );
 
 		if( $success === true ) {
 			return $default;
@@ -63,20 +69,20 @@ class APC
 
 		// regular cache
 		$success = false;
-		$value = apc_fetch( $this->prefix . $path, $success );
+		$value = apcu_fetch( $this->prefix . $path, $success );
 
 		if( $success === true ) {
 			return $value;
 		}
 
 		// not cached
-		if( ( $value = $this->getObject()->get( $path, null ) ) === null )
+		if( ( $value = parent::get( $path, null ) ) === null )
 		{
-			apc_store( '-' . $this->prefix . $path, null );
+			apcu_store( '-' . $this->prefix . $path, null );
 			return $default;
 		}
 
-		apc_store( $this->prefix . $path, $value );
+		apcu_store( $this->prefix . $path, $value );
 
 		return $value;
 	}
@@ -87,13 +93,19 @@ class APC
 	 *
 	 * @param string $path Path to the requested value like tree/node/classname
 	 * @param string $value Value that should be associated with the given path
+	 * @return \Aimeos\MW\Config\Iface Config instance for method chaining
 	 */
 	public function set( $path, $value )
 	{
+		if( $this->enable === false ) {
+			return parent::set( $path, $value );
+		}
+
 		$path = trim( $path, '/' );
 
-		$this->getObject()->set( $path, $value );
+		parent::set( $path, $value );
 
-		apc_store( $this->prefix . $path, $value );
+		apcu_store( $this->prefix . $path, $value );
+		return $this;
 	}
 }

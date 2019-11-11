@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Product
  */
@@ -20,90 +20,100 @@ namespace Aimeos\MShop\Order\Manager\Base\Product\Attribute;
  */
 class Standard
 	extends \Aimeos\MShop\Common\Manager\Base
-	implements \Aimeos\MShop\Order\Manager\Base\Product\Attribute\Iface
+	implements \Aimeos\MShop\Order\Manager\Base\Product\Attribute\Iface, \Aimeos\MShop\Common\Manager\Factory\Iface
 {
 	private $searchConfig = array(
 		'order.base.product.attribute.id' => array(
-			'code'=>'order.base.product.attribute.id',
-			'internalcode'=>'mordbaprat."id"',
+			'code' => 'order.base.product.attribute.id',
+			'internalcode' => 'mordbaprat."id"',
 			'internaldeps' => array( 'LEFT JOIN "mshop_order_base_product_attr" AS mordbaprat ON ( mordbapr."id" = mordbaprat."ordprodid" )' ),
-			'label'=>'Order base product attribute ID',
-			'type'=> 'integer',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_INT,
+			'label' => 'Product attribute ID',
+			'type' => 'integer',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 			'public' => false,
 		),
 		'order.base.product.attribute.siteid' => array(
-			'code'=>'order.base.product.attribute.siteid',
-			'internalcode'=>'mordbaprat."siteid"',
-			'label'=>'Order base product attribute site ID',
-			'type'=> 'integer',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_INT,
+			'code' => 'order.base.product.attribute.siteid',
+			'internalcode' => 'mordbaprat."siteid"',
+			'label' => 'Product attribute site ID',
+			'type' => 'integer',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 			'public' => false,
 		),
 		'order.base.product.attribute.attributeid' => array(
-			'code'=>'order.base.product.attribute.attributeid',
-			'internalcode'=>'mordbaprat."attrid"',
-			'label'=>'Order base product attribute original ID',
-			'type'=> 'string',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'code' => 'order.base.product.attribute.attributeid',
+			'internalcode' => 'mordbaprat."attrid"',
+			'label' => 'Product attribute original ID',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 			'public' => false,
 		),
-		'order.base.product.attribute.productid' => array(
-			'code'=>'order.base.product.attribute.productid',
-			'internalcode'=>'mordbaprat."ordprodid"',
-			'label'=>'Order base product ID',
-			'type'=> 'integer',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_INT,
+		'order.base.product.attribute.parentid' => array(
+			'code' => 'order.base.product.attribute.parentid',
+			'internalcode' => 'mordbaprat."ordprodid"',
+			'label' => 'Product ID',
+			'type' => 'integer',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 			'public' => false,
-		),
-		'order.base.product.attribute.type' => array(
-			'code'=>'order.base.product.attribute.type',
-			'internalcode'=>'mordbaprat."type"',
-			'label'=>'Order base product attribute type',
-			'type'=> 'string',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
-		),
-		'order.base.product.attribute.code' => array(
-			'code'=>'order.base.product.attribute.code',
-			'internalcode'=>'mordbaprat."code"',
-			'label'=>'Order base product attribute code',
-			'type'=> 'string',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
-		),
-		'order.base.product.attribute.value' => array(
-			'code'=>'order.base.product.attribute.value',
-			'internalcode'=>'mordbaprat."value"',
-			'label'=>'Order base product attribute value',
-			'type'=> 'string',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
 		'order.base.product.attribute.name' => array(
-			'code'=>'order.base.product.attribute.name',
-			'internalcode'=>'mordbaprat."name"',
-			'label'=>'Order base product attribute name',
-			'type'=> 'string',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'code' => 'order.base.product.attribute.name',
+			'internalcode' => 'mordbaprat."name"',
+			'label' => 'Product attribute name',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		),
+		'order.base.product.attribute.value' => array(
+			'code' => 'order.base.product.attribute.value',
+			'internalcode' => 'mordbaprat."value"',
+			'label' => 'Product attribute value',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		),
+		'order.base.product.attribute.code' => array(
+			'code' => 'order.base.product.attribute.code',
+			'internalcode' => 'mordbaprat."code"',
+			'label' => 'Product attribute code',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		),
+		'order.base.product.attribute.type' => array(
+			'code' => 'order.base.product.attribute.type',
+			'internalcode' => 'mordbaprat."type"',
+			'label' => 'Product attribute type',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		),
+		'order.base.product.attribute.quantity' => array(
+			'code' => 'order.base.product.attribute.quantity',
+			'internalcode' => 'mordbaprat."quantity"',
+			'label' => 'Product attribute quantity',
+			'type' => 'integer',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
+		),
+		'order.base.product.attribute.ctime' => array(
+			'code' => 'order.base.product.attribute.ctime',
+			'internalcode' => 'mordbaprat."ctime"',
+			'label' => 'Product attribute create date/time',
+			'type' => 'datetime',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
 		'order.base.product.attribute.mtime' => array(
-			'code'=>'order.base.product.attribute.mtime',
-			'internalcode'=>'mordbaprat."mtime"',
-			'label'=>'Order base product attribute modification time',
-			'type'=> 'datetime',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'code' => 'order.base.product.attribute.mtime',
+			'internalcode' => 'mordbaprat."mtime"',
+			'label' => 'Product attribute modify date/time',
+			'type' => 'datetime',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
-		'order.base.product.attribute.ctime'=> array(
-			'code'=>'order.base.product.attribute.ctime',
-			'internalcode'=>'mordbaprat."ctime"',
-			'label'=>'Order base product attribute create date/time',
-			'type'=> 'datetime',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR
-		),
-		'order.base.product.attribute.editor'=> array(
-			'code'=>'order.base.product.attribute.editor',
-			'internalcode'=>'mordbaprat."editor"',
-			'label'=>'Order base product attribute editor',
-			'type'=> 'string',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR
+		'order.base.product.attribute.editor' => array(
+			'code' => 'order.base.product.attribute.editor',
+			'internalcode' => 'mordbaprat."editor"',
+			'label' => 'Product attribute editor',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
 	);
 
@@ -125,11 +135,18 @@ class Standard
 	 *
 	 * @param \Aimeos\MW\Criteria\Iface $search Search criteria
 	 * @param string $key Search key to aggregate items for
-	 * @return array List of the search keys as key and the number of counted items as value
+	 * @return integer[] List of the search keys as key and the number of counted items as value
+	 * @todo 2018.01 Add optional parameters to interface
 	 */
-	public function aggregate( \Aimeos\MW\Criteria\Iface $search, $key )
+	public function aggregate( \Aimeos\MW\Criteria\Iface $search, $key, $value = null, $type = null )
 	{
-		/** mshop/order/manager/base/product/attribute/standard/aggregate
+		/** mshop/order/manager/base/product/attribute/standard/aggregate/mysql
+		 * Counts the number of records grouped by the values in the key column and matched by the given criteria
+		 *
+		 * @see mshop/order/manager/base/product/attribute/standard/aggregate/ansi
+		 */
+
+		/** mshop/order/manager/base/product/attribute/standard/aggregate/ansi
 		 * Counts the number of records grouped by the values in the key column and matched by the given criteria
 		 *
 		 * Groups all records by the values in the key column and counts their
@@ -165,225 +182,93 @@ class Standard
 		 * @param string SQL statement for aggregating order items
 		 * @since 2014.09
 		 * @category Developer
-		 * @see mshop/order/manager/base/product/attribute/standard/insert
-		 * @see mshop/order/manager/base/product/attribute/standard/update
-		 * @see mshop/order/manager/base/product/attribute/standard/newid
-		 * @see mshop/order/manager/base/product/attribute/standard/delete
-		 * @see mshop/order/manager/base/product/attribute/standard/search
-		 * @see mshop/order/manager/base/product/attribute/standard/count
+		 * @see mshop/order/manager/base/product/attribute/standard/insert/ansi
+		 * @see mshop/order/manager/base/product/attribute/standard/update/ansi
+		 * @see mshop/order/manager/base/product/attribute/standard/newid/ansi
+		 * @see mshop/order/manager/base/product/attribute/standard/delete/ansi
+		 * @see mshop/order/manager/base/product/attribute/standard/search/ansi
+		 * @see mshop/order/manager/base/product/attribute/standard/count/ansi
 		 */
-		$cfgkey = 'mshop/order/manager/base/product/attribute/standard/aggregate';
-		return $this->aggregateBase( $search, $key, $cfgkey, array( 'order.base.product.attribute' ) );
+		$cfgkey = 'mshop/order/manager/base/product/attribute/standard/aggregate' . $type;
+		return $this->aggregateBase( $search, $key, $cfgkey, array( 'order.base.product.attribute' ), $value );
 	}
 
 
 	/**
 	 * Removes old entries from the storage.
 	 *
-	 * @param integer[] $siteids List of IDs for sites whose entries should be deleted
+	 * @param string[] $siteids List of IDs for sites whose entries should be deleted
+	 * @return \Aimeos\MShop\Order\Manager\Base\Product\Attribute\Iface Manager object for chaining method calls
 	 */
-	public function cleanup( array $siteids )
+	public function clear( array $siteids )
 	{
 		$path = 'mshop/order/manager/base/product/attribute/submanagers';
-		foreach( $this->getContext()->getConfig()->get( $path, array() ) as $domain ) {
-			$this->getSubManager( $domain )->cleanup( $siteids );
+		foreach( $this->getContext()->getConfig()->get( $path, [] ) as $domain ) {
+			$this->getObject()->getSubManager( $domain )->clear( $siteids );
 		}
 
-		$this->cleanupBase( $siteids, 'mshop/order/manager/base/product/attribute/standard/delete' );
+		return $this->clearBase( $siteids, 'mshop/order/manager/base/product/attribute/standard/delete' );
 	}
 
 
 	/**
-	 * Creates a new order base product attribute object.
+	 * Creates a new empty item instance
 	 *
-	 * @return \Aimeos\MShop\Order\Item\Base\Product\Attribute\Iface New media object
+	 * @param array $values Values the item should be initialized with
+	 * @return \Aimeos\MShop\Order\Item\Base\Product\Attribute\Iface New order product attribute item object
 	 */
-	public function createItem()
+	public function createItem( array $values = [] )
 	{
-		$values = array( 'siteid'=> $this->getContext()->getLocale()->getSiteId() );
+		$values['order.base.product.attribute.siteid'] = $this->getContext()->getLocale()->getSiteId();
 		return $this->createItemBase( $values );
+	}
+
+
+	/**
+	 * Creates a search critera object
+	 *
+	 * @param boolean $default Add default criteria (optional)
+	 * @return \Aimeos\MW\Criteria\Iface New search criteria object
+	 */
+	public function createSearch( $default = false )
+	{
+		$search = parent::createSearch( $default );
+		$search->setSortations( [$search->sort( '+', 'order.base.product.attribute.id' )] );
+
+		return $search;
 	}
 
 
 	/**
 	 * Returns an item for the given ID.
 	 *
-	 * @param integer $id ID of the item that should be retrieved
-	 * @param array $ref List of domains to fetch list items and referenced items for
+	 * @param string $id ID of the item that should be retrieved
+	 * @param string[] $ref List of domains to fetch list items and referenced items for
+	 * @param boolean $default Add default criteria
 	 * @return \Aimeos\MShop\Order\Item\Base\Product\Attribute\Iface Returns order base product attribute item of the given id
 	 * @throws \Aimeos\MShop\Exception If item couldn't be found
 	 */
-	public function getItem( $id, array $ref = array() )
+	public function getItem( $id, array $ref = [], $default = false )
 	{
-		return $this->getItemBase( 'order.base.product.attribute.id', $id, $ref );
+		return $this->getItemBase( 'order.base.product.attribute.id', $id, $ref, $default );
 	}
 
 
 	/**
-	 * Adds a new item to the storage or updates an existing one.
+	 * Removes multiple items.
 	 *
-	 * @param \Aimeos\MShop\Order\Item\Base\Product\Attribute\Iface $item New item that should
-	 * be saved to the storage
-	 * @param boolean $fetch True if the new ID should be returned in the item
+	 * @param \Aimeos\MShop\Common\Item\Iface[]|string[] $itemIds List of item objects or IDs of the items
+	 * @return \Aimeos\MShop\Order\Manager\Base\Product\Attribute\Iface Manager object for chaining method calls
 	 */
-	public function saveItem( \Aimeos\MShop\Common\Item\Iface $item, $fetch = true )
+	public function deleteItems( array $itemIds )
 	{
-		$iface = '\\Aimeos\\MShop\\Order\\Item\\Base\\Product\\Attribute\\Iface';
-		if( !( $item instanceof $iface ) ) {
-			throw new \Aimeos\MShop\Order\Exception( sprintf( 'Object is not of required type "%1$s"', $iface ) );
-		}
+		/** mshop/order/manager/base/product/attribute/standard/delete/mysql
+		 * Deletes the items matched by the given IDs from the database
+		 *
+		 * @see mshop/order/manager/base/product/attribute/standard/delete/ansi
+		 */
 
-		if( !$item->isModified() ) { return; }
-
-		$context = $this->getContext();
-
-		$dbm = $context->getDatabaseManager();
-		$dbname = $this->getResourceName();
-		$conn = $dbm->acquire( $dbname );
-
-		try
-		{
-			$id = $item->getId();
-			$date = date( 'Y-m-d H:i:s' );
-
-			if( $id === null )
-			{
-				/** mshop/order/manager/base/product/attribute/standard/insert
-				 * Inserts a new order record into the database table
-				 *
-				 * Items with no ID yet (i.e. the ID is NULL) will be created in
-				 * the database and the newly created ID retrieved afterwards
-				 * using the "newid" SQL statement.
-				 *
-				 * The SQL statement must be a string suitable for being used as
-				 * prepared statement. It must include question marks for binding
-				 * the values from the order item to the statement before they are
-				 * sent to the database server. The number of question marks must
-				 * be the same as the number of columns listed in the INSERT
-				 * statement. The order of the columns must correspond to the
-				 * order in the saveItems() method, so the correct values are
-				 * bound to the columns.
-				 *
-				 * The SQL statement should conform to the ANSI standard to be
-				 * compatible with most relational database systems. This also
-				 * includes using double quotes for table and column names.
-				 *
-				 * @param string SQL statement for inserting records
-				 * @since 2014.03
-				 * @category Developer
-				 * @see mshop/order/manager/base/product/attribute/standard/update
-				 * @see mshop/order/manager/base/product/attribute/standard/newid
-				 * @see mshop/order/manager/base/product/attribute/standard/delete
-				 * @see mshop/order/manager/base/product/attribute/standard/search
-				 * @see mshop/order/manager/base/product/attribute/standard/count
-				 */
-				$path = 'mshop/order/manager/base/product/attribute/standard/insert';
-			}
-			else
-			{
-				/** mshop/order/manager/base/product/attribute/standard/update
-				 * Updates an existing order record in the database
-				 *
-				 * Items which already have an ID (i.e. the ID is not NULL) will
-				 * be updated in the database.
-				 *
-				 * The SQL statement must be a string suitable for being used as
-				 * prepared statement. It must include question marks for binding
-				 * the values from the order item to the statement before they are
-				 * sent to the database server. The order of the columns must
-				 * correspond to the order in the saveItems() method, so the
-				 * correct values are bound to the columns.
-				 *
-				 * The SQL statement should conform to the ANSI standard to be
-				 * compatible with most relational database systems. This also
-				 * includes using double quotes for table and column names.
-				 *
-				 * @param string SQL statement for updating records
-				 * @since 2014.03
-				 * @category Developer
-				 * @see mshop/order/manager/base/product/attribute/standard/insert
-				 * @see mshop/order/manager/base/product/attribute/standard/newid
-				 * @see mshop/order/manager/base/product/attribute/standard/delete
-				 * @see mshop/order/manager/base/product/attribute/standard/search
-				 * @see mshop/order/manager/base/product/attribute/standard/count
-				 */
-				$path = 'mshop/order/manager/base/product/attribute/standard/update';
-			}
-
-			$stmt = $this->getCachedStatement( $conn, $path );
-			$stmt->bind( 1, $context->getLocale()->getSiteId(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 2, $item->getAttributeId() );
-			$stmt->bind( 3, $item->getProductId(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 4, $item->getType() );
-			$stmt->bind( 5, $item->getCode() );
-			$stmt->bind( 6, $item->getValue() );
-			$stmt->bind( 7, $item->getName() );
-			$stmt->bind( 8, $date ); // mtime
-			$stmt->bind( 9, $context->getEditor() );
-
-			if( $id !== null ) {
-				$stmt->bind( 10, $id, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-				$item->setId( $id );
-			} else {
-				$stmt->bind( 10, $date ); // ctime
-			}
-
-			$stmt->execute()->finish();
-
-			if( $id === null && $fetch === true )
-			{
-				/** mshop/order/manager/base/product/attribute/standard/newid
-				 * Retrieves the ID generated by the database when inserting a new record
-				 *
-				 * As soon as a new record is inserted into the database table,
-				 * the database server generates a new and unique identifier for
-				 * that record. This ID can be used for retrieving, updating and
-				 * deleting that specific record from the table again.
-				 *
-				 * For MySQL:
-				 *  SELECT LAST_INSERT_ID()
-				 * For PostgreSQL:
-				 *  SELECT currval('seq_mord_id')
-				 * For SQL Server:
-				 *  SELECT SCOPE_IDENTITY()
-				 * For Oracle:
-				 *  SELECT "seq_mord_id".CURRVAL FROM DUAL
-				 *
-				 * There's no way to retrive the new ID by a SQL statements that
-				 * fits for most database servers as they implement their own
-				 * specific way.
-				 *
-				 * @param string SQL statement for retrieving the last inserted record ID
-				 * @since 2014.03
-				 * @category Developer
-				 * @see mshop/order/manager/base/product/attribute/standard/insert
-				 * @see mshop/order/manager/base/product/attribute/standard/update
-				 * @see mshop/order/manager/base/product/attribute/standard/delete
-				 * @see mshop/order/manager/base/product/attribute/standard/search
-				 * @see mshop/order/manager/base/product/attribute/standard/count
-				 */
-				$path = 'mshop/order/manager/base/product/attribute/standard/newid';
-				$item->setId( $this->newId( $conn, $path ) );
-			}
-
-			$dbm->release( $conn, $dbname );
-		}
-		catch( \Exception $e )
-		{
-			$dbm->release( $conn, $dbname );
-			throw $e;
-		}
-	}
-
-
-	/**
-	 * Removes multiple items specified by ids in the array.
-	 *
-	 * @param array $ids List of IDs
-	 */
-	public function deleteItems( array $ids )
-	{
-		/** mshop/order/manager/base/product/attribute/standard/delete
+		/** mshop/order/manager/base/product/attribute/standard/delete/ansi
 		 * Deletes the items matched by the given IDs from the database
 		 *
 		 * Removes the records specified by the given IDs from the order database.
@@ -401,14 +286,28 @@ class Standard
 		 * @param string SQL statement for deleting items
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/order/manager/base/product/attribute/standard/insert
-		 * @see mshop/order/manager/base/product/attribute/standard/update
-		 * @see mshop/order/manager/base/product/attribute/standard/newid
-		 * @see mshop/order/manager/base/product/attribute/standard/search
-		 * @see mshop/order/manager/base/product/attribute/standard/count
+		 * @see mshop/order/manager/base/product/attribute/standard/insert/ansi
+		 * @see mshop/order/manager/base/product/attribute/standard/update/ansi
+		 * @see mshop/order/manager/base/product/attribute/standard/newid/ansi
+		 * @see mshop/order/manager/base/product/attribute/standard/search/ansi
+		 * @see mshop/order/manager/base/product/attribute/standard/count/ansi
 		 */
 		$path = 'mshop/order/manager/base/product/attribute/standard/delete';
-		$this->deleteItemsBase( $ids, $path );
+
+		return $this->deleteItemsBase( $itemIds, $path );
+	}
+
+
+	/**
+	 * Returns the available manager types
+	 *
+	 * @param boolean $withsub Return also the resource type of sub-managers if true
+	 * @return string[] Type of the manager and submanagers, subtypes are separated by slashes
+	 */
+	public function getResourceType( $withsub = true )
+	{
+		$path = 'mshop/order/manager/base/product/attribute/submanagers';
+		return $this->getResourceTypeBase( 'order/base/product/attribute', $path, [], $withsub );
 	}
 
 
@@ -416,7 +315,7 @@ class Standard
 	 * Returns the attributes that can be used for searching.
 	 *
 	 * @param boolean $withsub Return also attributes of sub-managers if true
-	 * @return array List of attributes implementing \Aimeos\MW\Criteria\Attribute\Iface
+	 * @return \Aimeos\MW\Criteria\Attribute\Iface[] List of search attribute items
 	 */
 	public function getSearchAttributes( $withsub = true )
 	{
@@ -439,7 +338,7 @@ class Standard
 		 */
 		$path = 'mshop/order/manager/base/product/attribute/submanagers';
 
-		return $this->getSearchAttributesBase( $this->searchConfig, $path, array(), $withsub );
+		return $this->getSearchAttributesBase( $this->searchConfig, $path, [], $withsub );
 	}
 
 
@@ -521,12 +420,14 @@ class Standard
 		 * modify what is returned to the caller.
 		 *
 		 * This option allows you to wrap global decorators
-		 * ("\Aimeos\MShop\Common\Manager\Decorator\*") around the order base product attribute manager.
+		 * ("\Aimeos\MShop\Common\Manager\Decorator\*") around the order base
+		 * product attribute manager.
 		 *
 		 *  mshop/order/manager/base/product/attribute/decorators/global = array( 'decorator1' )
 		 *
 		 * This would add the decorator named "decorator1" defined by
-		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator1" only to the order controller.
+		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator1" only to the order
+		 * base product attribute manager.
 		 *
 		 * @param array List of decorator names
 		 * @since 2014.03
@@ -545,13 +446,14 @@ class Standard
 		 * modify what is returned to the caller.
 		 *
 		 * This option allows you to wrap local decorators
-		 * ("\Aimeos\MShop\Common\Manager\Decorator\*") around the order base product attribute manager.
+		 * ("\Aimeos\MShop\Order\Manager\Base\Product\Attribute\Decorator\*")
+		 * around the order base product attribute manager.
 		 *
 		 *  mshop/order/manager/base/product/attribute/decorators/local = array( 'decorator2' )
 		 *
 		 * This would add the decorator named "decorator2" defined by
-		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator2" only to the order
-		 * controller.
+		 * "\Aimeos\MShop\Order\Manager\Base\Product\Attribute\Decorator\Decorator2"
+		 * only to the order base product attribute manager.
 		 *
 		 * @param array List of decorator names
 		 * @since 2014.03
@@ -566,13 +468,198 @@ class Standard
 
 
 	/**
+	 * Adds a new item to the storage or updates an existing one.
+	 *
+	 * @param \Aimeos\MShop\Order\Item\Base\Product\Attribute\Iface $item Item that should be saved to the storage
+	 * @param boolean $fetch True if the new ID should be returned in the item
+	 * @return \Aimeos\MShop\Order\Item\Base\Product\Attribute\Iface $item Updated item including the generated ID
+	 */
+	public function saveItem( \Aimeos\MShop\Order\Item\Base\Product\Attribute\Iface $item, $fetch = true )
+	{
+		if( !$item->isModified() ) {
+			return $item;
+		}
+
+		$context = $this->getContext();
+
+		$dbm = $context->getDatabaseManager();
+		$dbname = $this->getResourceName();
+		$conn = $dbm->acquire( $dbname );
+
+		try
+		{
+			$id = $item->getId();
+			$date = date( 'Y-m-d H:i:s' );
+			$columns = $this->getObject()->getSaveAttributes();
+
+			if( $id === null )
+			{
+				/** mshop/order/manager/base/product/attribute/standard/insert/mysql
+				 * Inserts a new order record into the database table
+				 *
+				 * @see mshop/order/manager/base/product/attribute/standard/insert/ansi
+				 */
+
+				/** mshop/order/manager/base/product/attribute/standard/insert/ansi
+				 * Inserts a new order record into the database table
+				 *
+				 * Items with no ID yet (i.e. the ID is NULL) will be created in
+				 * the database and the newly created ID retrieved afterwards
+				 * using the "newid" SQL statement.
+				 *
+				 * The SQL statement must be a string suitable for being used as
+				 * prepared statement. It must include question marks for binding
+				 * the values from the order item to the statement before they are
+				 * sent to the database server. The number of question marks must
+				 * be the same as the number of columns listed in the INSERT
+				 * statement. The order of the columns must correspond to the
+				 * order in the saveItems() method, so the correct values are
+				 * bound to the columns.
+				 *
+				 * The SQL statement should conform to the ANSI standard to be
+				 * compatible with most relational database systems. This also
+				 * includes using double quotes for table and column names.
+				 *
+				 * @param string SQL statement for inserting records
+				 * @since 2014.03
+				 * @category Developer
+				 * @see mshop/order/manager/base/product/attribute/standard/update/ansi
+				 * @see mshop/order/manager/base/product/attribute/standard/newid/ansi
+				 * @see mshop/order/manager/base/product/attribute/standard/delete/ansi
+				 * @see mshop/order/manager/base/product/attribute/standard/search/ansi
+				 * @see mshop/order/manager/base/product/attribute/standard/count/ansi
+				 */
+				$path = 'mshop/order/manager/base/product/attribute/standard/insert';
+				$sql = $this->addSqlColumns( array_keys( $columns ), $this->getSqlConfig( $path ) );
+			}
+			else
+			{
+				/** mshop/order/manager/base/product/attribute/standard/update/mysql
+				 * Updates an existing order record in the database
+				 *
+				 * @see mshop/order/manager/base/product/attribute/standard/update/ansi
+				 */
+
+				/** mshop/order/manager/base/product/attribute/standard/update/ansi
+				 * Updates an existing order record in the database
+				 *
+				 * Items which already have an ID (i.e. the ID is not NULL) will
+				 * be updated in the database.
+				 *
+				 * The SQL statement must be a string suitable for being used as
+				 * prepared statement. It must include question marks for binding
+				 * the values from the order item to the statement before they are
+				 * sent to the database server. The order of the columns must
+				 * correspond to the order in the saveItems() method, so the
+				 * correct values are bound to the columns.
+				 *
+				 * The SQL statement should conform to the ANSI standard to be
+				 * compatible with most relational database systems. This also
+				 * includes using double quotes for table and column names.
+				 *
+				 * @param string SQL statement for updating records
+				 * @since 2014.03
+				 * @category Developer
+				 * @see mshop/order/manager/base/product/attribute/standard/insert/ansi
+				 * @see mshop/order/manager/base/product/attribute/standard/newid/ansi
+				 * @see mshop/order/manager/base/product/attribute/standard/delete/ansi
+				 * @see mshop/order/manager/base/product/attribute/standard/search/ansi
+				 * @see mshop/order/manager/base/product/attribute/standard/count/ansi
+				 */
+				$path = 'mshop/order/manager/base/product/attribute/standard/update';
+				$sql = $this->addSqlColumns( array_keys( $columns ), $this->getSqlConfig( $path ), false );
+			}
+
+			$idx = 1;
+			$stmt = $this->getCachedStatement( $conn, $path, $sql );
+
+			foreach( $columns as $name => $entry ) {
+				$stmt->bind( $idx++, $item->get( $name ), $entry->getInternalType() );
+			}
+
+			$stmt->bind( $idx++, $item->getAttributeId() );
+			$stmt->bind( $idx++, $item->getParentId(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmt->bind( $idx++, $item->getType() );
+			$stmt->bind( $idx++, $item->getCode() );
+			$stmt->bind( $idx++, json_encode( $item->getValue() ) );
+			$stmt->bind( $idx++, $item->getQuantity(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmt->bind( $idx++, $item->getName() );
+			$stmt->bind( $idx++, $date ); // mtime
+			$stmt->bind( $idx++, $context->getEditor() );
+			$stmt->bind( $idx++, $item->getSiteId(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+
+			if( $id !== null ) {
+				$stmt->bind( $idx++, $id, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+				$item->setId( $id );
+			} else {
+				$stmt->bind( $idx++, $date ); // ctime
+			}
+
+			$stmt->execute()->finish();
+
+			if( $id === null && $fetch === true )
+			{
+				/** mshop/order/manager/base/product/attribute/standard/newid/mysql
+				 * Retrieves the ID generated by the database when inserting a new record
+				 *
+				 * @see mshop/order/manager/base/product/attribute/standard/newid/ansi
+				 */
+
+				/** mshop/order/manager/base/product/attribute/standard/newid/ansi
+				 * Retrieves the ID generated by the database when inserting a new record
+				 *
+				 * As soon as a new record is inserted into the database table,
+				 * the database server generates a new and unique identifier for
+				 * that record. This ID can be used for retrieving, updating and
+				 * deleting that specific record from the table again.
+				 *
+				 * For MySQL:
+				 *  SELECT LAST_INSERT_ID()
+				 * For PostgreSQL:
+				 *  SELECT currval('seq_mord_id')
+				 * For SQL Server:
+				 *  SELECT SCOPE_IDENTITY()
+				 * For Oracle:
+				 *  SELECT "seq_mord_id".CURRVAL FROM DUAL
+				 *
+				 * There's no way to retrive the new ID by a SQL statements that
+				 * fits for most database servers as they implement their own
+				 * specific way.
+				 *
+				 * @param string SQL statement for retrieving the last inserted record ID
+				 * @since 2014.03
+				 * @category Developer
+				 * @see mshop/order/manager/base/product/attribute/standard/insert/ansi
+				 * @see mshop/order/manager/base/product/attribute/standard/update/ansi
+				 * @see mshop/order/manager/base/product/attribute/standard/delete/ansi
+				 * @see mshop/order/manager/base/product/attribute/standard/search/ansi
+				 * @see mshop/order/manager/base/product/attribute/standard/count/ansi
+				 */
+				$path = 'mshop/order/manager/base/product/attribute/standard/newid';
+				$item->setId( $this->newId( $conn, $path ) );
+			}
+
+			$dbm->release( $conn, $dbname );
+		}
+		catch( \Exception $e )
+		{
+			$dbm->release( $conn, $dbname );
+			throw $e;
+		}
+
+		return $item;
+	}
+
+
+	/**
 	 * Searches for order product attributes based on the given criteria.
 	 *
-	 * @param \Aimeos\MW\Criteria\Iface $search Search object containing the conditions
-	 * @param integer &$total Number of items that are available in total
-	 * @return array List of products implementing \Aimeos\MShop\Order\Item\Base\Product\Attribute\Iface
+	 * @param \Aimeos\MW\Criteria\Iface $search Search criteria object
+	 * @param string[] $ref List of domains to fetch list items and referenced items for
+	 * @param integer|null &$total Number of items that are available in total
+	 * @return \Aimeos\MShop\Order\Item\Base\Product\Attribute\Iface[] List of order product attribute items
 	 */
-	public function searchItems( \Aimeos\MW\Criteria\Iface $search, array $ref = array(), &$total = null )
+	public function searchItems( \Aimeos\MW\Criteria\Iface $search, array $ref = [], &$total = null )
 	{
 		$context = $this->getContext();
 
@@ -580,14 +667,22 @@ class Standard
 		$dbname = $this->getResourceName();
 		$conn = $dbm->acquire( $dbname );
 
-		$items = array();
+		$items = [];
 
 		try
 		{
 			$required = array( 'order.base.product.attribute' );
-			$sitelevel = \Aimeos\MShop\Locale\Manager\Base::SITE_SUBTREE;
 
-			/** mshop/order/manager/base/product/attribute/standard/search
+			$level = \Aimeos\MShop\Locale\Manager\Base::SITE_ALL;
+			$level = $context->getConfig()->get( 'mshop/order/manager/sitemode', $level );
+
+			/** mshop/order/manager/base/product/attribute/standard/search/mysql
+			 * Retrieves the records matched by the given criteria in the database
+			 *
+			 * @see mshop/order/manager/base/product/attribute/standard/search/ansi
+			 */
+
+			/** mshop/order/manager/base/product/attribute/standard/search/ansi
 			 * Retrieves the records matched by the given criteria in the database
 			 *
 			 * Fetches the records matched by the given criteria from the order
@@ -632,15 +727,21 @@ class Standard
 			 * @param string SQL statement for searching items
 			 * @since 2014.03
 			 * @category Developer
-			 * @see mshop/order/manager/base/product/attribute/standard/insert
-			 * @see mshop/order/manager/base/product/attribute/standard/update
-			 * @see mshop/order/manager/base/product/attribute/standard/newid
-			 * @see mshop/order/manager/base/product/attribute/standard/delete
-			 * @see mshop/order/manager/base/product/attribute/standard/count
+			 * @see mshop/order/manager/base/product/attribute/standard/insert/ansi
+			 * @see mshop/order/manager/base/product/attribute/standard/update/ansi
+			 * @see mshop/order/manager/base/product/attribute/standard/newid/ansi
+			 * @see mshop/order/manager/base/product/attribute/standard/delete/ansi
+			 * @see mshop/order/manager/base/product/attribute/standard/count/ansi
 			 */
 			$cfgPathSearch = 'mshop/order/manager/base/product/attribute/standard/search';
 
-			/** mshop/order/manager/base/product/attribute/standard/count
+			/** mshop/order/manager/base/product/attribute/standard/count/mysql
+			 * Counts the number of records matched by the given criteria in the database
+			 *
+			 * @see mshop/order/manager/base/product/attribute/standard/count/ansi
+			 */
+
+			/** mshop/order/manager/base/product/attribute/standard/count/ansi
 			 * Counts the number of records matched by the given criteria in the database
 			 *
 			 * Counts all records matched by the given criteria from the order
@@ -679,25 +780,27 @@ class Standard
 			 * @param string SQL statement for counting items
 			 * @since 2014.03
 			 * @category Developer
-			 * @see mshop/order/manager/base/product/attribute/standard/insert
-			 * @see mshop/order/manager/base/product/attribute/standard/update
-			 * @see mshop/order/manager/base/product/attribute/standard/newid
-			 * @see mshop/order/manager/base/product/attribute/standard/delete
-			 * @see mshop/order/manager/base/product/attribute/standard/search
+			 * @see mshop/order/manager/base/product/attribute/standard/insert/ansi
+			 * @see mshop/order/manager/base/product/attribute/standard/update/ansi
+			 * @see mshop/order/manager/base/product/attribute/standard/newid/ansi
+			 * @see mshop/order/manager/base/product/attribute/standard/delete/ansi
+			 * @see mshop/order/manager/base/product/attribute/standard/search/ansi
 			 */
 			$cfgPathCount = 'mshop/order/manager/base/product/attribute/standard/count';
 
 			$results = $this->searchItemsBase( $conn, $search, $cfgPathSearch, $cfgPathCount,
-				$required, $total, $sitelevel );
+				$required, $total, $level );
 
 			try
 			{
 				while( ( $row = $results->fetch() ) !== false )
 				{
-					if( ( $value = json_decode( $row['value'], true ) ) !== null ) {
-						$row['value'] = $value;
+					if( ( $row['order.base.product.attribute.value'] = json_decode( $config = $row['order.base.product.attribute.value'], true ) ) === null )
+					{
+						$msg = sprintf( 'Invalid JSON as result of search for ID "%2$s" in "%1$s": %3$s', 'mshop_order_base_product_attribute.value', $row['order.base.product.attribute.id'], $config );
+						$this->getContext()->getLogger()->log( $msg, \Aimeos\MW\Logger\Base::WARN );
 					}
-					$items[$row['id']] = $this->createItemBase( $row );
+					$items[(string) $row['order.base.product.attribute.id']] = $this->createItemBase( $row );
 				}
 			}
 			catch( \Exception $e )
@@ -722,9 +825,9 @@ class Standard
 	 * Creates new order base product attribute item object initialized with given parameters.
 	 *
 	 * @param array $values Associative array of order product attribute values
-	 * @return \Aimeos\MShop\Order\Item\Base\Product\Attribute\Iface
+	 * @return \Aimeos\MShop\Order\Item\Base\Product\Attribute\Iface New order product attriubte item
 	 */
-	protected function createItemBase( array $values = array() )
+	protected function createItemBase( array $values = [] )
 	{
 		return new \Aimeos\MShop\Order\Item\Base\Product\Attribute\Standard( $values );
 	}

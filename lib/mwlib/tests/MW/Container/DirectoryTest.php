@@ -5,9 +5,9 @@ namespace Aimeos\MW\Container;
 
 /**
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
-class DirectoryTest extends \PHPUnit_Framework_TestCase
+class DirectoryTest extends \PHPUnit\Framework\TestCase
 {
 	public function testNewFile()
 	{
@@ -55,7 +55,7 @@ class DirectoryTest extends \PHPUnit_Framework_TestCase
 	{
 		$dir = new \Aimeos\MW\Container\Directory( __DIR__ . DIRECTORY_SEPARATOR . '_testdir', 'CSV' );
 
-		$this->assertInstanceOf( '\\Aimeos\\MW\\Container\\Content\\Iface', $dir->get( 'testfile.csv' ) );
+		$this->assertInstanceOf( \Aimeos\MW\Container\Content\Iface::class, $dir->get( 'testfile.csv' ) );
 	}
 
 
@@ -67,21 +67,21 @@ class DirectoryTest extends \PHPUnit_Framework_TestCase
 			'testfile.csv' => 1,
 		);
 
-		$actual = array();
+		$actual = [];
 		foreach( $dir as $entry )
 		{
-			$rows = array();
+			$rows = [];
 			foreach( $entry as $row ) {
 				$rows[] = $row;
 			}
 
 			// test if rewind works
-			$rows = array();
+			$rows = [];
 			foreach( $entry as $row ) {
 				$rows[] = $row;
 			}
 
-			$actual[ $entry->getName() ] = count( $rows );
+			$actual[$entry->getName()] = count( $rows );
 		}
 
 		$this->assertEquals( $expected, $actual );

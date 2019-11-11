@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2014
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2014
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Service
  */
@@ -13,50 +13,56 @@ namespace Aimeos\MShop\Service\Provider\Decorator;
 
 
 /**
- * Country-limiting decorator for service providers.
+ * Country-limiting decorator for service providers
+ *
+ * This decorator interacts with the ServiceUpdate and Autofill basket plugins!
+ * If the delivery/payment option isn't available any more, the ServiceUpdate
+ * plugin will remove it from the basket and the Autofill plugin will add one
+ * of the available options again.
  *
  * @package MShop
  * @subpackage Service
  */
 class Country
 	extends \Aimeos\MShop\Service\Provider\Decorator\Base
+	implements \Aimeos\MShop\Service\Provider\Decorator\Iface
 {
 	private $beConfig = array(
 		'country.billing-include' => array(
 			'code' => 'country.billing-include',
-			'internalcode'=> 'country.billing-include',
-			'label'=> 'List of countries allowed for the billing address',
-			'type'=> 'string',
-			'internaltype'=> 'string',
-			'default'=> '',
-			'required'=> false,
+			'internalcode' => 'country.billing-include',
+			'label' => 'List of countries allowed for the billing address',
+			'type' => 'string',
+			'internaltype' => 'string',
+			'default' => '',
+			'required' => false,
 		),
 		'country.billing-exclude' => array(
 			'code' => 'country.billing-exclude',
-			'internalcode'=> 'country.billing-exclude',
-			'label'=> 'List of countries not allowed for the billing address',
-			'type'=> 'string',
-			'internaltype'=> 'string',
-			'default'=> '',
-			'required'=> false,
+			'internalcode' => 'country.billing-exclude',
+			'label' => 'List of countries not allowed for the billing address',
+			'type' => 'string',
+			'internaltype' => 'string',
+			'default' => '',
+			'required' => false,
 		),
 		'country.delivery-include' => array(
 			'code' => 'country.delivery-include',
-			'internalcode'=> 'country.delivery-include',
-			'label'=> 'List of countries allowed for the delivery address',
-			'type'=> 'string',
-			'internaltype'=> 'string',
-			'default'=> '',
-			'required'=> false,
+			'internalcode' => 'country.delivery-include',
+			'label' => 'List of countries allowed for the delivery address',
+			'type' => 'string',
+			'internaltype' => 'string',
+			'default' => '',
+			'required' => false,
 		),
 		'country.delivery-exclude' => array(
 			'code' => 'country.delivery-exclude',
-			'internalcode'=> 'country.delivery-exclude',
-			'label'=> 'List of countries not allowed for the delivery address',
-			'type'=> 'string',
-			'internaltype'=> 'string',
-			'default'=> '',
-			'required'=> false,
+			'internalcode' => 'country.delivery-exclude',
+			'label' => 'List of countries not allowed for the delivery address',
+			'type' => 'string',
+			'internaltype' => 'string',
+			'default' => '',
+			'required' => false,
 		),
 	);
 
@@ -85,13 +91,7 @@ class Country
 	 */
 	public function getConfigBE()
 	{
-		$list = $this->getProvider()->getConfigBE();
-
-		foreach( $this->beConfig as $key => $config ) {
-			$list[$key] = new \Aimeos\MW\Criteria\Attribute\Standard( $config );
-		}
-
-		return $list;
+		return array_merge( $this->getProvider()->getConfigBE(), $this->getConfigItems( $this->beConfig ) );
 	}
 
 
@@ -103,41 +103,40 @@ class Country
 	 */
 	public function isAvailable( \Aimeos\MShop\Order\Item\Base\Iface $basket )
 	{
-		$addresses = $basket->getAddresses();
-
 		$paymentType = \Aimeos\MShop\Order\Item\Base\Address\Base::TYPE_PAYMENT;
 		$deliveryType = \Aimeos\MShop\Order\Item\Base\Address\Base::TYPE_DELIVERY;
 
 
-		if( isset( $addresses[$deliveryType] ) )
+		if( ( $addresses = $basket->getAddress( $deliveryType ) ) !== [] )
 		{
-			$code = strtoupper( $addresses[$deliveryType]->getCountryId() );
+			foreach( $addresses as $address )
+			{
+				$code = strtoupper( $address->getCountryId() );
 
-			if( $this->checkCountryCode( $code, 'country.delivery-include' ) === false
-				|| $this->checkCountryCode( $code, 'country.delivery-exclude' ) === true
-			) {
-				return false;
+				if( $this->checkCountryCode( $code, 'country.delivery-include' ) === false
+					|| $this->checkCountryCode( $code, 'country.delivery-exclude' ) === true
+				) {
+					return false;
+				}
 			}
 		}
-		else if( isset( $addresses[$paymentType] ) ) // use billing address if no delivery address is available
+		elseif( ( $addresses = $basket->getAddress( $paymentType ) ) !== [] ) // use billing address if no delivery address is available
 		{
-			$code = strtoupper( $addresses[$paymentType]->getCountryId() );
+			foreach( $addresses as $address )
+			{
+				$code = strtoupper( $address->getCountryId() );
 
-			if( $this->checkCountryCode( $code, 'country.delivery-include' ) === false
-				|| $this->checkCountryCode( $code, 'country.delivery-exclude' ) === true
-			) {
-				return false;
-			}
-		}
+				if( $this->checkCountryCode( $code, 'country.delivery-include' ) === false
+					|| $this->checkCountryCode( $code, 'country.delivery-exclude' ) === true
+				) {
+					return false;
+				}
 
-		if( isset( $addresses[$paymentType] ) )
-		{
-			$code = strtoupper( $addresses[$paymentType]->getCountryId() );
-
-			if( $this->checkCountryCode( $code, 'country.billing-include' ) === false
-				|| $this->checkCountryCode( $code, 'country.billing-exclude' ) === true
-			) {
-				return false;
+				if( $this->checkCountryCode( $code, 'country.billing-include' ) === false
+					|| $this->checkCountryCode( $code, 'country.billing-exclude' ) === true
+				) {
+					return false;
+				}
 			}
 		}
 
@@ -153,7 +152,7 @@ class Country
 	 */
 	protected function checkCountryCode( $code, $key )
 	{
-		if( ( $str = $this->getConfigValue( array( $key ) ) ) === null ) {
+		if( ( $str = $this->getConfigValue( $key ) ) == null ) {
 			return null;
 		}
 

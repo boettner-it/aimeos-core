@@ -1,8 +1,8 @@
 <?php
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Order
  */
@@ -18,68 +18,71 @@ namespace Aimeos\MShop\Order\Manager\Status;
  */
 class Standard
 	extends \Aimeos\MShop\Common\Manager\Base
-	implements \Aimeos\MShop\Order\Manager\Status\Iface
+	implements \Aimeos\MShop\Order\Manager\Status\Iface, \Aimeos\MShop\Common\Manager\Factory\Iface
 {
 	private $searchConfig = array(
-		'order.status.id'=> array(
-			'code'=>'order.status.id',
-			'internalcode'=>'mordst."id"',
-			'internaldeps'=> array( 'LEFT JOIN "mshop_order_status" AS mordst ON ( mord."id" = mordst."parentid" )' ),
-			'label'=>'Order status ID',
-			'type'=> 'integer',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_INT,
+		'order.status.id' => array(
+			'code' => 'order.status.id',
+			'internalcode' => 'mordst."id"',
+			'internaldeps' => array( 'LEFT JOIN "mshop_order_status" AS mordst ON ( mord."id" = mordst."parentid" )' ),
+			'label' => 'Status ID',
+			'type' => 'integer',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 			'public' => false,
 		),
-		'order.status.siteid'=> array(
-			'code'=>'order.status.siteid',
-			'internalcode'=>'mordst."siteid"',
-			'label'=>'Order status site ID',
-			'type'=> 'integer',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_INT,
+		'order.status.siteid' => array(
+			'code' => 'order.status.siteid',
+			'internalcode' => 'mordst."siteid"',
+			'label' => 'Status site ID',
+			'type' => 'integer',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 			'public' => false,
 		),
-		'order.status.parentid'=> array(
-			'code'=>'order.status.parentid',
-			'internalcode'=>'mordst."parentid"',
-			'label'=>'Order status parent id',
-			'type'=> 'integer',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_INT,
+		'order.status.parentid' => array(
+			'code' => 'order.status.parentid',
+			'internalcode' => 'mordst."parentid"',
+			'label' => 'Status parent id',
+			'type' => 'integer',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 			'public' => false,
 		),
-		'order.status.type'=> array(
-			'code'=>'order.status.type',
-			'internalcode'=>'mordst."type"',
-			'label'=>'Order status type',
-			'type'=> 'string',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'order.status.type' => array(
+			'code' => 'order.status.type',
+			'internalcode' => 'mordst."type"',
+			'label' => 'Status type',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
-		'order.status.value'=> array(
-			'code'=>'order.status.value',
-			'internalcode'=>'mordst."value"',
-			'label'=>'Order status value',
-			'type'=> 'string',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'order.status.value' => array(
+			'code' => 'order.status.value',
+			'internalcode' => 'mordst."value"',
+			'label' => 'Status value',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
-		'order.status.mtime'=> array(
-			'code'=>'order.status.mtime',
-			'internalcode'=>'mordst."mtime"',
-			'label'=>'Order status modification time',
-			'type'=> 'datetime',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'order.status.ctime' => array(
+			'code' => 'order.status.ctime',
+			'internalcode' => 'mordst."ctime"',
+			'label' => 'Status create date/time',
+			'type' => 'datetime',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
-		'order.status.ctime'=> array(
-			'code'=>'order.status.ctime',
-			'internalcode'=>'mordst."ctime"',
-			'label'=>'Order status create date/time',
-			'type'=> 'datetime',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'order.status.mtime' => array(
+			'code' => 'order.status.mtime',
+			'internalcode' => 'mordst."mtime"',
+			'label' => 'Status modify date/time',
+			'type' => 'datetime',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
-		'order.status.editor'=> array(
-			'code'=>'order.status.editor',
-			'internalcode'=>'mordst."editor"',
-			'label'=>'Order status editor',
-			'type'=> 'string',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'order.status.editor' => array(
+			'code' => 'order.status.editor',
+			'internalcode' => 'mordst."editor"',
+			'label' => 'Status editor',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
 	);
 
@@ -101,11 +104,18 @@ class Standard
 	 *
 	 * @param \Aimeos\MW\Criteria\Iface $search Search criteria
 	 * @param string $key Search key to aggregate items for
-	 * @return array List of the search keys as key and the number of counted items as value
+	 * @return integer[] List of the search keys as key and the number of counted items as value
+	 * @todo 2018.01 Add optional parameters to interface
 	 */
-	public function aggregate( \Aimeos\MW\Criteria\Iface $search, $key )
+	public function aggregate( \Aimeos\MW\Criteria\Iface $search, $key, $value = null, $type = null )
 	{
-		/** mshop/order/manager/status/standard/aggregate
+		/** mshop/order/manager/status/standard/aggregate/mysql
+		 * Counts the number of records grouped by the values in the key column and matched by the given criteria
+		 *
+		 * @see mshop/order/manager/status/standard/aggregate/ansi
+		 */
+
+		/** mshop/order/manager/status/standard/aggregate/ansi
 		 * Counts the number of records grouped by the values in the key column and matched by the given criteria
 		 *
 		 * Groups all records by the values in the key column and counts their
@@ -141,42 +151,44 @@ class Standard
 		 * @param string SQL statement for aggregating order items
 		 * @since 2014.09
 		 * @category Developer
-		 * @see mshop/order/manager/status/standard/insert
-		 * @see mshop/order/manager/status/standard/update
-		 * @see mshop/order/manager/status/standard/newid
-		 * @see mshop/order/manager/status/standard/delete
-		 * @see mshop/order/manager/status/standard/search
-		 * @see mshop/order/manager/status/standard/count
+		 * @see mshop/order/manager/status/standard/insert/ansi
+		 * @see mshop/order/manager/status/standard/update/ansi
+		 * @see mshop/order/manager/status/standard/newid/ansi
+		 * @see mshop/order/manager/status/standard/delete/ansi
+		 * @see mshop/order/manager/status/standard/search/ansi
+		 * @see mshop/order/manager/status/standard/count/ansi
 		 */
-		$cfgkey = 'mshop/order/manager/status/standard/aggregate';
-		return $this->aggregateBase( $search, $key, $cfgkey, array( 'order.status' ) );
+		$cfgkey = 'mshop/order/manager/status/standard/aggregate' . $type;
+		return $this->aggregateBase( $search, $key, $cfgkey, array( 'order.status' ), $value );
 	}
 
 
 	/**
 	 * Removes old entries from the storage.
 	 *
-	 * @param integer[] $siteids List of IDs for sites whose entries should be deleted
+	 * @param string[] $siteids List of IDs for sites whose entries should be deleted
+	 * @return \Aimeos\MShop\Order\Manager\Status\Iface Manager object for chaining method calls
 	 */
-	public function cleanup( array $siteids )
+	public function clear( array $siteids )
 	{
 		$path = 'mshop/order/manager/status/submanagers';
-		foreach( $this->getContext()->getConfig()->get( $path, array() ) as $domain ) {
-			$this->getSubManager( $domain )->cleanup( $siteids );
+		foreach( $this->getContext()->getConfig()->get( $path, [] ) as $domain ) {
+			$this->getObject()->getSubManager( $domain )->clear( $siteids );
 		}
 
-		$this->cleanupBase( $siteids, 'mshop/order/manager/status/standard/delete' );
+		return $this->clearBase( $siteids, 'mshop/order/manager/status/standard/delete' );
 	}
 
 
 	/**
-	 * Creates a new order status object.
+	 * Creates a new empty item instance
 	 *
-	 * @return \Aimeos\MShop\Order\Item\Status\Iface New item object
+	 * @param array $values Values the item should be initialized with
+	 * @return \Aimeos\MShop\Order\Item\Status\Iface New order status item object
 	 */
-	public function createItem()
+	public function createItem( array $values = [] )
 	{
-		$values = array( 'siteid'=> $this->getContext()->getLocale()->getSiteId() );
+		$values['order.status.siteid'] = $this->getContext()->getLocale()->getSiteId();
 		return $this->createItemBase( $values );
 	}
 
@@ -186,15 +198,13 @@ class Standard
 	 *
 	 * @param \Aimeos\MShop\Order\Item\Status\Iface $item Order status object whose data should be saved
 	 * @param boolean $fetch True if the new ID should be returned in the item
+	 * @return \Aimeos\MShop\Order\Item\Status\Iface $item Updated item including the generated ID
 	 */
-	public function saveItem( \Aimeos\MShop\Common\Item\Iface $item, $fetch = true )
+	public function saveItem( \Aimeos\MShop\Order\Item\Status\Iface $item, $fetch = true )
 	{
-		$iface = '\\Aimeos\\MShop\\Order\\Item\\Status\\Iface';
-		if( !( $item instanceof $iface ) ) {
-			throw new \Aimeos\MShop\Order\Exception( sprintf( 'Object is not of required type "%1$s"', $iface ) );
+		if( !$item->isModified() ) {
+			return $item;
 		}
-
-		if( !$item->isModified() ) { return; }
 
 		$context = $this->getContext();
 
@@ -206,10 +216,17 @@ class Standard
 		{
 			$id = $item->getId();
 			$date = date( 'Y-m-d H:i:s' );
+			$columns = $this->getObject()->getSaveAttributes();
 
 			if( $id === null )
 			{
-				/** mshop/order/manager/status/standard/insert
+				/** mshop/order/manager/status/standard/insert/mysql
+				 * Inserts a new order record into the database table
+				 *
+				 * @see mshop/order/manager/status/standard/insert/ansi
+				 */
+
+				/** mshop/order/manager/status/standard/insert/ansi
 				 * Inserts a new order record into the database table
 				 *
 				 * Items with no ID yet (i.e. the ID is NULL) will be created in
@@ -232,17 +249,24 @@ class Standard
 				 * @param string SQL statement for inserting records
 				 * @since 2014.03
 				 * @category Developer
-				 * @see mshop/order/manager/status/standard/update
-				 * @see mshop/order/manager/status/standard/newid
-				 * @see mshop/order/manager/status/standard/delete
-				 * @see mshop/order/manager/status/standard/search
-				 * @see mshop/order/manager/status/standard/count
+				 * @see mshop/order/manager/status/standard/update/ansi
+				 * @see mshop/order/manager/status/standard/newid/ansi
+				 * @see mshop/order/manager/status/standard/delete/ansi
+				 * @see mshop/order/manager/status/standard/search/ansi
+				 * @see mshop/order/manager/status/standard/count/ansi
 				 */
 				$path = 'mshop/order/manager/status/standard/insert';
+				$sql = $this->addSqlColumns( array_keys( $columns ), $this->getSqlConfig( $path ) );
 			}
 			else
 			{
-				/** mshop/order/manager/status/standard/update
+				/** mshop/order/manager/status/standard/update/mysql
+				 * Updates an existing order record in the database
+				 *
+				 * @see mshop/order/manager/status/standard/update/ansi
+				 */
+
+				/** mshop/order/manager/status/standard/update/ansi
 				 * Updates an existing order record in the database
 				 *
 				 * Items which already have an ID (i.e. the ID is not NULL) will
@@ -262,36 +286,48 @@ class Standard
 				 * @param string SQL statement for updating records
 				 * @since 2014.03
 				 * @category Developer
-				 * @see mshop/order/manager/status/standard/insert
-				 * @see mshop/order/manager/status/standard/newid
-				 * @see mshop/order/manager/status/standard/delete
-				 * @see mshop/order/manager/status/standard/search
-				 * @see mshop/order/manager/status/standard/count
+				 * @see mshop/order/manager/status/standard/insert/ansi
+				 * @see mshop/order/manager/status/standard/newid/ansi
+				 * @see mshop/order/manager/status/standard/delete/ansi
+				 * @see mshop/order/manager/status/standard/search/ansi
+				 * @see mshop/order/manager/status/standard/count/ansi
 				 */
 				$path = 'mshop/order/manager/status/standard/update';
+				$sql = $this->addSqlColumns( array_keys( $columns ), $this->getSqlConfig( $path ), false );
 			}
 
-			$stmt = $this->getCachedStatement( $conn, $path );
+			$idx = 1;
+			$stmt = $this->getCachedStatement( $conn, $path, $sql );
 
-			$stmt->bind( 1, $context->getLocale()->getSiteId(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 2, $item->getParentID(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 3, $item->getType() );
-			$stmt->bind( 4, $item->getValue() );
-			$stmt->bind( 5, $date ); //mtime
-			$stmt->bind( 6, $context->getEditor() );
+			foreach( $columns as $name => $entry ) {
+				$stmt->bind( $idx++, $item->get( $name ), $entry->getInternalType() );
+			}
+
+			$stmt->bind( $idx++, $item->getParentId(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmt->bind( $idx++, $item->getType() );
+			$stmt->bind( $idx++, $item->getValue() );
+			$stmt->bind( $idx++, $date ); //mtime
+			$stmt->bind( $idx++, $context->getEditor() );
+			$stmt->bind( $idx++, $context->getLocale()->getSiteId(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 
 			if( $id !== null ) {
-				$stmt->bind( 7, $id, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+				$stmt->bind( $idx++, $id, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 				$item->setId( $id ); //is not modified anymore
 			} else {
-				$stmt->bind( 7, $date ); //ctime
+				$stmt->bind( $idx++, $date ); //ctime
 			}
 
 			$stmt->execute()->finish();
 
 			if( $id === null && $fetch === true )
 			{
-				/** mshop/order/manager/status/standard/newid
+				/** mshop/order/manager/status/standard/newid/mysql
+				 * Retrieves the ID generated by the database when inserting a new record
+				 *
+				 * @see mshop/order/manager/status/standard/newid/ansi
+				 */
+
+				/** mshop/order/manager/status/standard/newid/ansi
 				 * Retrieves the ID generated by the database when inserting a new record
 				 *
 				 * As soon as a new record is inserted into the database table,
@@ -315,11 +351,11 @@ class Standard
 				 * @param string SQL statement for retrieving the last inserted record ID
 				 * @since 2014.03
 				 * @category Developer
-				 * @see mshop/order/manager/status/standard/insert
-				 * @see mshop/order/manager/status/standard/update
-				 * @see mshop/order/manager/status/standard/delete
-				 * @see mshop/order/manager/status/standard/search
-				 * @see mshop/order/manager/status/standard/count
+				 * @see mshop/order/manager/status/standard/insert/ansi
+				 * @see mshop/order/manager/status/standard/update/ansi
+				 * @see mshop/order/manager/status/standard/delete/ansi
+				 * @see mshop/order/manager/status/standard/search/ansi
+				 * @see mshop/order/manager/status/standard/count/ansi
 				 */
 				$path = 'mshop/order/manager/status/standard/newid';
 				$item->setId( $this->newId( $conn, $path ) );
@@ -333,31 +369,40 @@ class Standard
 			throw $e;
 		}
 
+		return $item;
 	}
 
 
 	/**
 	 * Returns the order status item specified by its ID.
 	 *
-	 * @param integer $id Unique ID of the order status item
-	 * @param array $ref List of domains to fetch list items and referenced items for
+	 * @param string $id Unique ID of the order status item
+	 * @param string[] $ref List of domains to fetch list items and referenced items for
+	 * @param boolean $default Add default criteria
 	 * @return \Aimeos\MShop\Order\Item\Status\Iface Returns order status item of the given id
 	 * @throws \Aimeos\MShop\Order\Exception If item couldn't be found
 	 */
-	public function getItem( $id, array $ref = array() )
+	public function getItem( $id, array $ref = [], $default = false )
 	{
-		return $this->getItemBase( 'order.status.id', $id, $ref );
+		return $this->getItemBase( 'order.status.id', $id, $ref, $default );
 	}
 
 
 	/**
-	 * Removes multiple items specified by ids in the array.
+	 * Removes multiple items.
 	 *
-	 * @param array $ids List of IDs
+	 * @param \Aimeos\MShop\Common\Item\Iface[]|string[] $itemIds List of item objects or IDs of the items
+	 * @return \Aimeos\MShop\Order\Manager\Status\Iface Manager object for chaining method calls
 	 */
-	public function deleteItems( array $ids )
+	public function deleteItems( array $itemIds )
 	{
-		/** mshop/order/manager/status/standard/delete
+		/** mshop/order/manager/status/standard/delete/mysql
+		 * Deletes the items matched by the given IDs from the database
+		 *
+		 * @see mshop/order/manager/status/standard/delete/ansi
+		 */
+
+		/** mshop/order/manager/status/standard/delete/ansi
 		 * Deletes the items matched by the given IDs from the database
 		 *
 		 * Removes the records specified by the given IDs from the order database.
@@ -375,14 +420,29 @@ class Standard
 		 * @param string SQL statement for deleting items
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/order/manager/status/standard/insert
-		 * @see mshop/order/manager/status/standard/update
-		 * @see mshop/order/manager/status/standard/newid
-		 * @see mshop/order/manager/status/standard/search
-		 * @see mshop/order/manager/status/standard/count
+		 * @see mshop/order/manager/status/standard/insert/ansi
+		 * @see mshop/order/manager/status/standard/update/ansi
+		 * @see mshop/order/manager/status/standard/newid/ansi
+		 * @see mshop/order/manager/status/standard/search/ansi
+		 * @see mshop/order/manager/status/standard/count/ansi
 		 */
 		$path = 'mshop/order/manager/status/standard/delete';
-		$this->deleteItemsBase( $ids, $path );
+
+		return $this->deleteItemsBase( $itemIds, $path );
+	}
+
+
+	/**
+	 * Returns the available manager types
+	 *
+	 * @param boolean $withsub Return also the resource type of sub-managers if true
+	 * @return string[] Type of the manager and submanagers, subtypes are separated by slashes
+	 */
+	public function getResourceType( $withsub = true )
+	{
+		$path = 'mshop/order/manager/status/submanagers';
+
+		return $this->getResourceTypeBase( 'order/status', $path, [], $withsub );
 	}
 
 
@@ -390,7 +450,7 @@ class Standard
 	 * Returns the attributes that can be used for searching.
 	 *
 	 * @param boolean $withsub Return also attributes of sub-managers if true
-	 * @return array List of attribute items implementing \Aimeos\MW\Criteria\Attribute\Iface
+	 * @return \Aimeos\MW\Criteria\Attribute\Iface[] List of search attribute items
 	 */
 	public function getSearchAttributes( $withsub = true )
 	{
@@ -413,7 +473,7 @@ class Standard
 		 */
 		$path = 'mshop/order/manager/status/submanagers';
 
-		return $this->getSearchAttributesBase( $this->searchConfig, $path, array(), $withsub );
+		return $this->getSearchAttributesBase( $this->searchConfig, $path, [], $withsub );
 	}
 
 
@@ -495,12 +555,14 @@ class Standard
 		 * modify what is returned to the caller.
 		 *
 		 * This option allows you to wrap global decorators
-		 * ("\Aimeos\MShop\Common\Manager\Decorator\*") around the order status manager.
+		 * ("\Aimeos\MShop\Common\Manager\Decorator\*") around the order status
+		 * manager.
 		 *
 		 *  mshop/order/manager/status/decorators/global = array( 'decorator1' )
 		 *
 		 * This would add the decorator named "decorator1" defined by
-		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator1" only to the order controller.
+		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator1" only to the order
+		 * status manager.
 		 *
 		 * @param array List of decorator names
 		 * @since 2014.03
@@ -519,13 +581,14 @@ class Standard
 		 * modify what is returned to the caller.
 		 *
 		 * This option allows you to wrap local decorators
-		 * ("\Aimeos\MShop\Common\Manager\Decorator\*") around the order status manager.
+		 * ("\Aimeos\MShop\Order\Manager\Status\Decorator\*") around the order
+		 * status manager.
 		 *
 		 *  mshop/order/manager/status/decorators/local = array( 'decorator2' )
 		 *
 		 * This would add the decorator named "decorator2" defined by
-		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator2" only to the order
-		 * controller.
+		 * "\Aimeos\MShop\Order\Manager\Status\Decorator\Decorator2" only to the
+		 * order status manager.
 		 *
 		 * @param array List of decorator names
 		 * @since 2014.03
@@ -542,14 +605,14 @@ class Standard
 	/**
 	 * Searches for all items matching the given critera.
 	 *
-	 * @param \Aimeos\MW\Criteria\Iface $search Criteria object with conditions, sortations, etc.
-	 * @param array $ref Not used
-	 * @param integer &$total Number of items that are available in total
-	 * @return array List of items implementing \Aimeos\MShop\Order\Item\Status\Iface
+	 * @param \Aimeos\MW\Criteria\Iface $search Search criteria object
+	 * @param string[] $ref List of domains to fetch list items and referenced items for
+	 * @param integer|null &$total Number of items that are available in total
+	 * @return \Aimeos\MShop\Order\Item\Status\Iface[] List of order status items
 	 */
-	public function searchItems( \Aimeos\MW\Criteria\Iface $search, array $ref = array(), &$total = null )
+	public function searchItems( \Aimeos\MW\Criteria\Iface $search, array $ref = [], &$total = null )
 	{
-		$items = array();
+		$items = [];
 		$context = $this->getContext();
 
 		$dbm = $context->getDatabaseManager();
@@ -559,9 +622,17 @@ class Standard
 		try
 		{
 			$required = array( 'order.status' );
-			$sitelevel = \Aimeos\MShop\Locale\Manager\Base::SITE_SUBTREE;
 
-			/** mshop/order/manager/status/standard/search
+			$level = \Aimeos\MShop\Locale\Manager\Base::SITE_ALL;
+			$level = $context->getConfig()->get( 'mshop/order/manager/sitemode', $level );
+
+			/** mshop/order/manager/status/standard/search/mysql
+			 * Retrieves the records matched by the given criteria in the database
+			 *
+			 * @see mshop/order/manager/status/standard/search/ansi
+			 */
+
+			/** mshop/order/manager/status/standard/search/ansi
 			 * Retrieves the records matched by the given criteria in the database
 			 *
 			 * Fetches the records matched by the given criteria from the order
@@ -606,15 +677,21 @@ class Standard
 			 * @param string SQL statement for searching items
 			 * @since 2014.03
 			 * @category Developer
-			 * @see mshop/order/manager/status/standard/insert
-			 * @see mshop/order/manager/status/standard/update
-			 * @see mshop/order/manager/status/standard/newid
-			 * @see mshop/order/manager/status/standard/delete
-			 * @see mshop/order/manager/status/standard/count
+			 * @see mshop/order/manager/status/standard/insert/ansi
+			 * @see mshop/order/manager/status/standard/update/ansi
+			 * @see mshop/order/manager/status/standard/newid/ansi
+			 * @see mshop/order/manager/status/standard/delete/ansi
+			 * @see mshop/order/manager/status/standard/count/ansi
 			 */
 			$cfgPathSearch = 'mshop/order/manager/status/standard/search';
 
-			/** mshop/order/manager/status/standard/count
+			/** mshop/order/manager/status/standard/count/mysql
+			 * Counts the number of records matched by the given criteria in the database
+			 *
+			 * @see mshop/order/manager/status/standard/count/ansi
+			 */
+
+			/** mshop/order/manager/status/standard/count/ansi
 			 * Counts the number of records matched by the given criteria in the database
 			 *
 			 * Counts all records matched by the given criteria from the order
@@ -653,23 +730,22 @@ class Standard
 			 * @param string SQL statement for counting items
 			 * @since 2014.03
 			 * @category Developer
-			 * @see mshop/order/manager/status/standard/insert
-			 * @see mshop/order/manager/status/standard/update
-			 * @see mshop/order/manager/status/standard/newid
-			 * @see mshop/order/manager/status/standard/delete
-			 * @see mshop/order/manager/status/standard/search
+			 * @see mshop/order/manager/status/standard/insert/ansi
+			 * @see mshop/order/manager/status/standard/update/ansi
+			 * @see mshop/order/manager/status/standard/newid/ansi
+			 * @see mshop/order/manager/status/standard/delete/ansi
+			 * @see mshop/order/manager/status/standard/search/ansi
 			 */
 			$cfgPathCount = 'mshop/order/manager/status/standard/count';
 
 			$results = $this->searchItemsBase( $conn, $search, $cfgPathSearch, $cfgPathCount,
-				$required, $total, $sitelevel );
+				$required, $total, $level );
 
 			while( ( $row = $results->fetch() ) !== false ) {
-				$items[$row['id']] = $this->createItemBase( $row );
+				$items[(string) $row['order.status.id']] = $this->createItemBase( $row );
 			}
 
 			$dbm->release( $conn, $dbname );
-
 		}
 		catch( \Exception $e )
 		{
@@ -687,7 +763,7 @@ class Standard
 	 * @param array $values List of attributes for the order status object
 	 * @return \Aimeos\MShop\Order\Item\Status\Iface New order status object
 	 */
-	protected function createItemBase( array $values = array() )
+	protected function createItemBase( array $values = [] )
 	{
 		return new \Aimeos\MShop\Order\Item\Status\Standard( $values );
 	}

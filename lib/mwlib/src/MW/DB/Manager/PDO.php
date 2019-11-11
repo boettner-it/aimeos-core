@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage DB
  */
@@ -20,9 +20,9 @@ namespace Aimeos\MW\DB\Manager;
  */
 class PDO implements \Aimeos\MW\DB\Manager\Iface
 {
-	private $config = null;
-	private $connections = array();
-	private $count = array();
+	private $connections = [];
+	private $count = [];
+	private $config;
 
 
 	/**
@@ -37,11 +37,40 @@ class PDO implements \Aimeos\MW\DB\Manager\Iface
 
 
 	/**
-	 * Clones the objects inside.
+	 * Cleans up the object
+	 */
+	public function __destruct()
+	{
+		foreach( $this->connections as $name => $list )
+		{
+			foreach( $list as $key => $conn ) {
+				unset( $this->connections[$name][$key] );
+			}
+		}
+	}
+
+
+	/**
+	 * Reset when cloning the object
 	 */
 	public function __clone()
 	{
-		$this->config = clone $this->config;
+		$this->connections = [];
+		$this->count = [];
+	}
+
+
+	/**
+	 * Clean up the objects inside
+	 */
+	public function __sleep()
+	{
+		$this->__destruct();
+
+		$this->connections = [];
+		$this->count = [];
+
+		return get_object_vars( $this );
 	}
 
 
@@ -55,6 +84,10 @@ class PDO implements \Aimeos\MW\DB\Manager\Iface
 	{
 		try
 		{
+			if( $this->config->get( 'resource/' . $name ) === null ) {
+				$name = 'db';
+			}
+
 			$adapter = $this->config->get( 'resource/' . $name . '/adapter', 'mysql' );
 
 			if( !isset( $this->connections[$name] ) || empty( $this->connections[$name] ) )
@@ -65,26 +98,17 @@ class PDO implements \Aimeos\MW\DB\Manager\Iface
 
 				$limit = $this->config->get( 'resource/' . $name . '/limit', -1 );
 
-				if( $limit >= 0 && $this->count[$name] >= $limit ) {
-					throw new \Aimeos\MW\DB\Exception( sprintf( 'Maximum number of connections (%1$d) exceeded', $limit ) );
+				if( $limit >= 0 && $this->count[$name] >= $limit )
+				{
+					$msg = sprintf( 'Maximum number of connections (%1$d) for "%2$s" exceeded', $limit, $name );
+					throw new \Aimeos\MW\DB\Exception( $msg );
 				}
 
 				$this->connections[$name] = array( $this->createConnection( $name, $adapter ) );
 				$this->count[$name]++;
 			}
 
-			switch( $adapter )
-			{
-				case 'sqlite':
-				case 'sqlite3':
-					// SQLite uses page locking which prevents a second connection from
-					// reading from tables which are already in use. Fortunately, it is
-					// possible withing the same connection to do the update.
-					return $this->connections[$name][0];
-			}
-
 			return array_pop( $this->connections[$name] );
-
 		}
 		catch( \PDOException $e ) {
 			throw new \Aimeos\MW\DB\Exception( $e->getMessage(), $e->getCode(), $e->errorInfo );
@@ -102,6 +126,10 @@ class PDO implements \Aimeos\MW\DB\Manager\Iface
 	{
 		if( ( $connection instanceof \Aimeos\MW\DB\Connection\PDO ) === false ) {
 			throw new \Aimeos\MW\DB\Exception( 'Connection object isn\'t of type \PDO' );
+		}
+
+		if( $this->config->get( 'resource/' . $name ) === null ) {
+			$name = 'db';
 		}
 
 		$this->connections[$name][] = $connection;
@@ -123,6 +151,7 @@ class PDO implements \Aimeos\MW\DB\Manager\Iface
 		$pass = $this->config->get( 'resource/' . $name . '/password' );
 		$sock = $this->config->get( 'resource/' . $name . '/socket' );
 		$dbase = $this->config->get( 'resource/' . $name . '/database' );
+		$persist = $this->config->get( 'resource/' . $name . '/opt-persistent', false );
 
 		$dsn = $adapter . ':dbname=' . $dbase;
 		if( $sock == null )
@@ -135,18 +164,9 @@ class PDO implements \Aimeos\MW\DB\Manager\Iface
 			$dsn .= ';unix_socket=' . $sock;
 		}
 
-		$attr = array(
-			\PDO::ATTR_PERSISTENT => $this->config->get( 'resource/' . $name . '/opt-persistent', false ),
-		);
+		$params = array( $dsn, $user, $pass, array( \PDO::ATTR_PERSISTENT => $persist ) );
+		$stmts = $this->config->get( 'resource/' . $name . '/stmt', array() );
 
-		$pdo = new \PDO( $dsn, $user, $pass, $attr );
-		$pdo->setAttribute( \PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION );
-		$dbc = new \Aimeos\MW\DB\Connection\PDO( $pdo );
-
-		foreach( $this->config->get( 'resource/' . $name . '/stmt', array() ) as $stmt ) {
-			$dbc->create( $stmt )->execute()->finish();
-		}
-
-		return $dbc;
+		return new \Aimeos\MW\DB\Connection\PDO( $params, $stmts );
 	}
 }

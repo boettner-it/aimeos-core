@@ -6,19 +6,46 @@ namespace Aimeos\MW\Media;
 /**
  * Test class for \Aimeos\MW\Media\Factory.
  *
- * @copyright Metaways Infosystems GmbH, 2014
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2014
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
-class FactoryTest extends \PHPUnit_Framework_TestCase
+class FactoryTest extends \PHPUnit\Framework\TestCase
 {
 	public function testGetImage()
 	{
 		$ds = DIRECTORY_SEPARATOR;
-		$object = \Aimeos\MW\Media\Factory::get( __DIR__ . $ds .'_testfiles' . $ds . 'image.png' );
+		$object = \Aimeos\MW\Media\Factory::get( __DIR__ . $ds . '_testfiles' . $ds . 'image.png' );
 
-		$this->assertInstanceOf( '\\Aimeos\\MW\\Media\\Iface', $object );
-		$this->assertInstanceOf( '\\Aimeos\\MW\\Media\\Image\\Iface', $object );
+		$this->assertInstanceOf( \Aimeos\MW\Media\Iface::class, $object );
+		$this->assertInstanceOf( \Aimeos\MW\Media\Image\Iface::class, $object );
+		$this->assertEquals( 'image/png', $object->getMimetype() );
+	}
+
+
+	public function testGetImageAsResource()
+	{
+		$ds = DIRECTORY_SEPARATOR;
+		if( ( $resource = fopen( __DIR__ . $ds . '_testfiles' . $ds . 'image.png', 'rw' ) ) === false ) {
+			throw new \RuntimeException( 'Failed to open ' . __DIR__ . $ds . '_testfiles' . $ds . 'image.png' );
+		}
+
+		$object = \Aimeos\MW\Media\Factory::get( $resource );
+
+		$this->assertInstanceOf( \Aimeos\MW\Media\Iface::class, $object );
+		$this->assertInstanceOf( \Aimeos\MW\Media\Image\Iface::class, $object );
+		$this->assertEquals( 'image/png', $object->getMimetype() );
+	}
+
+
+	public function testGetImageAsString()
+	{
+		$ds = DIRECTORY_SEPARATOR;
+		$content = file_get_contents( __DIR__ . $ds . '_testfiles' . $ds . 'image.png' );
+		$object = \Aimeos\MW\Media\Factory::get( $content );
+
+		$this->assertInstanceOf( \Aimeos\MW\Media\Iface::class, $object );
+		$this->assertInstanceOf( \Aimeos\MW\Media\Image\Iface::class, $object );
 		$this->assertEquals( 'image/png', $object->getMimetype() );
 	}
 
@@ -28,15 +55,19 @@ class FactoryTest extends \PHPUnit_Framework_TestCase
 		$ds = DIRECTORY_SEPARATOR;
 		$object = \Aimeos\MW\Media\Factory::get( __DIR__ . $ds . '_testfiles' . $ds . 'application.txt' );
 
-		$this->assertInstanceOf( '\\Aimeos\\MW\\Media\\Iface', $object );
-		$this->assertInstanceOf( '\\Aimeos\\MW\\Media\\Application\\Iface', $object );
+		$this->assertInstanceOf( \Aimeos\MW\Media\Iface::class, $object );
+		$this->assertInstanceOf( \Aimeos\MW\Media\Application\Iface::class, $object );
 		$this->assertEquals( 'text/plain', $object->getMimetype() );
 	}
 
 
-	public function testGetException()
+	public function testGetSvg()
 	{
-		$this->setExpectedException('\\Aimeos\\MW\\Media\\Exception');
-		\Aimeos\MW\Media\Factory::get( null );
+		$ds = DIRECTORY_SEPARATOR;
+		$object = \Aimeos\MW\Media\Factory::get( __DIR__ . $ds . '_testfiles' . $ds . 'image.svgz' );
+
+		$this->assertInstanceOf( \Aimeos\MW\Media\Iface::class, $object );
+		$this->assertInstanceOf( \Aimeos\MW\Media\Image\Iface::class, $object );
+		$this->assertEquals( 'image/svg+xml', $object->getMimetype() );
 	}
 }

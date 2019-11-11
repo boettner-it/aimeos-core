@@ -1,0 +1,191 @@
+<?php
+
+/**
+ * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
+ * @package MShop
+ * @subpackage Common
+ */
+
+
+namespace Aimeos\MShop\Common\Helper\Form;
+
+
+/**
+ * Default implementation of the form helper
+ *
+ * @package MShop
+ * @subpackage Common
+ */
+class Standard implements \Aimeos\MShop\Common\Helper\Form\Iface
+{
+	private $url;
+	private $method;
+	private $values;
+	private $external;
+	private $html;
+
+
+	/**
+	 * Initializes the object.
+	 *
+	 * @param string $url Initial url
+	 * @param string $method Initial method (e.g. post or get)
+	 * @param \Aimeos\MW\Criteria\Attribute\Iface[] $values Form parameter items
+	 * @param boolean $external True if URL points to an external site, false if it stays on the same site
+	 * @param string $html Custom HTML for rendering form (e.g. Including JS or custom html)
+	 */
+	public function __construct( $url = '', $method = '', array $values = [], $external = true, $html = '' )
+	{
+		\Aimeos\MW\Common\Base::checkClassList( \Aimeos\MW\Criteria\Attribute\Iface::class, $values );
+
+		$this->url = (string) $url;
+		$this->external = (bool) $external;
+		$this->method = (string) $method;
+		$this->values = $values;
+		$this->html = $html;
+	}
+
+
+	/**
+	 * Returns if the URL points to an external site.
+	 *
+	 * @return boolean True if URL points to an external site, false if it stays on the same site
+	 */
+	public function getExternal()
+	{
+		return $this->external;
+	}
+
+
+	/**
+	 * Sets if the URL points to an external site.
+	 *
+	 * @param boolean $value True if URL points to an external site, false if it stays on the same site
+	 * @return \Aimeos\MShop\Common\Helper\Form\Iface Helper for chaining method calls
+	 */
+	public function setExternal( $value )
+	{
+		$this->external = (bool) $value;
+
+		return $this;
+	}
+
+
+	/**
+	 * Returns the url.
+	 *
+	 * @return string Url
+	 */
+	public function getUrl()
+	{
+		return $this->url;
+	}
+
+
+	/**
+	 * Sets the url.
+	 *
+	 * @param string $url Url
+	 * @return \Aimeos\MShop\Common\Helper\Form\Iface Helper for chaining method calls
+	 */
+	public function setUrl( $url )
+	{
+		$this->url = (string) $url;
+
+		return $this;
+	}
+
+
+	/**
+	 * Returns the method.
+	 *
+	 * @return string Method
+	 */
+	public function getMethod()
+	{
+		return $this->method;
+	}
+
+
+	/**
+	 * Sets the method.
+	 *
+	 * @param string $method Method
+	 * @return \Aimeos\MShop\Common\Helper\Form\Iface Helper for chaining method calls
+	 */
+	public function setMethod( $method )
+	{
+		$this->method = (string) $method;
+
+		return $this;
+	}
+
+
+	/**
+	 * Returns the value for the given key.
+	 *
+	 * @param string $key Unique key
+	 * @return \Aimeos\MW\Criteria\Attribute\Iface Attribute item for the given key
+	 */
+	public function getValue( $key )
+	{
+		if( !isset( $this->values[$key] ) ) {
+			return null;
+		}
+
+		return $this->values[$key];
+	}
+
+
+	/**
+	 * Sets the value for the key.
+	 *
+	 * @param string $key Unique key
+	 * @param \Aimeos\MW\Criteria\Attribute\Iface $value Attribute item for the given key
+	 * @return \Aimeos\MShop\Common\Helper\Form\Iface Helper for chaining method calls
+	 */
+	public function setValue( $key, \Aimeos\MW\Criteria\Attribute\Iface $value )
+	{
+		$this->values[$key] = $value;
+
+		return $this;
+	}
+
+
+	/**
+	 * Returns the all key/value pairs.
+	 *
+	 * @return array Key/value pairs, values implementing \Aimeos\MW\Criteria\Attribute\Iface
+	 */
+	public function getValues()
+	{
+		return $this->values;
+	}
+
+
+	/**
+	 * Returns the custom HTML string.
+	 *
+	 * @return string HTML string
+	 */
+	public function getHtml()
+	{
+		return $this->html;
+	}
+
+
+	/**
+	 * Sets the custom HTML string.
+	 *
+	 * @param string $html HTML string
+	 * @return \Aimeos\MShop\Common\Helper\Form\Iface Helper for chaining method calls
+	 */
+	public function setHtml( $html )
+	{
+		$this->html = (string) $html;
+
+		return $this;
+	}
+}

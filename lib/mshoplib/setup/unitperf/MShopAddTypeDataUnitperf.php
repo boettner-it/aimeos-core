@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2012
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2012
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 
@@ -33,14 +33,14 @@ class MShopAddTypeDataUnitperf extends \Aimeos\MW\Setup\Task\MShopAddTypeData
 	 */
 	public function getPostDependencies()
 	{
-		return array( 'ProductAddBasePerfData' );
+		return array( 'MShopAddTypeData', 'ProductAddBasePerfData' );
 	}
 
 
 	/**
 	 * Executes the task for MySQL databases.
 	 */
-	protected function mysql()
+	public function migrate()
 	{
 		$this->process();
 	}

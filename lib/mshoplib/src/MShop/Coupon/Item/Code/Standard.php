@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2012
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2012
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Coupon
  */
@@ -22,54 +22,53 @@ class Standard
 	extends \Aimeos\MShop\Common\Item\Base
 	implements \Aimeos\MShop\Coupon\Item\Code\Iface
 {
-	private $values;
+	private $date;
+
 
 	/**
 	 * Initializes the coupon code instance
 	 *
 	 * @param array $values Associative array with ID, coupon item ID, code and counter
 	 */
-	public function __construct( array $values = array( ) )
+	public function __construct( array $values = [] )
 	{
 		parent::__construct( 'coupon.code.', $values );
 
-		$this->values = $values;
+		$this->date = isset( $values['.date'] ) ? $values['.date'] : date( 'Y-m-d H:i:s' );
 	}
 
 
 	/**
 	 * Returns the unique ID of the coupon item the code belongs to.
 	 *
-	 * @return integer Unique ID of the coupon item
+	 * @return string|null Unique ID of the coupon item
 	 */
-	public function getCouponId()
+	public function getParentId()
 	{
-		return ( isset( $this->values['couponid'] ) ? (int) $this->values['couponid'] : null );
+		return $this->get( 'coupon.code.parentid' );
 	}
 
 
 	/**
 	 * Sets the new unique ID of the coupon item the code belongs to.
 	 *
-	 * @param integer $id Unique ID of the coupon item
+	 * @param string $id Unique ID of the coupon item
+	 * @return \Aimeos\MShop\Coupon\Item\Code\Iface Coupon code item for chaining method calls
 	 */
-	public function setCouponId( $id )
+	public function setParentId( $id )
 	{
-		if( $id == $this->getCouponId() ) { return; }
-
-		$this->values['couponid'] = (int) $id;
-		$this->setModified();
+		return $this->set( 'coupon.code.parentid', (string) $id );
 	}
 
 
 	/**
 	 * Returns the code of the coupon item.
 	 *
-	 * @return string Coupon code
+	 * @return string|null Coupon code
 	 */
 	public function getCode()
 	{
-		return ( isset( $this->values['code'] ) ? (string) $this->values['code'] : null );
+		return $this->get( 'coupon.code.code' );
 	}
 
 
@@ -77,79 +76,69 @@ class Standard
 	 * Sets the new code for the coupon item.
 	 *
 	 * @param string $code Coupon code
+	 * @return \Aimeos\MShop\Coupon\Item\Code\Iface Coupon code item for chaining method calls
 	 */
 	public function setCode( $code )
 	{
-		$this->checkCode( $code );
-
-		if( $code == $this->getCode() ) { return; }
-
-		$this->values['code'] = (string) $code;
-		$this->setModified();
+		return $this->set( 'coupon.code.code', $this->checkCode( $code ) );
 	}
 
 
 	/**
 	 * Returns the number of tries the code is valid.
 	 *
-	 * @return integer Number of available tries
+	 * @return integer|null Number of available tries or null for unlimited
 	 */
 	public function getCount()
 	{
-		return ( isset( $this->values['count'] ) ? (int) $this->values['count'] : 0 );
+		return $this->get( 'coupon.code.count', 0 );
 	}
 
 
 	/**
 	 * Sets the new number of tries the code is valid.
 	 *
-	 * @param integer $count Number of tries
+	 * @param integer|null $count Number of tries or null for unlimited
+	 * @return \Aimeos\MShop\Coupon\Item\Code\Iface Coupon code item for chaining method calls
 	 */
 	public function setCount( $count )
 	{
-		if( $count == $this->getCount() ) { return; }
-
-		$this->values['count'] = (string) $count;
-		$this->setModified();
+		$count = ( is_numeric( $count ) ? (int) $count : null );
+		return $this->set( 'coupon.code.count', $count );
 	}
 
 
 	/**
 	 * Returns the starting point of time, in which the code is available.
 	 *
-	 * @return string ISO date in YYYY-MM-DD hh:mm:ss format
+	 * @return string|null ISO date in YYYY-MM-DD hh:mm:ss format
 	 */
 	public function getDateStart()
 	{
-		return ( isset( $this->values['start'] ) ? (string) $this->values['start'] : null );
+		return $this->get( 'coupon.code.datestart' );
 	}
 
 
 	/**
 	 * Sets a new starting point of time, in which the code is available.
 	 *
-	 * @param string New ISO date in YYYY-MM-DD hh:mm:ss format
+	 * @param string $date New ISO date in YYYY-MM-DD hh:mm:ss format
+	 * @return \Aimeos\MShop\Coupon\Item\Code\Iface Coupon code item for chaining method calls
 	 */
 	public function setDateStart( $date )
 	{
-		if( $date == $this->getDateStart() ) { return; }
-
-		$this->checkDateFormat( $date );
-
-		$this->values['start'] = ( $date !== null ? (string) $date : null );
-
-		$this->setModified();
+		return $this->set( 'coupon.code.datestart', $this->checkDateFormat( $date ) );
 	}
 
 
 	/**
 	 * Returns the ending point of time, in which the code is available.
 	 *
-	 * @return string ISO date in YYYY-MM-DD hh:mm:ss format
+	 * @return string|null ISO date in YYYY-MM-DD hh:mm:ss format
 	 */
 	public function getDateEnd()
 	{
-		return ( isset( $this->values['end'] ) ? (string) $this->values['end'] : null );
+		return $this->get( 'coupon.code.dateend' );
 	}
 
 
@@ -157,61 +146,113 @@ class Standard
 	 * Sets a new ending point of time, in which the code is available.
 	 *
 	 * @param string New ISO date in YYYY-MM-DD hh:mm:ss format
+	 * @return \Aimeos\MShop\Coupon\Item\Code\Iface Coupon code item for chaining method calls
 	 */
 	public function setDateEnd( $date )
 	{
-		if( $date == $this->getDateEnd() ) { return; }
-
-		$this->checkDateFormat( $date );
-
-		$this->values['end'] = ( $date !== null ? (string) $date : null );
-
-		$this->setModified();
+		return $this->set( 'coupon.code.dateend', $this->checkDateFormat( $date ) );
 	}
 
 
 	/**
-	 * Sets the item values from the given array.
+	 * Returns reference for the coupon code
+	 * This can be an arbitrary value used by the coupon provider
 	 *
-	 * @param array $list Associative list of item keys and their values
-	 * @return array Associative list of keys and their values that are unknown
+	 * @return string Arbitrary value depending on the coupon provider
 	 */
-	public function fromArray( array $list )
+	public function getRef()
 	{
-		$unknown = array();
-		$list = parent::fromArray( $list );
+		return (string) $this->get( 'coupon.code.ref', '' );
+	}
+
+
+	/**
+	 * Sets the new reference for the coupon code
+	 * This can be an arbitrary value used by the coupon provider
+	 *
+	 * @param string $ref Arbitrary value depending on the coupon provider
+	 * @return \Aimeos\MShop\Coupon\Item\Code\Iface Coupon code item for chaining method calls
+	 */
+	public function setRef( $ref )
+	{
+		return $this->set( 'coupon.code.ref', (string) $ref );
+	}
+
+
+	/**
+	 * Returns the item type
+	 *
+	 * @return string Item type, subtypes are separated by slashes
+	 */
+	public function getResourceType()
+	{
+		return 'coupon/code';
+	}
+
+
+	/**
+	 * Tests if the item is available based on status, time, language and currency
+	 *
+	 * @return boolean True if available, false if not
+	 */
+	public function isAvailable()
+	{
+		return parent::isAvailable()
+			&& ( $this->getDateStart() === null || $this->getDateStart() < $this->date )
+			&& ( $this->getDateEnd() === null || $this->getDateEnd() > $this->date );
+	}
+
+
+	/*
+	 * Sets the item values from the given array and removes that entries from the list
+	 *
+	 * @param array &$list Associative list of item keys and their values
+	 * @param boolean True to set private properties too, false for public only
+	 * @return \Aimeos\MShop\Coupon\Item\Code\Iface Coupon code item for chaining method calls
+	 */
+	public function fromArray( array &$list, $private = false )
+	{
+		$item = parent::fromArray( $list, $private );
 
 		foreach( $list as $key => $value )
 		{
 			switch( $key )
 			{
-				case 'coupon.code.count': $this->setCount( $value ); break;
-				case 'coupon.code.code': $this->setCode( $value ); break;
-				case 'coupon.code.couponid': $this->setCouponId( $value ); break;
-				case 'coupon.code.datestart': $this->setDateStart( $value ); break;
-				case 'coupon.code.dateend': $this->setDateEnd( $value ); break;
-				default: $unknown[$key] = $value;
+				case 'coupon.code.parentid': !$private ?: $item = $item->setParentId( $value ); break;
+				case 'coupon.code.datestart': $item = $item->setDateStart( $value ); break;
+				case 'coupon.code.dateend': $item = $item->setDateEnd( $value ); break;
+				case 'coupon.code.count': $item = $item->setCount( $value ); break;
+				case 'coupon.code.code': $item = $item->setCode( $value ); break;
+				case 'coupon.code.ref': $item = $item->setRef( $value ); break;
+				default: continue 2;
 			}
+
+			unset( $list[$key] );
 		}
 
-		return $unknown;
+		return $item;
 	}
 
 
 	/**
 	 * Returns the item values as array.
 	 *
-	 * @return Associative list of item properties and their values
+	 * @param boolean True to return private properties, false for public only
+	 * @return array Associative list of item properties and their values
 	 */
-	public function toArray()
+	public function toArray( $private = false )
 	{
-		$list = parent::toArray();
+		$list = parent::toArray( $private );
 
-		$list['coupon.code.count'] = $this->getCount();
-		$list['coupon.code.code'] = $this->getCode();
-		$list['coupon.code.couponid'] = $this->getCouponId();
 		$list['coupon.code.datestart'] = $this->getDateStart();
 		$list['coupon.code.dateend'] = $this->getDateEnd();
+		$list['coupon.code.count'] = $this->getCount();
+		$list['coupon.code.code'] = $this->getCode();
+		$list['coupon.code.ref'] = $this->getRef();
+
+		if( $private === true ) {
+			$list['coupon.code.parentid'] = $this->getParentId();
+		}
 
 		return $list;
 	}

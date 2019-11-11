@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Tree
  */
@@ -29,22 +29,22 @@ class Factory
 	 * @return \Aimeos\MW\Tree\Manager\Iface Tree manager object of the requested type
 	 * @throws \Aimeos\MW\Tree\Exception if class isn't found
 	 */
-	static public function createManager( $name, array $config, $resource )
+	public static function create( string $name, array $config, $resource )
 	{
 		if( ctype_alnum( $name ) === false )
 		{
-			$classname = is_string( $name ) ? '\\Aimeos\\MW\\Tree\\Manager\\' . $name : '<not a string>';
-			throw new \Aimeos\MW\Tree\Exception( sprintf( 'Invalid characters in class name "%1$s"', $classname ) );
+			$msg = sprintf( 'Invalid characters in class name "%1$s"', '\Aimeos\MW\Tree\Manager\\' . $name );
+			throw new \Aimeos\MW\Tree\Exception( $msg );
 		}
 
-		$iface = '\\Aimeos\\MW\\Tree\\Manager\\Iface';
-		$classname = '\\Aimeos\\MW\\Tree\\Manager\\' . $name;
+		$iface = \Aimeos\MW\Tree\Manager\Iface::class;
+		$classname = '\Aimeos\MW\Tree\Manager\\' . $name;
 
 		if( class_exists( $classname ) === false ) {
 			throw new \Aimeos\MW\Tree\Exception( sprintf( 'Class "%1$s" not available', $classname ) );
 		}
 
-		$manager =  new $classname( $config, $resource );
+		$manager = new $classname( $config, $resource );
 
 		if( !( $manager instanceof $iface ) ) {
 			throw new \Aimeos\MW\Tree\Exception( sprintf( 'Class "%1$s" does not implement interface "%2$s"', $classname, $iface ) );

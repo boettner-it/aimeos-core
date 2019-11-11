@@ -1,51 +1,35 @@
 <?php
 
+/**
+ * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
+ * @copyright Aimeos (aimeos.org), 2015-2018
+ */
+
+
 namespace Aimeos\Controller\Jobs;
 
 
-/**
- * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
- */
-class BaseTest extends \PHPUnit_Framework_TestCase
+class BaseTest extends \PHPUnit\Framework\TestCase
 {
-	private $object;
-
-
-	public function setUp()
+	public function testGetValue()
 	{
-		$context = \TestHelper::getContext();
-		$aimeos = \TestHelper::getAimeos();
+		$context = \TestHelperJobs::getContext();
+		$aimeos = \TestHelperJobs::getAimeos();
 
-		$this->object = new TestAbstract( $context, $aimeos );
-	}
+		$object = new TestBase( $context, $aimeos );
 
-
-	public function testGetTypeItemNotFound()
-	{
-		$this->setExpectedException( '\\Aimeos\\Controller\\Jobs\\Exception' );
-		$this->object->getTypeItemPublic( 'product/type', 'product', 'test' );
-	}
-
-
-	public function testGetTemplateNotFound()
-	{
-		$this->setExpectedException( '\\Aimeos\\Controller\\Jobs\\Exception' );
-		$this->object->getTemplatePublic( 'test', 'test' );
+		$this->assertEquals( 'value', $object->getValuePublic( ['key' => ' value '], 'key', 'def' ) );
+		$this->assertEquals( 'def', $object->getValuePublic( ['key' => ' '], 'key', 'def' ) );
+		$this->assertEquals( 'def', $object->getValuePublic( [], 'key', 'def' ) );
 	}
 }
 
 
 
-class TestAbstract extends \Aimeos\Controller\Jobs\Base
+class TestBase extends \Aimeos\Controller\Jobs\Base
 {
-	public function getTemplatePublic( $confpath, $default )
+	public function getValuePublic( $list, $key, $default )
 	{
-		$this->getTemplate( $confpath, $default );
-	}
-
-	public function getTypeItemPublic( $prefix, $domain, $code )
-	{
-		$this->getTypeItem( $prefix, $domain, $code );
+		return $this->getValue( $list, $key, $default );
 	}
 }

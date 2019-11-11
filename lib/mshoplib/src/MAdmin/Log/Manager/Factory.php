@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MAdmin
  * @subpackage Log
  */
@@ -26,10 +26,10 @@ class Factory
 	 * Creates an admin log manager object.
 	 *
 	 * @param \Aimeos\MShop\Context\Item\Iface $context Context instance with necessary objects
-	 * @param string $name Manager name
+	 * @param string|null $name Manager name
 	 * @return \Aimeos\MAdmin\Log\Manager\Iface Log manager object
 	 */
-	public static function createManager( \Aimeos\MShop\Context\Item\Iface $context, $name = null )
+	public static function create( \Aimeos\MShop\Context\Item\Iface $context, $name = null )
 	{
 		/** madmin/log/manager/name
 		 * Class name of the used log manager implementation
@@ -70,14 +70,14 @@ class Factory
 
 		if( ctype_alnum( $name ) === false )
 		{
-			$classname = is_string( $name ) ? '\\Aimeos\\MAdmin\\Log\\Manager\\' . $name : '<not a string>';
+			$classname = is_string( $name ) ? '\Aimeos\MAdmin\Log\Manager\\' . $name : '<not a string>';
 			throw new \Aimeos\MAdmin\Log\Exception( sprintf( 'Invalid characters in class name "%1$s"', $classname ) );
 		}
 
-		$iface = '\\Aimeos\\MAdmin\\Log\\Manager\\Iface';
-		$classname = '\\Aimeos\\MAdmin\\Log\\Manager\\' . $name;
+		$iface = \Aimeos\MAdmin\Log\Manager\Iface::class;
+		$classname = '\Aimeos\MAdmin\Log\Manager\\' . $name;
 
-		$manager = self::createManagerBase( $context, $classname, $iface );
+		$manager = self::createManager( $context, $classname, $iface );
 
 		/** madmin/log/manager/decorators/excludes
 		 * Excludes decorators added by the "common" option from the log manager

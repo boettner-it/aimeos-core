@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2014
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2014
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MAdmin
  * @subpackage Common
  */
@@ -56,8 +56,8 @@ abstract class Base
 		 * @since 2014.03
 		 * @category Developer
 		 */
-		$decorators = $config->get( 'madmin/common/manager/decorators/default', array() );
-		$excludes = $config->get( 'madmin/' . $domain . '/manager/decorators/excludes', array() );
+		$decorators = $config->get( 'madmin/common/manager/decorators/default', [] );
+		$excludes = $config->get( 'madmin/' . $domain . '/manager/decorators/excludes', [] );
 
 		foreach( $decorators as $key => $name )
 		{
@@ -66,15 +66,15 @@ abstract class Base
 			}
 		}
 
-		$classprefix = '\\Aimeos\\MShop\\Common\\Manager\\Decorator\\';
+		$classprefix = '\Aimeos\MShop\Common\Manager\Decorator\\';
 		$manager = self::addDecorators( $context, $manager, $decorators, $classprefix );
 
-		$classprefix = '\\Aimeos\\MShop\\Common\\Manager\\Decorator\\';
-		$decorators = $config->get( 'madmin/' . $domain . '/manager/decorators/global', array() );
+		$classprefix = '\Aimeos\MShop\Common\Manager\Decorator\\';
+		$decorators = $config->get( 'madmin/' . $domain . '/manager/decorators/global', [] );
 		$manager = self::addDecorators( $context, $manager, $decorators, $classprefix );
 
-		$classprefix = '\\Aimeos\\MShop\\' . ucfirst( $domain ) . '\\Manager\\Decorator\\';
-		$decorators = $config->get( 'madmin/' . $domain . '/manager/decorators/local', array() );
+		$classprefix = '\Aimeos\MShop\\' . ucfirst( $domain ) . '\Manager\Decorator\\';
+		$decorators = $config->get( 'madmin/' . $domain . '/manager/decorators/local', [] );
 		$manager = self::addDecorators( $context, $manager, $decorators, $classprefix );
 
 		return $manager;

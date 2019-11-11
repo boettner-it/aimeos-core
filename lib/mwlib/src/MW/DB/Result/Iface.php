@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage DB
  */
@@ -32,14 +32,15 @@ interface Iface
 	 * Retrieves the next row from database result set.
 	 *
 	 * @param integer $style The data can be returned as associative or numerical array
-	 * @return List (numeric or associative array) of columns returned by the SQL statement
+	 * @return array|false Numeric or associative array of columns returned by the database or false if no more rows are available
 	 */
-	public function fetch( $style = \Aimeos\MW\DB\Result\Base::ASSOC );
+	public function fetch( $style = \Aimeos\MW\DB\Result\Base::FETCH_ASSOC );
 
 
 	/**
 	 * Cleans up pending database result sets.
-	 * @return void
+	 *
+	 * @return \Aimeos\MW\DB\Connection\Iface Connection instance for method chaining
 	 */
 	public function finish();
 

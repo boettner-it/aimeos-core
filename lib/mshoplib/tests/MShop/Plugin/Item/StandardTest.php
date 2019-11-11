@@ -1,51 +1,41 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 
 namespace Aimeos\MShop\Plugin\Item;
 
 
-/**
- * Test class for \Aimeos\MShop\Plugin\Item\Standard
- */
-class StandardTest extends \PHPUnit_Framework_TestCase
+class StandardTest extends \PHPUnit\Framework\TestCase
 {
 	private $object;
 	private $values;
 
 
-	/**
-	 * Sets up the fixture. This method is called before a test is executed.
-	 */
 	protected function setUp()
 	{
 		$this->values = array(
-			'id' => 123,
-			'siteid'=>99,
-			'typeid' => 2,
-			'label' => 'unitTestPlugin',
-			'type' => 'order',
-			'provider' => 'provider',
-			'config' => array( 'limit'=>'40' ),
-			'pos' => 0,
-			'status' => 1,
-			'mtime' => '2011-01-01 00:00:02',
-			'ctime' => '2011-01-01 00:00:01',
-			'editor' => 'unitTestUser'
+			'plugin.id' => 123,
+			'plugin.siteid' => 99,
+			'plugin.label' => 'unitTestPlugin',
+			'plugin.type' => 'order',
+			'plugin.provider' => 'provider',
+			'plugin.config' => array( 'limit' => '40' ),
+			'plugin.position' => 0,
+			'plugin.status' => 1,
+			'plugin.mtime' => '2011-01-01 00:00:02',
+			'plugin.ctime' => '2011-01-01 00:00:01',
+			'plugin.editor' => 'unitTestUser'
 		);
 
 		$this->object = new \Aimeos\MShop\Plugin\Item\Standard( $this->values );
 	}
 
 
-	/**
-	 * Tears down the fixture. This method is called after a test is executed.
-	 */
 	protected function tearDown()
 	{
 		unset( $this->object );
@@ -60,7 +50,9 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testSetId()
 	{
-		$this->object->setId( null );
+		$return = $this->object->setId( null );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Plugin\Item\Iface::class, $return );
 		$this->assertEquals( null, $this->object->getId() );
 		$this->assertEquals( true, $this->object->isModified() );
 	}
@@ -71,17 +63,19 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals( 99, $this->object->getSiteId() );
 	}
 
-	public function testGetTypeId()
+
+	public function testGetType()
 	{
-		$this->assertEquals( 2, $this->object->getTypeId() );
+		$this->assertEquals( 'order', $this->object->getType() );
 	}
 
 
-	public function testSetTypeId()
+	public function testSetType()
 	{
-		$this->object->setTypeId( 99 );
-		$this->assertEquals( 99, $this->object->getTypeId() );
+		$return = $this->object->setType( 'test' );
 
+		$this->assertInstanceOf( \Aimeos\MShop\Plugin\Item\Iface::class, $return );
+		$this->assertEquals( 'test', $this->object->getType() );
 		$this->assertTrue( $this->object->isModified() );
 	}
 
@@ -94,7 +88,9 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testSetLabel()
 	{
-		$this->object->setLabel( 'anotherLabel' );
+		$return = $this->object->setLabel( 'anotherLabel' );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Plugin\Item\Iface::class, $return );
 		$this->assertEquals( 'anotherLabel', $this->object->getLabel() );
 		$this->assertEquals( true, $this->object->isModified() );
 	}
@@ -108,9 +104,18 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testSetProvider()
 	{
-		$this->object->setProvider( 'newProvider' );
+		$return = $this->object->setProvider( 'newProvider' );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Plugin\Item\Iface::class, $return );
 		$this->assertEquals( 'newProvider', $this->object->getProvider() );
 		$this->assertEquals( true, $this->object->isModified() );
+	}
+
+
+	public function testSetProviderInvalid()
+	{
+		$this->setExpectedException( \Aimeos\MShop\Plugin\Exception::class );
+		$this->object->setProvider( ',newProvider' );
 	}
 
 
@@ -120,9 +125,17 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	}
 
 
+	public function testGetConfigValue()
+	{
+		$this->assertEquals( '40', $this->object->getConfigValue( 'limit' ) );
+	}
+
+
 	public function testSetConfig()
 	{
-		$this->object->setConfig( array( 'threshold'=>'20.00' ) );
+		$return = $this->object->setConfig( array( 'threshold' => '20.00' ) );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Plugin\Item\Iface::class, $return );
 		$this->assertEquals( array( 'threshold'=>'20.00' ), $this->object->getConfig() );
 		$this->assertEquals( true, $this->object->isModified() );
 	}
@@ -136,7 +149,9 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testSetPosition()
 	{
-		$this->object->setPosition( 1 );
+		$return = $this->object->setPosition( 1 );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Plugin\Item\Iface::class, $return );
 		$this->assertEquals( 1, $this->object->getPosition() );
 		$this->assertTrue( $this->object->isModified() );
 	}
@@ -150,7 +165,9 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testSetStatus()
 	{
-		$this->object->setStatus( 0 );
+		$return = $this->object->setStatus( 0 );
+
+		$this->assertInstanceOf( \Aimeos\MShop\Plugin\Item\Iface::class, $return );
 		$this->assertEquals( 0, $this->object->getStatus() );
 		$this->assertTrue( $this->object->isModified() );
 	}
@@ -174,41 +191,47 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	}
 
 
+	public function testGetResourceType()
+	{
+		$this->assertEquals( 'plugin', $this->object->getResourceType() );
+	}
+
+
 	public function testFromArray()
 	{
 		$item = new \Aimeos\MShop\Plugin\Item\Standard();
 
-		$list = array(
+		$list = $entries = array(
 			'plugin.id' => 1,
-			'plugin.typeid' => 2,
+			'plugin.type' => 'test',
 			'plugin.label' => 'test item',
 			'plugin.provider' => 'FreeShipping',
 			'plugin.config' => array( 'test' ),
 			'plugin.status' => 0,
 		);
 
-		$unknown = $item->fromArray( $list );
+		$item = $item->fromArray( $entries, true );
 
-		$this->assertEquals( array(), $unknown );
-
+		$this->assertEquals( [], $entries );
 		$this->assertEquals( $list['plugin.id'], $item->getId() );
-		$this->assertEquals( $list['plugin.typeid'], $item->getTypeId() );
+		$this->assertEquals( $list['plugin.type'], $item->getType() );
 		$this->assertEquals( $list['plugin.label'], $item->getLabel() );
 		$this->assertEquals( $list['plugin.provider'], $item->getProvider() );
 		$this->assertEquals( $list['plugin.config'], $item->getConfig() );
 		$this->assertEquals( $list['plugin.status'], $item->getStatus() );
+		$this->assertNull( $item->getSiteId() );
 	}
 
 
 	public function testToArray()
 	{
-		$arrayObject = $this->object->toArray();
+		$arrayObject = $this->object->toArray( true );
+
 		$this->assertEquals( count( $this->values ), count( $arrayObject ) );
 
 		$this->assertEquals( $this->object->getId(), $arrayObject['plugin.id'] );
 		$this->assertEquals( $this->object->getSiteId(), $arrayObject['plugin.siteid'] );
 		$this->assertEquals( $this->object->getType(), $arrayObject['plugin.type'] );
-		$this->assertEquals( $this->object->getTypeId(), $arrayObject['plugin.typeid'] );
 		$this->assertEquals( $this->object->getLabel(), $arrayObject['plugin.label'] );
 		$this->assertEquals( $this->object->getProvider(), $arrayObject['plugin.provider'] );
 		$this->assertEquals( $this->object->getConfig(), $arrayObject['plugin.config'] );
@@ -216,5 +239,23 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals( $this->object->getTimeCreated(), $arrayObject['plugin.ctime'] );
 		$this->assertEquals( $this->object->getTimeModified(), $arrayObject['plugin.mtime'] );
 		$this->assertEquals( $this->object->getEditor(), $arrayObject['plugin.editor'] );
+	}
+
+
+	public function testIsAvailable()
+	{
+		$this->assertTrue( $this->object->isAvailable() );
+		$this->object->setAvailable( false );
+		$this->assertFalse( $this->object->isAvailable() );
+	}
+
+
+	public function testIsAvailableOnStatus()
+	{
+		$this->assertTrue( $this->object->isAvailable() );
+		$this->object->setStatus( 0 );
+		$this->assertFalse( $this->object->isAvailable() );
+		$this->object->setStatus( -1 );
+		$this->assertFalse( $this->object->isAvailable() );
 	}
 }

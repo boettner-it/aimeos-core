@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2012
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2012
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Service
  */
@@ -23,19 +23,35 @@ class PostPay
 	implements \Aimeos\MShop\Service\Provider\Payment\Iface
 {
 	/**
-	 * Tries to get an authorization or captures the money immediately for the given order if capturing the money
-	 * separately isn't supported or not configured by the shop owner.
+	 * Executes the payment again for the given order if supported.
+	 * This requires support of the payment gateway and token based payment
 	 *
 	 * @param \Aimeos\MShop\Order\Item\Iface $order Order invoice object
-	 * @param array $params Request parameter if available
-	 * @return \Aimeos\MShop\Common\Item\Helper\Form\Standard Form object with URL, action and parameters to redirect to
-	 * 	(e.g. to an external server of the payment provider or to a local success page)
+	 * @return void
 	 */
-	public function process( \Aimeos\MShop\Order\Item\Iface $order, array $params = array() )
+	public function repay( \Aimeos\MShop\Order\Item\Iface $order )
 	{
 		$order->setPaymentStatus( \Aimeos\MShop\Order\Item\Base::PAY_AUTHORIZED );
 		$this->saveOrder( $order );
+	}
 
-		return parent::process( $order, $params );
+
+	/**
+	 * Updates the orders for whose status updates have been received by the confirmation page
+	 *
+	 * @param \Psr\Http\Message\ServerRequestInterface $request Request object with parameters and request body
+	 * @param \Aimeos\MShop\Order\Item\Iface $order Order item that should be updated
+	 * @return \Aimeos\MShop\Order\Item\Iface Updated order item
+	 * @throws \Aimeos\MShop\Service\Exception If updating the orders failed
+	 */
+	public function updateSync( \Psr\Http\Message\ServerRequestInterface $request, \Aimeos\MShop\Order\Item\Iface $order )
+	{
+		if( $order->getPaymentStatus() === \Aimeos\MShop\Order\Item\Base::PAY_UNFINISHED )
+		{
+			$order->setPaymentStatus( \Aimeos\MShop\Order\Item\Base::PAY_AUTHORIZED );
+			$this->saveOrder( $order );
+		}
+
+		return $order;
 	}
 }

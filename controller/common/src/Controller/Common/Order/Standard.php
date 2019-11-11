@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2014
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2014
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package Controller
  * @subpackage Common
  */
@@ -52,11 +52,14 @@ class Standard
 	 * meantime. This can lead to an oversell of products!
 	 *
 	 * @param \Aimeos\MShop\Order\Item\Iface $orderItem Order item object
+	 * @return \Aimeos\MShop\Order\Item\Iface Order item object
 	 */
 	public function block( \Aimeos\MShop\Order\Item\Iface $orderItem )
 	{
 		$this->updateStatus( $orderItem, \Aimeos\MShop\Order\Item\Status\Base::STOCK_UPDATE, 1, -1 );
 		$this->updateStatus( $orderItem, \Aimeos\MShop\Order\Item\Status\Base::COUPON_UPDATE, 1, -1 );
+
+		return $orderItem;
 	}
 
 
@@ -77,11 +80,14 @@ class Standard
 	 * meantime. This can lead to an oversell of products!
 	 *
 	 * @param \Aimeos\MShop\Order\Item\Iface $orderItem Order item object
+	 * @return \Aimeos\MShop\Order\Item\Iface Order item object
 	 */
 	public function unblock( \Aimeos\MShop\Order\Item\Iface $orderItem )
 	{
 		$this->updateStatus( $orderItem, \Aimeos\MShop\Order\Item\Status\Base::STOCK_UPDATE, 0, +1 );
 		$this->updateStatus( $orderItem, \Aimeos\MShop\Order\Item\Status\Base::COUPON_UPDATE, 0, +1 );
+
+		return $orderItem;
 	}
 
 
@@ -98,6 +104,7 @@ class Standard
 	 * nothing as long as the payment status hasn't changed in the meantime.
 	 *
 	 * @param \Aimeos\MShop\Order\Item\Iface $orderItem Order item object
+	 * @return \Aimeos\MShop\Order\Item\Iface Order item object
 	 */
 	public function update( \Aimeos\MShop\Order\Item\Iface $orderItem )
 	{
@@ -116,6 +123,8 @@ class Standard
 				$this->block( $orderItem );
 				break;
 		}
+
+		return $orderItem;
 	}
 
 
@@ -128,14 +137,47 @@ class Standard
 	 */
 	protected function addStatusItem( $parentid, $type, $value )
 	{
-		$manager = \Aimeos\MShop\Factory::createManager( $this->getContext(), 'order/status' );
+		$manager = \Aimeos\MShop::create( $this->getContext(), 'order/status' );
 
 		$item = $manager->createItem();
 		$item->setParentId( $parentid );
 		$item->setType( $type );
 		$item->setValue( $value );
 
-		$manager->saveItem( $item );
+		$manager->saveItem( $item, false );
+	}
+
+
+	/**
+	 * Returns the product articles and their bundle product codes for the given article ID
+	 *
+	 * @param string $prodId Product ID of the article whose stock level changed
+	 * @return array Associative list of article codes as keys and lists of bundle product codes as values
+	 */
+	protected function getBundleMap( $prodId )
+	{
+		$bundleMap = [];
+		$productManager = \Aimeos\MShop::create( $this->context, 'product' );
+
+		$search = $productManager->createSearch();
+		$func = $search->createFunction( 'product:has', ['product', 'default', $prodId] );
+		$expr = array(
+			$search->compare( '==', 'product.type', 'bundle' ),
+			$search->compare( '!=', $func, null ),
+		);
+		$search->setConditions( $search->combine( '&&', $expr ) );
+		$search->setSlice( 0, 0x7fffffff );
+
+		$bundleItems = $productManager->searchItems( $search, array( 'product' ) );
+
+		foreach( $bundleItems as $bundleItem )
+		{
+			foreach( $bundleItem->getRefItems( 'product', null, 'default' ) as $item ) {
+				$bundleMap[$item->getCode()][] = $bundleItem->getCode();
+			}
+		}
+
+		return $bundleMap;
 	}
 
 
@@ -154,17 +196,19 @@ class Standard
 	 * Returns the last status item for the given order ID.
 	 *
 	 * @param string $parentid Order ID
+	 * @param string $type Status type constant
+	 * @param string $status New status value stored along with the order item
 	 * @return \Aimeos\MShop\Order\Item\Status\Iface|false Order status item or false if no item is available
 	 */
-	protected function getLastStatusItem( $parentid, $type )
+	protected function getLastStatusItem( $parentid, $type, $status )
 	{
-		$manager = \Aimeos\MShop\Factory::createManager( $this->getContext(), 'order/status' );
+		$manager = \Aimeos\MShop::create( $this->getContext(), 'order/status' );
 
 		$search = $manager->createSearch();
 		$expr = array(
 			$search->compare( '==', 'order.status.parentid', $parentid ),
 			$search->compare( '==', 'order.status.type', $type ),
-			$search->compare( '!=', 'order.status.value', '' ),
+			$search->compare( '==', 'order.status.value', $status ),
 		);
 		$search->setConditions( $search->combine( '&&', $expr ) );
 		$search->setSortations( array( $search->sort( '-', 'order.status.ctime' ) ) );
@@ -177,6 +221,29 @@ class Standard
 
 
 	/**
+	 * Returns the stock items for the given product codes
+	 *
+	 * @param array $prodCodes List of product codes
+	 * @param string $stockType Stock type code the stock items must belong to
+	 * @return \Aimeos\MShop\Stock\Item\Iface[] Associative list of stock IDs as keys and stock items as values
+	 */
+	protected function getStockItems( array $prodCodes, $stockType )
+	{
+		$stockManager = \Aimeos\MShop::create( $this->context, 'stock' );
+
+		$search = $stockManager->createSearch();
+		$expr = array(
+			$search->compare( '==', 'stock.productcode', $prodCodes ),
+			$search->compare( '==', 'stock.type', $stockType ),
+		);
+		$search->setConditions( $search->combine( '&&', $expr ) );
+		$search->setSlice( 0, count( $prodCodes ) );
+
+		return $stockManager->searchItems( $search );
+	}
+
+
+	/**
 	 * Increases or decreses the coupon code counts referenced in the order by the given value.
 	 *
 	 * @param \Aimeos\MShop\Order\Item\Iface $orderItem Order item object
@@ -185,8 +252,8 @@ class Standard
 	protected function updateCoupons( \Aimeos\MShop\Order\Item\Iface $orderItem, $how = +1 )
 	{
 		$context = $this->getContext();
-		$manager = \Aimeos\MShop\Factory::createManager( $context, 'order/base/coupon' );
-		$couponCodeManager = \Aimeos\MShop\Factory::createManager( $context, 'coupon/code' );
+		$manager = \Aimeos\MShop::create( $context, 'order/base/coupon' );
+		$couponCodeManager = \Aimeos\MShop::create( $context, 'coupon/code' );
 
 		$search = $manager->createSearch();
 		$search->setConditions( $search->compare( '==', 'order.base.coupon.baseid', $orderItem->getBaseId() ) );
@@ -202,7 +269,7 @@ class Standard
 				$items = $manager->searchItems( $search );
 
 				foreach( $items as $item ) {
-					$couponCodeManager->increase( $item->getCode(), $how * 1 );
+					$couponCodeManager->decrease( $item->getCode(), $how * -1 );
 				}
 
 				$count = count( $items );
@@ -231,7 +298,7 @@ class Standard
 	 */
 	protected function updateStatus( \Aimeos\MShop\Order\Item\Iface $orderItem, $type, $status, $value )
 	{
-		$statusItem = $this->getLastStatusItem( $orderItem->getId(), $type );
+		$statusItem = $this->getLastStatusItem( $orderItem->getId(), $type, $status );
 
 		if( $statusItem !== false && $statusItem->getValue() == $status ) {
 			return;
@@ -256,9 +323,8 @@ class Standard
 	protected function updateStock( \Aimeos\MShop\Order\Item\Iface $orderItem, $how = +1 )
 	{
 		$context = $this->getContext();
-		$productManager = \Aimeos\MShop\Factory::createManager( $context, 'product' );
-		$stockManager = \Aimeos\MShop\Factory::createManager( $context, 'product/stock' );
-		$manager = \Aimeos\MShop\Factory::createManager( $context, 'order/base/product' );
+		$stockManager = \Aimeos\MShop::create( $context, 'stock' );
+		$manager = \Aimeos\MShop::create( $context, 'order/base/product' );
 
 		$search = $manager->createSearch();
 		$search->setConditions( $search->compare( '==', 'order.base.product.baseid', $orderItem->getBaseId() ) );
@@ -275,22 +341,14 @@ class Standard
 
 				foreach( $items as $item )
 				{
-					$stockManager->increase( $item->getProductCode(), $item->getWarehouseCode(), $how * $item->getQuantity() );
+					$stockManager->decrease( [$item->getProductCode() => $how * -1 * $item->getQuantity()], $item->getStockType() );
 
-					// recalculate stock level of product bundles
-					$search = $productManager->createSearch();
-					$expr = array(
-						$search->compare( '==', 'product.type.code', 'bundle' ),
-						$search->compare( '==', 'product.lists.domain', 'product' ),
-						$search->compare( '==', 'product.lists.refid', $item->getProductId() ),
-						$search->compare( '==', 'product.lists.type.code', 'default' ),
-					);
-					$search->setConditions( $search->combine( '&&', $expr ) );
-					$search->setSlice( 0, 0x7fffffff );
-
-					$bundleItems = $productManager->searchItems( $search, array( 'product' ) );
-
-					$this->updateStockBundle( $bundleItems, $item->getWarehouseCode() );
+					switch( $item->getType() ) {
+						case 'default':
+							$this->updateStockBundle( $item->getProductId(), $item->getStockType() ); break;
+						case 'select':
+							$this->updateStockSelection( $item->getProductId(), $item->getStockType() ); break;
+					}
 				}
 
 				$count = count( $items );
@@ -310,74 +368,98 @@ class Standard
 
 
 	/**
-	 * Updates the stock levels of bundles for a specific warehouse
+	 * Updates the stock levels of bundles for a specific type
 	 *
-	 * @param array $bundleItems List of items implementing \Aimeos\MShop\Product\Item\Iface
-	 * @param string $whcode Unique warehouse code
+	 * @param string $prodId Unique product ID
+	 * @param string $stockType Unique stock type
 	 */
-	protected function updateStockBundle( array $bundleItems, $whcode )
+	protected function updateStockBundle( $prodId, $stockType )
 	{
-		$bundleMap = $prodIds = $stock = array();
-		$stockManager = \Aimeos\MShop\Factory::createManager( $this->getContext(), 'product/stock' );
-
-
-		foreach( $bundleItems as $bundleId => $bundleItem )
-		{
-			foreach( $bundleItem->getRefItems( 'product', null, 'default' ) as $id => $item )
-			{
-				$bundleMap[$id][] = $bundleId;
-				$prodIds[] = $id;
-			}
-		}
-
-		if( empty( $prodIds ) ) {
+		if( ( $bundleMap = $this->getBundleMap( $prodId ) ) === [] ) {
 			return;
 		}
 
 
-		$search = $stockManager->createSearch();
-		$expr = array(
-			$search->compare( '==', 'product.stock.productid', $prodIds ),
-			$search->compare( '==', 'product.stock.warehouse.code', $whcode ),
-		);
-		$search->setConditions( $search->combine( '&&', $expr ) );
-		$search->setSlice( 0, 0x7fffffff );
+		$bundleCodes = $stock = [];
 
-		foreach( $stockManager->searchItems( $search ) as $stockItem )
+		foreach( $this->getStockItems( array_keys( $bundleMap ), $stockType ) as $stockItem )
 		{
-			if( isset( $bundleMap[$stockItem->getProductId()] ) && $stockItem->getStockLevel() !== null )
+			if( isset( $bundleMap[$stockItem->getProductCode()] ) && $stockItem->getStockLevel() !== null )
 			{
-				foreach( $bundleMap[$stockItem->getProductId()] as $bundleId )
+				foreach( $bundleMap[$stockItem->getProductCode()] as $bundleCode )
 				{
-					if( isset( $stock[$bundleId] ) ) {
-						$stock[$bundleId] = min( $stock[$bundleId], $stockItem->getStockLevel() );
+					if( isset( $stock[$bundleCode] ) ) {
+						$stock[$bundleCode] = min( $stock[$bundleCode], $stockItem->getStockLevel() );
 					} else {
-						$stock[$bundleId] = $stockItem->getStockLevel();
+						$stock[$bundleCode] = $stockItem->getStockLevel();
 					}
+
+					$bundleCodes[$bundleCode] = null;
 				}
 			}
 		}
-
 
 		if( empty( $stock ) ) {
 			return;
 		}
 
-		$search = $stockManager->createSearch();
-		$expr = array(
-				$search->compare( '==', 'product.stock.productid', array_keys( $bundleItems ) ),
-				$search->compare( '==', 'product.stock.warehouse.code', $whcode ),
-		);
-		$search->setConditions( $search->combine( '&&', $expr ) );
-		$search->setSlice( 0, 0x7fffffff );
+		$stockManager = \Aimeos\MShop::create( $this->context, 'stock' );
 
-		foreach( $stockManager->searchItems( $search ) as $item )
+		foreach( $this->getStockItems( array_keys( $bundleCodes ), $stockType ) as $item )
 		{
-			if( isset( $stock[$item->getProductId()] ) )
+			if( isset( $stock[$item->getProductCode()] ) )
 			{
-				$item->setStockLevel( $stock[$item->getProductId()] );
+				$item->setStockLevel( $stock[$item->getProductCode()] );
 				$stockManager->saveItem( $item );
 			}
 		}
+	}
+
+
+	/**
+	 * Updates the stock levels of selection products for a specific type
+	 *
+	 * @param string $prodId Unique product ID
+	 * @param string $stocktype Unique stock type
+	 */
+	protected function updateStockSelection( $prodId, $stocktype )
+	{
+		$productManager = \Aimeos\MShop::create( $this->context, 'product' );
+		$stockManager = \Aimeos\MShop::create( $this->context, 'stock' );
+
+		$productItem = $productManager->getItem( $prodId, array( 'product' ) );
+		$prodCodes = array( $productItem->getCode() );
+		$sum = 0; $selStockItem = null;
+
+		foreach( $productItem->getRefItems( 'product', 'default', 'default' ) as $product ) {
+			$prodCodes[] = $product->getCode();
+		}
+
+		foreach( $this->getStockItems( $prodCodes, $stocktype ) as $stockItem )
+		{
+			if( $stockItem->getProductCode() === $productItem->getCode() )
+			{
+				$selStockItem = $stockItem;
+				continue;
+			}
+
+			if( ( $stock = $stockItem->getStockLevel() ) === null ) {
+				$sum = null;
+			}
+
+			if( $sum !== null ) {
+				$sum += $stock;
+			}
+		}
+
+		if( $selStockItem === null )
+		{
+			$selStockItem = $stockManager->createItem();
+			$selStockItem->setProductCode( $productItem->getCode() );
+			$selStockItem->setType( $stocktype );
+		}
+
+		$selStockItem->setStockLevel( $sum );
+		$stockManager->saveItem( $selStockItem, false );
 	}
 }

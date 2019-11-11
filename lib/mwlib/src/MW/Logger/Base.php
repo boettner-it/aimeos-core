@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Logger
  */
@@ -64,24 +64,24 @@ abstract class Base
 	/**
 	 * Checks if the given log constant is valid
 	 *
-	 * @param integer $level Log constant
+	 * @param int $level Log constant
+	 * @return mixed Log level
 	 * @throws \Aimeos\MW\Logger\Exception If log constant is unknown
 	 */
-	protected function checkLogLevel( $level )
+	protected function getLogLevel( int $level )
 	{
 		switch( $level )
 		{
-			case \Aimeos\MW\Logger\Base::EMERG:
-			case \Aimeos\MW\Logger\Base::ALERT:
-			case \Aimeos\MW\Logger\Base::CRIT:
-			case \Aimeos\MW\Logger\Base::ERR:
-			case \Aimeos\MW\Logger\Base::WARN:
-			case \Aimeos\MW\Logger\Base::NOTICE:
-			case \Aimeos\MW\Logger\Base::INFO:
-			case \Aimeos\MW\Logger\Base::DEBUG:
-				break;
-			default:
-				throw new \Aimeos\MW\Logger\Exception( sprintf( 'Invalid log level constant "%1$d"', $level ) );
+			case self::EMERG: return 'emergency';
+			case self::ALERT: return 'alert';
+			case self::CRIT: return 'critical';
+			case self::ERR: return 'error';
+			case self::WARN: return 'warning';
+			case self::NOTICE: return 'notice';
+			case self::INFO: return 'info';
+			case self::DEBUG: return 'debug';
 		}
+
+		throw new \Aimeos\MW\Logger\Exception( sprintf( 'Invalid log level constant "%1$d"', $level ) );
 	}
 }

@@ -1,45 +1,31 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 
 namespace Aimeos\MShop\Order\Manager\Base;
 
 
-/**
- * Test class for \Aimeos\MShop\Order\Manager\Standard.
- */
-class StandardTest extends \PHPUnit_Framework_TestCase
+class StandardTest extends \PHPUnit\Framework\TestCase
 {
 	private $object;
 	private $context;
 	private $editor = '';
 
 
-	/**
-	 * Sets up the fixture, for example, opens a network connection.
-	 * This method is called before a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function setUp()
 	{
-		$this->editor = \TestHelper::getContext()->getEditor();
-		$this->context = \TestHelper::getContext();
+		$this->context = \TestHelperMShop::getContext();
+		$this->editor = $this->context->getEditor();
+
 		$this->object = new \Aimeos\MShop\Order\Manager\Base\Standard( $this->context );
 	}
 
 
-	/**
-	 * Tears down the fixture, for example, closes a network connection.
-	 * This method is called after a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function tearDown()
 	{
 		unset( $this->object );
@@ -49,7 +35,7 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	public function testAggregate()
 	{
 		$search = $this->object->createSearch();
-		$search->setConditions( $search->compare( '==', 'order.base.editor', 'core:unittest' ) );
+		$search->setConditions( $search->compare( '==', 'order.base.editor', 'core:lib/mshoplib' ) );
 		$result = $this->object->aggregate( $search, 'order.base.rebate' );
 
 		$this->assertEquals( 3, count( $result ) );
@@ -58,21 +44,65 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	}
 
 
-	public function testCleanup()
+	public function testAggregateAvg()
 	{
-		$this->object->cleanup( array( -1 ) );
+		$search = $this->object->createSearch();
+		$search->setConditions( $search->compare( '==', 'order.base.editor', 'core:lib/mshoplib' ) );
+		$result = $this->object->aggregate( $search, 'order.base.address.email', 'order.base.price', 'avg' );
+
+		$this->assertEquals( 1, count( $result ) );
+		$this->assertArrayHasKey( 'test@example.com', $result );
+		$this->assertEquals( '896.86', round( $result['test@example.com'], 2 ) );
+	}
+
+
+	public function testAggregateSum()
+	{
+		$search = $this->object->createSearch();
+		$search->setConditions( $search->compare( '==', 'order.base.editor', 'core:lib/mshoplib' ) );
+		$result = $this->object->aggregate( $search, 'order.base.address.email', 'order.base.price', 'sum' );
+
+		$this->assertEquals( 1, count( $result ) );
+		$this->assertArrayHasKey( 'test@example.com', $result );
+		$this->assertEquals( '6278.00', $result['test@example.com'] );
+	}
+
+
+	public function testClear()
+	{
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Manager\Iface::class, $this->object->clear( [-1] ) );
+	}
+
+
+	public function testDeleteItems()
+	{
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Manager\Iface::class, $this->object->deleteItems( [-1] ) );
+	}
+
+
+	public function testGetResourceType()
+	{
+		$result = $this->object->getResourceType();
+
+		$this->assertContains( 'order/base', $result );
+		$this->assertContains( 'order/base/address', $result );
+		$this->assertContains( 'order/base/coupon', $result );
+		$this->assertContains( 'order/base/product', $result );
+		$this->assertContains( 'order/base/product/attribute', $result );
+		$this->assertContains( 'order/base/service', $result );
+		$this->assertContains( 'order/base/service/attribute', $result );
 	}
 
 
 	public function testCreateItem()
 	{
-		$this->assertInstanceOf( '\\Aimeos\\MShop\\Order\\Item\\Base\\Iface', $this->object->createItem() );
+		$this->assertInstanceOf( \Aimeos\MShop\Order\Item\Base\Iface::class, $this->object->createItem() );
 	}
 
 
 	public function testGetItem()
 	{
-		$search = $this->object->createSearch();
+		$search = $this->object->createSearch()->setSlice( 0, 1 );
 		$search->setConditions( $search->compare( '==', 'order.base.costs', '1.50' ) );
 		$results = $this->object->searchItems( $search );
 
@@ -95,12 +125,12 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$results = $this->object->searchItems( $search );
 
 		if( ( $item = reset( $results ) ) === false ) {
-			throw new \Exception( 'No order base item found.' );
+			throw new \RuntimeException( 'No order base item found.' );
 		}
 
 		$item->setId( null );
 		$item->setComment( 'Unittest1' );
-		$this->object->saveItem( $item );
+		$resultSaved = $this->object->saveItem( $item );
 		$itemSaved = $this->object->getItem( $item->getId() );
 		$itemPrice = $item->getPrice();
 		$itemSavedPrice = $item->getPrice();
@@ -108,7 +138,7 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$itemExp = clone $itemSaved;
 		$itemExp->setComment( 'Unittest2' );
 		$itemExp->setCustomerId( 'unittest2' );
-		$this->object->saveItem( $itemExp );
+		$resultUpd = $this->object->saveItem( $itemExp );
 		$itemUpd = $this->object->getItem( $itemExp->getId() );
 		$itemExpPrice = $itemExp->getPrice();
 		$itemUpdPrice = $itemUpd->getPrice();
@@ -122,6 +152,8 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals( $item->getSiteId(), $itemSaved->getSiteId() );
 		$this->assertEquals( $item->getCustomerId(), $itemSaved->getCustomerId() );
 		$this->assertEquals( $item->getLocale()->getLanguageId(), $itemSaved->getLocale()->getLanguageId() );
+		$this->assertEquals( $item->getCustomerReference(), $itemSaved->getCustomerReference() );
+		$this->assertEquals( $item->getComment(), $itemSaved->getComment() );
 		$this->assertEquals( $item->getSiteCode(), $itemSaved->getSiteCode() );
 		$this->assertEquals( $itemPrice->getValue(), $itemSavedPrice->getValue() );
 		$this->assertEquals( $itemPrice->getCosts(), $itemSavedPrice->getCosts() );
@@ -131,9 +163,6 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals( $item->getAddresses(), $itemSaved->getAddresses() );
 		$this->assertEquals( $item->getCoupons(), $itemSaved->getCoupons() );
 		$this->assertEquals( $item->getServices(), $itemSaved->getServices() );
-		$this->assertEquals( $item->getComment(), $itemSaved->getComment() );
-		$this->assertEquals( $item->getStatus(), $itemSaved->getStatus() );
-		$this->assertEquals( $item->getSiteCode(), $itemSaved->getSiteCode() );
 
 		$this->assertEquals( $this->editor, $itemSaved->getEditor() );
 		$this->assertRegExp( '/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/', $itemSaved->getTimeCreated() );
@@ -143,6 +172,8 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals( $itemExp->getSiteId(), $itemUpd->getSiteId() );
 		$this->assertEquals( $itemExp->getCustomerId(), $itemUpd->getCustomerId() );
 		$this->assertEquals( $itemExp->getLocale()->getLanguageId(), $itemUpd->getLocale()->getLanguageId() );
+		$this->assertEquals( $itemExp->getCustomerReference(), $itemUpd->getCustomerReference() );
+		$this->assertEquals( $itemExp->getComment(), $itemUpd->getComment() );
 		$this->assertEquals( $itemExp->getSiteCode(), $itemUpd->getSiteCode() );
 		$this->assertEquals( $itemExpPrice->getValue(), $itemUpdPrice->getValue() );
 		$this->assertEquals( $itemExpPrice->getCosts(), $itemUpdPrice->getCosts() );
@@ -152,22 +183,36 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals( $itemExp->getAddresses(), $itemUpd->getAddresses() );
 		$this->assertEquals( $itemExp->getCoupons(), $itemUpd->getCoupons() );
 		$this->assertEquals( $itemExp->getServices(), $itemUpd->getServices() );
-		$this->assertEquals( $itemExp->getComment(), $itemUpd->getComment() );
-		$this->assertEquals( $itemExp->getStatus(), $itemUpd->getStatus() );
-		$this->assertEquals( $itemExp->getSiteCode(), $itemUpd->getSiteCode() );
 
 		$this->assertEquals( $this->editor, $itemUpd->getEditor() );
 		$this->assertEquals( $itemExp->getTimeCreated(), $itemUpd->getTimeCreated() );
 		$this->assertRegExp( '/\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/', $itemUpd->getTimeModified() );
 
-		$this->setExpectedException( '\\Aimeos\\MShop\\Exception' );
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Item\Iface::class, $resultSaved );
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Item\Iface::class, $resultUpd );
+
+		$this->setExpectedException( \Aimeos\MShop\Exception::class );
 		$this->object->getItem( $itemSaved->getId() );
 	}
 
 
 	public function testCreateSearch()
 	{
-		$this->assertInstanceOf( '\\Aimeos\\MW\\Criteria\\Iface', $this->object->createSearch() );
+		$this->assertInstanceOf( \Aimeos\MW\Criteria\Iface::class, $this->object->createSearch() );
+	}
+
+
+	public function testCreateSearchDefault()
+	{
+		$search = $this->object->createSearch( true );
+
+		$this->assertInstanceOf( \Aimeos\MW\Criteria\Iface::class, $search );
+		$this->assertInstanceOf( \Aimeos\MW\Criteria\Expression\Combine\Iface::class, $search->getConditions() );
+
+		$list = $search->getConditions()->getExpressions();
+		$this->assertArrayHasKey( 0, $list );
+		$this->assertInstanceOf( \Aimeos\MW\Criteria\Expression\Compare\Iface::class, $list[0] );
+		$this->assertEquals( 'order.base.customerid', $list[0]->getName() );
 	}
 
 
@@ -178,7 +223,7 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$total = 0;
 		$search = $this->object->createSearch();
 
-		$expr = array();
+		$expr = [];
 		$expr[] = $search->compare( '!=', 'order.base.id', null );
 		$expr[] = $search->compare( '==', 'order.base.siteid', $siteid );
 		$expr[] = $search->compare( '==', 'order.base.sitecode', 'unittest' );
@@ -188,6 +233,7 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$expr[] = $search->compare( '==', 'order.base.price', '53.50' );
 		$expr[] = $search->compare( '==', 'order.base.costs', '1.50' );
 		$expr[] = $search->compare( '==', 'order.base.rebate', '14.50' );
+		$expr[] = $search->compare( '~=', 'order.base.customerref', 'ABC-1234' );
 		$expr[] = $search->compare( '~=', 'order.base.comment', 'This is a comment' );
 		$expr[] = $search->compare( '>=', 'order.base.mtime', '1970-01-01 00:00:00' );
 		$expr[] = $search->compare( '>=', 'order.base.ctime', '1970-01-01 00:00:00' );
@@ -209,7 +255,7 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$expr[] = $search->compare( '==', 'order.base.address.postal', '20146' );
 		$expr[] = $search->compare( '==', 'order.base.address.city', 'Hamburg' );
 		$expr[] = $search->compare( '==', 'order.base.address.state', 'Hamburg' );
-		$expr[] = $search->compare( '==', 'order.base.address.countryid', 'de' );
+		$expr[] = $search->compare( '==', 'order.base.address.countryid', 'DE' );
 		$expr[] = $search->compare( '==', 'order.base.address.languageid', 'de' );
 		$expr[] = $search->compare( '==', 'order.base.address.telephone', '055544332211' );
 		$expr[] = $search->compare( '==', 'order.base.address.email', 'test@example.com' );
@@ -242,7 +288,7 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$expr[] = $search->compare( '==', 'order.base.product.price', '4.50' );
 		$expr[] = $search->compare( '==', 'order.base.product.costs', '0.00' );
 		$expr[] = $search->compare( '==', 'order.base.product.rebate', '0.00' );
-		$expr[] = $search->compare( '==', 'order.base.product.taxrate', '0.00' );
+		$expr[] = $search->compare( '=~', 'order.base.product.taxrates', '{' );
 		$expr[] = $search->compare( '==', 'order.base.product.flags', 0 );
 		$expr[] = $search->compare( '==', 'order.base.product.position', 1 );
 		$expr[] = $search->compare( '==', 'order.base.product.status', 1 );
@@ -252,10 +298,11 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 		$expr[] = $search->compare( '!=', 'order.base.product.attribute.id', null );
 		$expr[] = $search->compare( '==', 'order.base.product.attribute.siteid', $siteid );
-		$expr[] = $search->compare( '!=', 'order.base.product.attribute.productid', null );
+		$expr[] = $search->compare( '!=', 'order.base.product.attribute.parentid', null );
 		$expr[] = $search->compare( '==', 'order.base.product.attribute.code', 'width' );
 		$expr[] = $search->compare( '==', 'order.base.product.attribute.value', '33' );
 		$expr[] = $search->compare( '==', 'order.base.product.attribute.name', '33' );
+		$expr[] = $search->compare( '==', 'order.base.product.attribute.quantity', 1 );
 		$expr[] = $search->compare( '>=', 'order.base.product.attribute.mtime', '1970-01-01 00:00:00' );
 		$expr[] = $search->compare( '>=', 'order.base.product.attribute.ctime', '1970-01-01 00:00:00' );
 		$expr[] = $search->compare( '==', 'order.base.product.attribute.editor', $this->editor );
@@ -270,27 +317,39 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$expr[] = $search->compare( '==', 'order.base.service.price', '0.00' );
 		$expr[] = $search->compare( '==', 'order.base.service.costs', '0.00' );
 		$expr[] = $search->compare( '==', 'order.base.service.rebate', '0.00' );
-		$expr[] = $search->compare( '==', 'order.base.service.taxrate', '0.00' );
+		$expr[] = $search->compare( '=~', 'order.base.service.taxrates', '{' );
 		$expr[] = $search->compare( '>=', 'order.base.service.mtime', '1970-01-01 00:00:00' );
 		$expr[] = $search->compare( '>=', 'order.base.service.ctime', '1970-01-01 00:00:00' );
 		$expr[] = $search->compare( '==', 'order.base.service.editor', $this->editor );
 
 		$expr[] = $search->compare( '!=', 'order.base.service.attribute.id', null );
 		$expr[] = $search->compare( '==', 'order.base.service.attribute.siteid', $siteid );
-		$expr[] = $search->compare( '!=', 'order.base.service.attribute.serviceid', null );
+		$expr[] = $search->compare( '!=', 'order.base.service.attribute.parentid', null );
 		$expr[] = $search->compare( '==', 'order.base.service.attribute.code', 'NAME' );
 		$expr[] = $search->compare( '==', 'order.base.service.attribute.value', '"CreditCard"' );
+		$expr[] = $search->compare( '==', 'order.base.service.attribute.quantity', 1 );
 		$expr[] = $search->compare( '>=', 'order.base.service.attribute.mtime', '1970-01-01 00:00:00' );
 		$expr[] = $search->compare( '>=', 'order.base.service.attribute.ctime', '1970-01-01 00:00:00' );
 		$expr[] = $search->compare( '==', 'order.base.service.attribute.editor', $this->editor );
 
 		$search->setConditions( $search->combine( '&&', $expr ) );
-		$result = $this->object->searchItems( $search, array(), $total );
+		$ref = ['order/base/address', 'order/base/coupon', 'order/base/product', 'order/base/service'];
+		$result = $this->object->searchItems( $search, $ref, $total );
 
-		$this->assertEquals( 1, count( $result ) );
 		$this->assertEquals( 1, $total );
+		$this->assertEquals( 1, count( $result ) );
+
+		$item = reset( $result );
+		$this->assertInstanceOf( \Aimeos\MShop\Order\Item\Base\Iface::class, $item );
+		$this->assertEquals( 2, count( $item->getAddresses() ) );
+		$this->assertEquals( 2, count( $item->getCoupons() ) );
+		$this->assertEquals( 4, count( $item->getProducts() ) );
+		$this->assertEquals( 2, count( $item->getServices() ) );
+	}
 
 
+	public function testSearchItemsTotal()
+	{
 		$search = $this->object->createSearch();
 		$conditions = array(
 			$search->compare( '>=', 'order.base.customerid', '' ),
@@ -299,7 +358,7 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$search->setConditions( $search->combine( '&&', $conditions ) );
 		$search->setSlice( 0, 1 );
 		$total = 0;
-		$items = $this->object->searchItems( $search, array(), $total );
+		$items = $this->object->searchItems( $search, [], $total );
 		$this->assertEquals( 1, count( $items ) );
 		$this->assertEquals( 4, $total );
 
@@ -309,28 +368,37 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	}
 
 
+	public function testSearchItemsDefault()
+	{
+		$search = $this->object->createSearch( true );
+		$items = $this->object->searchItems( $search );
+
+		$this->assertEquals( 0, count( $items ) );
+	}
+
+
 	public function testGetSubManager()
 	{
-		$this->assertInstanceOf( '\\Aimeos\\MShop\\Common\\Manager\\Iface', $this->object->getSubManager( 'address' ) );
-		$this->assertInstanceOf( '\\Aimeos\\MShop\\Common\\Manager\\Iface', $this->object->getSubManager( 'address', 'Standard' ) );
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Manager\Iface::class, $this->object->getSubManager( 'address' ) );
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Manager\Iface::class, $this->object->getSubManager( 'address', 'Standard' ) );
 
-		$this->assertInstanceOf( '\\Aimeos\\MShop\\Common\\Manager\\Iface', $this->object->getSubManager( 'coupon' ) );
-		$this->assertInstanceOf( '\\Aimeos\\MShop\\Common\\Manager\\Iface', $this->object->getSubManager( 'coupon', 'Standard' ) );
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Manager\Iface::class, $this->object->getSubManager( 'coupon' ) );
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Manager\Iface::class, $this->object->getSubManager( 'coupon', 'Standard' ) );
 
-		$this->assertInstanceOf( '\\Aimeos\\MShop\\Common\\Manager\\Iface', $this->object->getSubManager( 'product' ) );
-		$this->assertInstanceOf( '\\Aimeos\\MShop\\Common\\Manager\\Iface', $this->object->getSubManager( 'product', 'Standard' ) );
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Manager\Iface::class, $this->object->getSubManager( 'product' ) );
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Manager\Iface::class, $this->object->getSubManager( 'product', 'Standard' ) );
 
-		$this->assertInstanceOf( '\\Aimeos\\MShop\\Common\\Manager\\Iface', $this->object->getSubManager( 'service' ) );
-		$this->assertInstanceOf( '\\Aimeos\\MShop\\Common\\Manager\\Iface', $this->object->getSubManager( 'service', 'Standard' ) );
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Manager\Iface::class, $this->object->getSubManager( 'service' ) );
+		$this->assertInstanceOf( \Aimeos\MShop\Common\Manager\Iface::class, $this->object->getSubManager( 'service', 'Standard' ) );
 
-		$this->setExpectedException( '\\Aimeos\\MShop\\Exception' );
+		$this->setExpectedException( \Aimeos\MShop\Exception::class );
 		$this->object->getSubManager( 'unknown' );
 	}
 
 
 	public function testGetSubManagerInvalidName()
 	{
-		$this->setExpectedException( '\\Aimeos\\MShop\\Exception' );
+		$this->setExpectedException( \Aimeos\MShop\Exception::class );
 		$this->object->getSubManager( 'address', 'unknown' );
 	}
 
@@ -341,11 +409,14 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$order = $this->object->load( $item->getId() );
 
 
-		foreach( $order->getAddresses() as $address )
+		foreach( $order->getAddresses() as $addresses )
 		{
-			$this->assertInternalType( 'string', $address->getId() );
-			$this->assertNotEquals( '', $address->getId() );
-			$this->assertInternalType( 'integer', $address->getBaseId() );
+			foreach( $addresses as $address )
+			{
+				$this->assertNotEquals( '', $address->getId() );
+				$this->assertNotEquals( '', $address->getId() );
+				$this->assertNotEquals( '', $address->getBaseId() );
+			}
 		}
 
 		$this->assertEquals( 2, count( $order->getCoupons() ) );
@@ -355,23 +426,26 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 			$this->assertNotEquals( '', $code );
 
 			foreach( $products as $product ) {
-				$this->assertInstanceOf( '\\Aimeos\\MShop\\Order\\Item\\Base\\Product\\Iface', $product );
+				$this->assertInstanceOf( \Aimeos\MShop\Order\Item\Base\Product\Iface::class, $product );
 			}
 		}
 
 		foreach( $order->getProducts() as $product )
 		{
-			$this->assertInternalType( 'string', $product->getId() );
 			$this->assertNotEquals( '', $product->getId() );
-			$this->assertInternalType( 'integer', $product->getBaseId() );
+			$this->assertNotEquals( '', $product->getId() );
+			$this->assertNotEquals( '', $product->getBaseId() );
 			$this->assertGreaterThan( 0, $product->getPosition() );
 		}
 
-		foreach( $order->getServices() as $service )
+		foreach( $order->getServices() as $list )
 		{
-			$this->assertInternalType( 'string', $service->getId() );
-			$this->assertNotEquals( '', $service->getId() );
-			$this->assertInternalType( 'integer', $service->getBaseId() );
+			foreach( $list as $service )
+			{
+				$this->assertNotEquals( '', $service->getId() );
+				$this->assertNotEquals( '', $service->getId() );
+				$this->assertNotEquals( '', $service->getBaseId() );
+			}
 		}
 	}
 
@@ -379,75 +453,78 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	public function testLoadNone()
 	{
 		$item = $this->getOrderItem();
-		$order = $this->object->load( $item->getId(), \Aimeos\MShop\Order\Manager\Base\Base::PARTS_NONE );
+		$order = $this->object->load( $item->getId(), \Aimeos\MShop\Order\Item\Base\Base::PARTS_NONE );
 
-		$this->assertEquals( array(), $order->getProducts() );
-		$this->assertEquals( array(), $order->getCoupons() );
-		$this->assertEquals( array(), $order->getServices() );
-		$this->assertEquals( array(), $order->getAddresses() );
+		$this->assertEquals( [], $order->getProducts() );
+		$this->assertEquals( [], $order->getCoupons() );
+		$this->assertEquals( [], $order->getServices() );
+		$this->assertEquals( [], $order->getAddresses() );
 	}
 
 
 	public function testLoadAddress()
 	{
 		$item = $this->getOrderItem();
-		$order = $this->object->load( $item->getId(), \Aimeos\MShop\Order\Manager\Base\Base::PARTS_ADDRESS );
+		$order = $this->object->load( $item->getId(), \Aimeos\MShop\Order\Item\Base\Base::PARTS_ADDRESS );
 
 		$this->assertGreaterThan( 0, count( $order->getAddresses() ) );
-		$this->assertEquals( array(), $order->getCoupons() );
-		$this->assertEquals( array(), $order->getProducts() );
-		$this->assertEquals( array(), $order->getServices() );
+		$this->assertEquals( [], $order->getCoupons() );
+		$this->assertEquals( [], $order->getProducts() );
+		$this->assertEquals( [], $order->getServices() );
 	}
 
 
 	public function testLoadProduct()
 	{
 		$item = $this->getOrderItem();
-		$order = $this->object->load( $item->getId(), \Aimeos\MShop\Order\Manager\Base\Base::PARTS_PRODUCT );
+		$order = $this->object->load( $item->getId(), \Aimeos\MShop\Order\Item\Base\Base::PARTS_PRODUCT );
 
 		$this->assertGreaterThan( 0, count( $order->getProducts() ) );
-		$this->assertEquals( array(), $order->getCoupons() );
-		$this->assertEquals( array(), $order->getServices() );
-		$this->assertEquals( array(), $order->getAddresses() );
+		$this->assertEquals( [], $order->getCoupons() );
+		$this->assertEquals( [], $order->getServices() );
+		$this->assertEquals( [], $order->getAddresses() );
 	}
 
 
 	public function testLoadCoupon()
 	{
 		$item = $this->getOrderItem();
-		$order = $this->object->load( $item->getId(), \Aimeos\MShop\Order\Manager\Base\Base::PARTS_COUPON );
+		$order = $this->object->load( $item->getId(), \Aimeos\MShop\Order\Item\Base\Base::PARTS_COUPON );
 
 		$this->assertGreaterThan( 0, count( $order->getProducts() ) );
 		$this->assertGreaterThan( 0, count( $order->getCoupons() ) );
-		$this->assertEquals( array(), $order->getServices() );
-		$this->assertEquals( array(), $order->getAddresses() );
+		$this->assertEquals( [], $order->getServices() );
+		$this->assertEquals( [], $order->getAddresses() );
 	}
 
 
 	public function testLoadService()
 	{
 		$item = $this->getOrderItem();
-		$order = $this->object->load( $item->getId(), \Aimeos\MShop\Order\Manager\Base\Base::PARTS_SERVICE );
+		$order = $this->object->load( $item->getId(), \Aimeos\MShop\Order\Item\Base\Base::PARTS_SERVICE );
 
 		$this->assertGreaterThan( 0, count( $order->getServices() ) );
-		$this->assertEquals( array(), $order->getCoupons() );
-		$this->assertEquals( array(), $order->getProducts() );
-		$this->assertEquals( array(), $order->getAddresses() );
+		$this->assertEquals( [], $order->getCoupons() );
+		$this->assertEquals( [], $order->getProducts() );
+		$this->assertEquals( [], $order->getAddresses() );
 	}
 
 
 	public function testLoadFresh()
 	{
 		$item = $this->getOrderItem();
-		$order = $this->object->load( $item->getId(), \Aimeos\MShop\Order\Manager\Base\Base::PARTS_ALL, true );
+		$order = $this->object->load( $item->getId(), \Aimeos\MShop\Order\Item\Base\Base::PARTS_ALL, true );
 
 
-		$this->assertEquals( 0, count( $order->getCoupons() ) );
+		$this->assertEquals( 2, count( $order->getCoupons() ) );
 
-		foreach( $order->getAddresses() as $address )
+		foreach( $order->getAddresses() as $list )
 		{
-			$this->assertEquals( null, $address->getId() );
-			$this->assertEquals( null, $address->getBaseId() );
+			foreach( $list as $address )
+			{
+				$this->assertEquals( null, $address->getId() );
+				$this->assertEquals( null, $address->getBaseId() );
+			}
 		}
 
 		foreach( $order->getProducts() as $product )
@@ -457,10 +534,13 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 			$this->assertEquals( null, $product->getPosition() );
 		}
 
-		foreach( $order->getServices() as $service )
+		foreach( $order->getServices() as $list )
 		{
-			$this->assertEquals( null, $service->getId() );
-			$this->assertEquals( null, $service->getBaseId() );
+			foreach( $list as $service )
+			{
+				$this->assertEquals( null, $service->getId() );
+				$this->assertEquals( null, $service->getBaseId() );
+			}
 		}
 	}
 
@@ -468,60 +548,60 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	public function testLoadFreshNone()
 	{
 		$item = $this->getOrderItem();
-		$order = $this->object->load( $item->getId(), \Aimeos\MShop\Order\Manager\Base\Base::PARTS_NONE, true );
+		$order = $this->object->load( $item->getId(), \Aimeos\MShop\Order\Item\Base\Base::PARTS_NONE, true );
 
-		$this->assertEquals( array(), $order->getAddresses() );
-		$this->assertEquals( array(), $order->getCoupons() );
-		$this->assertEquals( array(), $order->getProducts() );
-		$this->assertEquals( array(), $order->getServices() );
+		$this->assertEquals( [], $order->getAddresses() );
+		$this->assertEquals( [], $order->getCoupons() );
+		$this->assertEquals( [], $order->getProducts() );
+		$this->assertEquals( [], $order->getServices() );
 	}
 
 
 	public function testLoadFreshAddress()
 	{
 		$item = $this->getOrderItem();
-		$order = $this->object->load( $item->getId(), \Aimeos\MShop\Order\Manager\Base\Base::PARTS_ADDRESS, true );
+		$order = $this->object->load( $item->getId(), \Aimeos\MShop\Order\Item\Base\Base::PARTS_ADDRESS, true );
 
 		$this->assertGreaterThan( 0, count( $order->getAddresses() ) );
-		$this->assertEquals( array(), $order->getCoupons() );
-		$this->assertEquals( array(), $order->getProducts() );
-		$this->assertEquals( array(), $order->getServices() );
+		$this->assertEquals( [], $order->getCoupons() );
+		$this->assertEquals( [], $order->getProducts() );
+		$this->assertEquals( [], $order->getServices() );
 	}
 
 
 	public function testLoadFreshProduct()
 	{
 		$item = $this->getOrderItem();
-		$order = $this->object->load( $item->getId(), \Aimeos\MShop\Order\Manager\Base\Base::PARTS_PRODUCT, true );
+		$order = $this->object->load( $item->getId(), \Aimeos\MShop\Order\Item\Base\Base::PARTS_PRODUCT, true );
 
 		$this->assertGreaterThan( 0, count( $order->getProducts() ) );
-		$this->assertEquals( array(), $order->getCoupons() );
-		$this->assertEquals( array(), $order->getAddresses() );
-		$this->assertEquals( array(), $order->getServices() );
+		$this->assertEquals( [], $order->getCoupons() );
+		$this->assertEquals( [], $order->getAddresses() );
+		$this->assertEquals( [], $order->getServices() );
 	}
 
 
 	public function testLoadFreshCoupon()
 	{
 		$item = $this->getOrderItem();
-		$order = $this->object->load( $item->getId(), \Aimeos\MShop\Order\Manager\Base\Base::PARTS_COUPON, true );
+		$order = $this->object->load( $item->getId(), \Aimeos\MShop\Order\Item\Base\Base::PARTS_COUPON, true );
 
-		$this->assertEquals( array(), $order->getAddresses() );
-		$this->assertEquals( array(), $order->getCoupons() );
-		$this->assertEquals( array(), $order->getProducts() );
-		$this->assertEquals( array(), $order->getServices() );
+		$this->assertEquals( [], $order->getAddresses() );
+		$this->assertEquals( 2, count( $order->getCoupons() ) );
+		$this->assertEquals( [], $order->getProducts() );
+		$this->assertEquals( [], $order->getServices() );
 	}
 
 
 	public function testLoadFreshService()
 	{
 		$item = $this->getOrderItem();
-		$order = $this->object->load( $item->getId(), \Aimeos\MShop\Order\Manager\Base\Base::PARTS_SERVICE, true );
+		$order = $this->object->load( $item->getId(), \Aimeos\MShop\Order\Item\Base\Base::PARTS_SERVICE, true );
 
 		$this->assertGreaterThan( 0, count( $order->getServices() ) );
-		$this->assertEquals( array(), $order->getCoupons() );
-		$this->assertEquals( array(), $order->getAddresses() );
-		$this->assertEquals( array(), $order->getProducts() );
+		$this->assertEquals( [], $order->getCoupons() );
+		$this->assertEquals( [], $order->getAddresses() );
+		$this->assertEquals( [], $order->getProducts() );
 	}
 
 
@@ -529,7 +609,7 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	{
 		$item = $this->getOrderItem();
 
-		$basket = $this->object->load( $item->getId(), \Aimeos\MShop\Order\Manager\Base\Base::PARTS_ALL, true );
+		$basket = $this->object->load( $item->getId(), \Aimeos\MShop\Order\Item\Base\Base::PARTS_ALL, true );
 		$this->object->store( $basket );
 
 		$newBasketId = $basket->getId();
@@ -541,16 +621,15 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals( $item->getCustomerId(), $basket->getCustomerId() );
 		$this->assertEquals( $basket->getLocale()->getSiteId(), $basket->getSiteId() );
 
-		// because of FreeShipping plugin price is not 6.50
-		$this->assertEquals( 1.50, $basket->getPrice()->getCosts() );
+		$this->assertEquals( 6.50, $basket->getPrice()->getCosts() );
 
-		$pos = 1;
+		$pos = 0;
 		$products = $basket->getProducts();
-		$this->assertEquals( 4, count( $products ) );
+		$this->assertEquals( 2, count( $products ) );
 
 		foreach( $products as $product )
 		{
-			$this->assertEquals( 2, count( $product->getAttributes() ) );
+			$this->assertGreaterThanOrEqual( 2, count( $product->getAttributeItems() ) );
 			$this->assertEquals( $pos++, $product->getPosition() );
 		}
 
@@ -559,15 +638,18 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$services = $basket->getServices();
 		$this->assertEquals( 2, count( $services ) );
 
-		$attributes = array();
-		foreach( $services as $service ) {
-			$attributes[$service->getCode()] = $service->getAttributes();
+		$attributes = [];
+		foreach( $services as $list )
+		{
+			foreach( $list as $service ) {
+				$attributes[$service->getCode()] = $service->getAttributeItems();
+			}
 		}
 
 		$this->assertEquals( 9, count( $attributes['OGONE'] ) );
 		$this->assertEquals( 0, count( $attributes['73'] ) );
 
-		$this->setExpectedException( '\\Aimeos\\MShop\\Exception' );
+		$this->setExpectedException( \Aimeos\MShop\Exception::class );
 		$this->object->getItem( $newBasketId );
 	}
 
@@ -576,7 +658,7 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	{
 		$item = $this->getOrderItem();
 
-		$basket = $this->object->load( $item->getId(), \Aimeos\MShop\Order\Manager\Base\Base::PARTS_ALL, true );
+		$basket = $this->object->load( $item->getId(), \Aimeos\MShop\Order\Item\Base\Base::PARTS_ALL, true );
 		$this->object->store( $basket );
 		$newBasketId = $basket->getId();
 		$this->object->store( $basket );
@@ -587,25 +669,28 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 		$newAddresses = $newBasket->getAddresses();
 
-		foreach( $basket->getAddresses() as $key => $address ) {
-			$this->assertEquals( $address->getId(), $newAddresses[$key]->getId() );
+		foreach( $basket->getAddresses() as $key => $list )
+		{
+			foreach( $list as $pos => $address ) {
+				$this->assertEquals( $address->getId(), $newAddresses[$key][$pos]->getId() );
+			}
 		}
 
 		$newProducts = $newBasket->getProducts();
 
 		foreach( $basket->getProducts() as $key => $product )
 		{
-			// key+1 is because of the array_splice() in \Aimeos\MShop\Order\Item\Base\Standard::addProduct()
-			// so it doesn't make sense to hand over the key as second parameter to addProduct() in
-			// \Aimeos\MShop\Order\Manager\Base\Standard::loadFresh() to try to enforce a 1-based numbering
-			$this->assertEquals( $product->getId(), $newProducts[$key + 1]->getId() );
-			$this->assertEquals( $product->getPosition(), $newProducts[$key + 1]->getPosition() );
+			$this->assertEquals( $product->getId(), $newProducts[$key]->getId() );
+			$this->assertEquals( $product->getPosition(), $newProducts[$key]->getPosition() );
 		}
 
 		$newServices = $newBasket->getServices();
 
-		foreach( $basket->getServices() as $key => $service ) {
-			$this->assertEquals( $service->getId(), $newServices[$key]->getId() );
+		foreach( $basket->getServices() as $key => $list )
+		{
+			foreach( $list as $pos => $service ) {
+				$this->assertEquals( $service->getId(), $newServices[$key][$pos]->getId() );
+			}
 		}
 	}
 
@@ -614,17 +699,17 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	{
 		$search = $this->object->createSearch();
 
-		$expr = array();
+		$expr = [];
 		$expr[] = $search->compare( '==', 'order.base.sitecode', 'unittest' );
 		$expr[] = $search->compare( '==', 'order.base.price', 4800.00 );
 		$search->setConditions( $search->combine( '&&', $expr ) );
 		$results = $this->object->searchItems( $search );
 
 		if( ( $item = reset( $results ) ) == false ) {
-			throw new \Exception( 'No order found' );
+			throw new \RuntimeException( 'No order found' );
 		}
 
-		$basket = $this->object->load( $item->getId(), \Aimeos\MShop\Order\Manager\Base\Base::PARTS_ALL, true );
+		$basket = $this->object->load( $item->getId(), \Aimeos\MShop\Order\Item\Base\Base::PARTS_ALL, true );
 		$this->object->store( $basket );
 
 		$newBasketId = $basket->getId();
@@ -635,7 +720,7 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals( $item->getCustomerId(), $basket->getCustomerId() );
 		$this->assertEquals( $basket->getLocale()->getSiteId(), $basket->getSiteId() );
 
-		$pos = 1;
+		$pos = 0;
 		$products = $basket->getProducts();
 
 		$this->assertEquals( 2, count( $products ) );
@@ -646,7 +731,7 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 			$pos += 3; // two sub-products in between
 		}
 
-		$this->setExpectedException( '\\Aimeos\\MShop\\Exception' );
+		$this->setExpectedException( \Aimeos\MShop\Exception::class );
 		$this->object->getItem( $newBasketId );
 	}
 
@@ -655,18 +740,18 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	{
 		$item = $this->getOrderItem();
 
-		$basket = $this->object->load( $item->getId(), \Aimeos\MShop\Order\Manager\Base\Base::PARTS_ALL, true );
-		$this->object->store( $basket, \Aimeos\MShop\Order\Manager\Base\Base::PARTS_NONE );
+		$basket = $this->object->load( $item->getId(), \Aimeos\MShop\Order\Item\Base\Base::PARTS_ALL, true );
+		$this->object->store( $basket, \Aimeos\MShop\Order\Item\Base\Base::PARTS_NONE );
 
 		$newBasketId = $basket->getId();
 
-		$basket = $this->object->load( $newBasketId, \Aimeos\MShop\Order\Manager\Base\Base::PARTS_ALL );
+		$basket = $this->object->load( $newBasketId, \Aimeos\MShop\Order\Item\Base\Base::PARTS_ALL );
 		$this->object->deleteItem( $newBasketId );
 
-		$this->assertEquals( array(), $basket->getCoupons() );
-		$this->assertEquals( array(), $basket->getAddresses() );
-		$this->assertEquals( array(), $basket->getProducts() );
-		$this->assertEquals( array(), $basket->getServices() );
+		$this->assertEquals( [], $basket->getCoupons() );
+		$this->assertEquals( [], $basket->getAddresses() );
+		$this->assertEquals( [], $basket->getProducts() );
+		$this->assertEquals( [], $basket->getServices() );
 	}
 
 
@@ -674,18 +759,18 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	{
 		$item = $this->getOrderItem();
 
-		$basket = $this->object->load( $item->getId(), \Aimeos\MShop\Order\Manager\Base\Base::PARTS_ALL, true );
-		$this->object->store( $basket, \Aimeos\MShop\Order\Manager\Base\Base::PARTS_ADDRESS );
+		$basket = $this->object->load( $item->getId(), \Aimeos\MShop\Order\Item\Base\Base::PARTS_ALL, true );
+		$this->object->store( $basket, \Aimeos\MShop\Order\Item\Base\Base::PARTS_ADDRESS );
 
 		$newBasketId = $basket->getId();
 
-		$basket = $this->object->load( $newBasketId, \Aimeos\MShop\Order\Manager\Base\Base::PARTS_ALL );
+		$basket = $this->object->load( $newBasketId, \Aimeos\MShop\Order\Item\Base\Base::PARTS_ALL );
 		$this->object->deleteItem( $newBasketId );
 
 		$this->assertGreaterThan( 0, count( $basket->getAddresses() ) );
-		$this->assertEquals( array(), $basket->getCoupons() );
-		$this->assertEquals( array(), $basket->getProducts() );
-		$this->assertEquals( array(), $basket->getServices() );
+		$this->assertEquals( [], $basket->getCoupons() );
+		$this->assertEquals( [], $basket->getProducts() );
+		$this->assertEquals( [], $basket->getServices() );
 	}
 
 
@@ -693,18 +778,18 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	{
 		$item = $this->getOrderItem();
 
-		$basket = $this->object->load( $item->getId(), \Aimeos\MShop\Order\Manager\Base\Base::PARTS_ALL, true );
-		$this->object->store( $basket, \Aimeos\MShop\Order\Manager\Base\Base::PARTS_PRODUCT );
+		$basket = $this->object->load( $item->getId(), \Aimeos\MShop\Order\Item\Base\Base::PARTS_ALL, true );
+		$this->object->store( $basket, \Aimeos\MShop\Order\Item\Base\Base::PARTS_PRODUCT );
 
 		$newBasketId = $basket->getId();
 
-		$basket = $this->object->load( $newBasketId, \Aimeos\MShop\Order\Manager\Base\Base::PARTS_ALL );
+		$basket = $this->object->load( $newBasketId, \Aimeos\MShop\Order\Item\Base\Base::PARTS_ALL );
 		$this->object->deleteItem( $newBasketId );
 
 		$this->assertGreaterThan( 0, count( $basket->getProducts() ) );
-		$this->assertEquals( array(), $basket->getAddresses() );
-		$this->assertEquals( array(), $basket->getCoupons() );
-		$this->assertEquals( array(), $basket->getServices() );
+		$this->assertEquals( [], $basket->getAddresses() );
+		$this->assertEquals( [], $basket->getCoupons() );
+		$this->assertEquals( [], $basket->getServices() );
 	}
 
 
@@ -712,83 +797,66 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	{
 		$item = $this->getOrderItem();
 
-		$basket = $this->object->load( $item->getId(), \Aimeos\MShop\Order\Manager\Base\Base::PARTS_ALL, true );
-		$this->object->store( $basket, \Aimeos\MShop\Order\Manager\Base\Base::PARTS_SERVICE );
+		$basket = $this->object->load( $item->getId(), \Aimeos\MShop\Order\Item\Base\Base::PARTS_ALL, true );
+		$this->object->store( $basket, \Aimeos\MShop\Order\Item\Base\Base::PARTS_SERVICE );
 
 		$newBasketId = $basket->getId();
 
-		$basket = $this->object->load( $newBasketId, \Aimeos\MShop\Order\Manager\Base\Base::PARTS_ALL );
+		$basket = $this->object->load( $newBasketId, \Aimeos\MShop\Order\Item\Base\Base::PARTS_ALL );
 		$this->object->deleteItem( $newBasketId );
 
 		$this->assertGreaterThan( 0, count( $basket->getServices() ) );
-		$this->assertEquals( array(), $basket->getAddresses() );
-		$this->assertEquals( array(), $basket->getCoupons() );
-		$this->assertEquals( array(), $basket->getProducts() );
+		$this->assertEquals( [], $basket->getAddresses() );
+		$this->assertEquals( [], $basket->getCoupons() );
+		$this->assertEquals( [], $basket->getProducts() );
 	}
 
 
 	public function testLoadStoreCoupons()
 	{
 		$search = $this->object->createSearch();
-		$search->setConditions( $search->compare( '==', 'order.base.price', '672.00' ) );
+		$search->setConditions( $search->compare( '==', 'order.base.price', '53.50' ) );
 		$results = $this->object->searchItems( $search );
 
 		if( ( $item = reset( $results ) ) === false ) {
-			throw new \Exception( 'No order found' );
+			throw new \RuntimeException( 'No order found' );
 		}
 
-		$basket = $this->object->load( $item->getId(), \Aimeos\MShop\Order\Manager\Base\Base::PARTS_ALL, true );
+		$parts = \Aimeos\MShop\Order\Item\Base\Base::PARTS_ALL ^ \Aimeos\MShop\Order\Item\Base\Base::PARTS_COUPON;
+		$basket = $this->object->load( $item->getId(), $parts, true );
 
-		$this->assertEquals( '672.00', $basket->getPrice()->getValue() );
-		$this->assertEquals( '32.00', $basket->getPrice()->getCosts() );
+		$this->assertEquals( '58.50', $basket->getPrice()->getValue() );
+		$this->assertEquals( '6.50', $basket->getPrice()->getCosts() );
 		$this->assertEquals( 0, count( $basket->getCoupons() ) );
 
+		$productBasket = $this->object->load( $item->getId(), \Aimeos\MShop\Order\Item\Base\Base::PARTS_ALL, true );
+
 		$basket->addCoupon( 'CDEF' );
-		$basket->addCoupon( '5678', $basket->getProducts() );
+		$basket->addCoupon( '90AB' );
 		$this->assertEquals( 2, count( $basket->getCoupons() ) );
 
 		$this->object->store( $basket );
 		$newBasket = $this->object->load( $basket->getId() );
 		$this->object->deleteItem( $newBasket->getId() );
 
-		$this->assertEquals( '1344.00', $newBasket->getPrice()->getValue() );
-		$this->assertEquals( '64.00', $newBasket->getPrice()->getCosts() );
-		$this->assertEquals( '5.00', $newBasket->getPrice()->getRebate() );
+		$this->assertEquals( '52.50', $newBasket->getPrice()->getValue() );
+		$this->assertEquals( '1.50', $newBasket->getPrice()->getCosts() );
+		$this->assertEquals( '6.00', $newBasket->getPrice()->getRebate() );
 		$this->assertEquals( 2, count( $newBasket->getCoupons() ) );
 	}
 
 
-	public function testGetSetSession()
-	{
-		$order = $this->object->createItem();
-		$order->setComment( 'test comment' );
-
-		$this->object->setSession( $order, 'test' );
-		$session = $this->object->getSession( 'test' );
-
-		$this->assertInstanceof( '\\Aimeos\\MShop\\Order\\Item\\Base\\Iface', $session );
-		$this->assertEquals( 'test comment', $order->getComment() );
-		$this->assertEquals( $order, $session );
-	}
-
-
-	public function testGetSetSessionLock()
-	{
-		$lock = $this->object->getSessionLock( 'test' );
-		$this->assertEquals( \Aimeos\MShop\Order\Manager\Base\Base::LOCK_DISABLE, $lock );
-
-		$this->object->setSessionLock( \Aimeos\MShop\Order\Manager\Base\Base::LOCK_ENABLE, 'test' );
-
-		$lock = $this->object->getSessionLock( 'test' );
-		$this->assertEquals( \Aimeos\MShop\Order\Manager\Base\Base::LOCK_ENABLE, $lock );
-	}
-
-
+	/**
+	 * Returns an order base item
+	 *
+	 * @return \Aimeos\MShop\Order\Item\Base\Iface Order base item
+	 * @throws \Exception If no found
+	 */
 	protected function getOrderItem()
 	{
 		$search = $this->object->createSearch();
 
-		$expr = array();
+		$expr = [];
 		$expr[] = $search->compare( '==', 'order.base.rebate', 14.50 );
 		$expr[] = $search->compare( '==', 'order.base.sitecode', 'unittest' );
 		$expr[] = $search->compare( '==', 'order.base.price', 53.50 );
@@ -797,7 +865,7 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$results = $this->object->searchItems( $search );
 
 		if( ( $item = reset( $results ) ) === false ) {
-			throw new \Exception( 'No order found' );
+			throw new \RuntimeException( 'No order found' );
 		}
 
 		return $item;

@@ -2,7 +2,7 @@
 
 /**
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Container
  */
@@ -21,7 +21,7 @@ class Directory
 	extends \Aimeos\MW\Container\Base
 	implements \Aimeos\MW\Container\Iface
 {
-	private $content = array();
+	private $content = [];
 	private $classname;
 	private $resource;
 
@@ -36,16 +36,16 @@ class Directory
 	 * @param string $format Format of the content objects inside the container
 	 * @param array $options Associative list of key/value pairs for configuration
 	 */
-	public function __construct( $resourcepath, $format, array $options = array() )
+	public function __construct( $resourcepath, $format, array $options = [] )
 	{
-		$this->classname = '\\Aimeos\\MW\\Container\\Content\\' . $format;
+		$this->classname = '\Aimeos\MW\Container\Content\\' . $format;
 
 		if( class_exists( $this->classname ) === false ) {
 			throw new \Aimeos\MW\Container\Exception( sprintf( 'Unknown format "%1$s"', $format ) );
 		}
 
 		parent::__construct( $resourcepath, $options );
-		
+
 		$perm = octdec( $this->getOption( 'dir-perm', '0755' ) );
 
 		if( !is_dir( realpath( $resourcepath ) ) && mkdir( $resourcepath, $perm, true ) === false ) {
@@ -73,10 +73,12 @@ class Directory
 	 * Adds a content object to the container.
 	 *
 	 * @param \Aimeos\MW\Container\Content\Iface $content Content object
+	 * @return \Aimeos\MW\Container\Iface Container instance for method chaining
 	 */
 	public function add( \Aimeos\MW\Container\Content\Iface $content )
 	{
 		$this->content[] = $content;
+		return $this;
 	}
 
 
@@ -86,20 +88,24 @@ class Directory
 	 * @param string $name Name of the content object that should be returned
 	 * @return \Aimeos\MW\Container\Content\Iface Content object
 	 */
-	function get( $name )
+	public function get( $name )
 	{
-		return new $this->classname( $this->resource->getPath() . DIRECTORY_SEPARATOR . $name, $name );
+		return new $this->classname( $this->resource->getPath() . DIRECTORY_SEPARATOR . $name, $name, $this->getOptions() );
 	}
 
 
 	/**
 	 * Cleans up and saves the container.
+	 *
+	 * @return \Aimeos\MW\Container\Iface Container instance for method chaining
 	 */
 	public function close()
 	{
 		foreach( $this->content as $content ) {
 			$content->close();
 		}
+
+		return $this;
 	}
 
 
@@ -108,18 +114,18 @@ class Directory
 	 *
 	 * @return \Aimeos\MW\Container\Content\Iface Current content object
 	 */
-	function current()
+	public function current()
 	{
-		return new $this->classname( $this->resource->getPathname(), $this->resource->getFilename() );
+		return new $this->classname( $this->resource->getPathname(), $this->resource->getFilename(), $this->getOptions() );
 	}
 
 
 	/**
 	 * Returns the key of the current element.
 	 *
-	 * @return integer Position within the directory
+	 * @return string Position within the directory
 	 */
-	function key()
+	public function key()
 	{
 		return $this->resource->key();
 	}
@@ -128,7 +134,7 @@ class Directory
 	/**
 	 * Moves forward to next element.
 	 */
-	function next()
+	public function next()
 	{
 		do {
 			$this->resource->next();
@@ -142,7 +148,7 @@ class Directory
 	/**
 	 * Rewinds the file pointer to the beginning.
 	 */
-	function rewind()
+	public function rewind()
 	{
 		$this->resource->rewind();
 	}
@@ -153,7 +159,7 @@ class Directory
 	 *
 	 * @return boolean True on success or false on failure
 	 */
-	function valid()
+	public function valid()
 	{
 		while( $this->resource->isDot() ) {
 			$this->next();

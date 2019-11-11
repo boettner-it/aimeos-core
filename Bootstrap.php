@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 
@@ -37,35 +37,14 @@ class Bootstrap
 		}
 
 		if( $defaultdir === true && is_dir( $basedir . DIRECTORY_SEPARATOR . 'ext' ) === true ) {
-			$extdirs[] = $basedir . DIRECTORY_SEPARATOR . 'ext';
+			$extdirs[] = realpath( $basedir . DIRECTORY_SEPARATOR . 'ext' );
 		}
 
 		$this->manifests[$basedir] = $this->getManifestFile( $basedir );
 
 		self::$includePaths = $this->getIncludePaths();
 		$this->registerAutoloader();
-
-		foreach( $this->getManifests( $extdirs ) as $location => $manifest )
-		{
-			if( isset( $this->extensions[$manifest['name']] ) )
-			{
-				$location2 = $this->extensions[$manifest['name']]['location'];
-				$msg = 'Extension "%1$s" exists twice in "%2$s" and in "%3$s"';
-				throw new \Exception( sprintf( $msg, $manifest['name'], $location, $location2 ) );
-			}
-
-			if( !isset( $manifest['depends'] ) || !is_array( $manifest['depends'] ) ) {
-				throw new \Exception( sprintf( 'Incorrect dependency configuration in manifest "%1$s"', $location ) );
-			}
-
-			$manifest['location'] = $location;
-			$this->extensions[$manifest['name']] = $manifest;
-
-			foreach( $manifest['depends'] as $name ) {
-				$this->dependencies[$manifest['name']][$name] = $name;
-			}
-		}
-
+		$this->addDependencies( $extdirs );
 		$this->addManifests( $this->dependencies );
 		self::$includePaths = $this->getIncludePaths();
 	}
@@ -170,8 +149,8 @@ class Bootstrap
 				continue;
 			}
 
-			foreach( (array) $manifest['config'] as $paths ) {
-				$confpaths[] = $path . DIRECTORY_SEPARATOR . $paths;
+			foreach( (array) $manifest['config'] as $relpath ) {
+				$confpaths[] = $path . DIRECTORY_SEPARATOR . $relpath;
 			}
 		}
 
@@ -197,6 +176,28 @@ class Bootstrap
 		}
 
 		return $paths;
+	}
+
+
+	/**
+	 * Returns the available extensions
+	 *
+	 * @return array List of available extension names
+	 */
+	public function getExtensions()
+	{
+		$list = [];
+
+		foreach( $this->manifests as $path => $manifest )
+		{
+			if( isset( $manifest['name'] ) && $manifest['name'] != '' ) {
+				$list[] = $manifest['name'];
+			} else {
+				$list[] = basename( $path );
+			}
+		}
+
+		return $list;
 	}
 
 
@@ -233,6 +234,37 @@ class Bootstrap
 
 
 	/**
+	 * Returns the language IDs for the available translations
+	 *
+	 * @param string $section Section name in the i18n paths
+	 * @return array List of ISO language codes
+	 */
+	public function getI18nList( $section )
+	{
+		$list = array();
+		$paths = $this->getI18nPaths();
+		$paths = ( isset( $paths[$section] ) ? (array) $paths[$section] : array() );
+
+		foreach( $paths as $path )
+		{
+			$iter = new \DirectoryIterator( $path );
+
+			foreach( $iter as $file )
+			{
+				$name = $file->getFilename();
+
+				if( $file->isFile() && preg_match( '/^[a-z]{2,3}(_[A-Z]{2})?$/', $name ) ) {
+					$list[$name] = null;
+				}
+			}
+		}
+
+		ksort( $list );
+		return array_keys( $list );
+	}
+
+
+	/**
 	 * Returns the configurations of the manifest files in the given directories.
 	 *
 	 * @param array $directories List of directories where the manifest files are stored
@@ -256,12 +288,10 @@ class Bootstrap
 
 			foreach( $dir as $dirinfo )
 			{
-				if( $dirinfo->isDot() !== false ) {
-					continue;
-				}
-
-				$manifest = $this->getManifestFile( $dirinfo->getPathName() );
-				if( $manifest === false ) {
+				if( $dirinfo->isDir() === false || $dirinfo->isDot() !== false
+					|| substr( $dirinfo->getFilename(), 0, 1 ) === '.'
+					|| ( $manifest = $this->getManifestFile( $dirinfo->getPathName() ) ) === false
+				) {
 					continue;
 				}
 
@@ -301,6 +331,43 @@ class Bootstrap
 			spl_autoload_register( array( $this, 'autoload' ), true, false );
 			self::$autoloader = true;
 		}
+
+		$ds = DIRECTORY_SEPARATOR;
+
+		if( is_file( __DIR__ . $ds . 'vendor' . $ds . 'autoload.php' ) ) {
+			require __DIR__ . $ds . 'vendor' . $ds . 'autoload.php';
+		}
+	}
+
+
+	/**
+	 * Adds the dependencies from the extensions
+	 *
+	 * @param array $extdirs List of extension directories
+	 * @throws \Exception If dependencies are incorrectly configured
+	 */
+	private function addDependencies( array $extdirs )
+	{
+		foreach( $this->getManifests( $extdirs ) as $location => $manifest )
+		{
+			if( isset( $this->extensions[$manifest['name']] ) )
+			{
+				$location2 = $this->extensions[$manifest['name']]['location'];
+				$msg = 'Extension "%1$s" exists twice in "%2$s" and in "%3$s"';
+				throw new \Exception( sprintf( $msg, $manifest['name'], $location, $location2 ) );
+			}
+
+			if( !isset( $manifest['depends'] ) || !is_array( $manifest['depends'] ) ) {
+				throw new \Exception( sprintf( 'Incorrect dependency configuration in manifest "%1$s"', $location ) );
+			}
+
+			$manifest['location'] = $location;
+			$this->extensions[$manifest['name']] = $manifest;
+
+			foreach( $manifest['depends'] as $name ) {
+				$this->dependencies[$manifest['name']][$name] = $name;
+			}
+		}
 	}
 
 
@@ -320,13 +387,11 @@ class Bootstrap
 			}
 
 			if( in_array( $extName, $stack ) ) {
-				$msg = sprintf( 'Circular dependency for "%1$s" detected', $extName );
-				throw new \Exception( $msg );
+				throw new \Exception( sprintf( 'Circular dependency for "%1$s" detected', $extName ) );
 			}
 
 			$stack[] = $extName;
 
-			/** @todo test for expression object or array when implementing version checks */
 			if( isset( $this->dependencies[$extName] ) ) {
 				$this->addManifests( (array) $this->dependencies[$extName], $stack );
 			}

@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage DB
  */
@@ -20,11 +20,7 @@ namespace Aimeos\MW\DB\Result;
  */
 class PDO extends \Aimeos\MW\DB\Result\Base implements \Aimeos\MW\DB\Result\Iface
 {
-	private $statement = null;
-	private $style = array(
-		\Aimeos\MW\DB\Result\Base::FETCH_ASSOC => \PDO::FETCH_ASSOC,
-		\Aimeos\MW\DB\Result\Base::FETCH_NUM => \PDO::FETCH_NUM,
-	);
+	private $statement;
 
 
 	/**
@@ -48,7 +44,7 @@ class PDO extends \Aimeos\MW\DB\Result\Base implements \Aimeos\MW\DB\Result\Ifac
 	{
 		try {
 			return $this->statement->rowCount();
-		} catch ( \PDOException $e ) {
+		} catch( \PDOException $e ) {
 			throw new \Aimeos\MW\DB\Exception( $e->getMessage(), $e->getCode(), $e->errorInfo );
 		}
 	}
@@ -58,14 +54,14 @@ class PDO extends \Aimeos\MW\DB\Result\Base implements \Aimeos\MW\DB\Result\Ifac
 	 * Retrieves the next row from database result set.
 	 *
 	 * @param integer $style The data can be returned as associative or numerical array
-	 * @return Array Numeric or associative array of columns returned by the SQL statement
+	 * @return array|false Numeric or associative array of columns returned by the database or false if no more rows are available
 	 * @throws \Aimeos\MW\DB\Exception if an error occured in the unterlying driver or the fetch style is unknown
 	 */
 	public function fetch( $style = \Aimeos\MW\DB\Result\Base::FETCH_ASSOC )
 	{
 		try {
-			return $this->statement->fetch( $this->style[$style] );
-		} catch ( \PDOException $e ) {
+			return $this->statement->fetch( $style ? \PDO::FETCH_ASSOC : \PDO::FETCH_NUM );
+		} catch( \PDOException $e ) {
 			throw new \Aimeos\MW\DB\Exception( $e->getMessage(), $e->getCode(), $e->errorInfo );
 		}
 	}
@@ -74,15 +70,18 @@ class PDO extends \Aimeos\MW\DB\Result\Base implements \Aimeos\MW\DB\Result\Ifac
 	/**
 	 * Cleans up pending database result sets.
 	 *
+	 * @return \Aimeos\MW\DB\Result\Iface Result instance for method chaining
 	 * @throws \Aimeos\MW\DB\Exception if an error occured in the unterlying driver
 	 */
 	public function finish()
 	{
 		try {
 			$this->statement->closeCursor();
-		} catch ( \PDOException $e ) {
+		} catch( \PDOException $e ) {
 			throw new \Aimeos\MW\DB\Exception( $e->getMessage(), $e->getCode(), $e->errorInfo );
 		}
+
+		return $this;
 	}
 
 
@@ -90,14 +89,13 @@ class PDO extends \Aimeos\MW\DB\Result\Base implements \Aimeos\MW\DB\Result\Ifac
 	 * Retrieves the next database result set.
 	 *
 	 * @return boolean True if another result is available, false if not
-	 * @throws \Aimeos\MW\DB\Exception if an error occured in the unterlying driver
 	 */
 	public function nextResult()
 	{
 		try {
 			return $this->statement->nextRowset();
-		} catch ( \PDOException $e ) {
-			throw new \Aimeos\MW\DB\Exception( $e->getMessage(), $e->getCode(), $e->errorInfo );
+		} catch( \PDOException $e ) {
+			return false;
 		}
 	}
 }

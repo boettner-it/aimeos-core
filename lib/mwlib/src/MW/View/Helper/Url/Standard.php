@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2012
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2012
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage View
  */
@@ -19,8 +19,8 @@ namespace Aimeos\MW\View\Helper\Url;
  * @subpackage View
  */
 class Standard
-	extends \Aimeos\MW\View\Helper\Base
-	implements \Aimeos\MW\View\Helper\Iface
+	extends \Aimeos\MW\View\Helper\Url\Base
+	implements \Aimeos\MW\View\Helper\Url\Iface
 {
 	private $baseUrl;
 
@@ -50,17 +50,14 @@ class Standard
 	 * @param array $config Additional configuration parameter per URL
 	 * @return string Complete URL that can be used in the template
 	 */
-	public function transform( $target = null, $controller = null, $action = null, array $params = array(), array $trailing = array(), array $config = array() )
+	public function transform( $target = null, $controller = null, $action = null, array $params = [], array $trailing = [], array $config = [] )
 	{
 		$path = ( $target !== null ? $target . '/' : '' );
 		$path .= ( $controller !== null ? $controller . '/' : '' );
 		$path .= ( $action !== null ? $action . '/' : '' );
 
-		$parameter = ( count( $params ) > 0 ? '?' . http_build_query( $params ) : '' );
-		$pretty = ( count( $trailing ) > 0 ? implode( '-', $trailing ) : '' );
-
-		$badchars = array( ' ', '/', '&', '%', '?', '#', '=', '{', '}', '|', '\\', '^', '~', '[', ']', '`' );
-		$pretty = str_replace( $badchars, '-', $pretty );
+		$parameter = ( count( $params ) > 0 ? '?' . http_build_query( $this->sanitize( $params ) ) : '' );
+		$pretty = ( count( $trailing ) > 0 ? implode( '-', $this->sanitize( $trailing ) ) : '' );
 
 		return $this->baseUrl . '/' . $path . $pretty . $parameter;
 	}

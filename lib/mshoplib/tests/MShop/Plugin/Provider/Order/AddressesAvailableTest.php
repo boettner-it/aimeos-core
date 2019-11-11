@@ -1,136 +1,146 @@
 <?php
 
+/**
+ * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
+ */
+
+
 namespace Aimeos\MShop\Plugin\Provider\Order;
 
 
-/**
- * @copyright Metaways Infosystems GmbH, 2011
- * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
- */
-class AddressesAvailableTest extends \PHPUnit_Framework_TestCase
+class AddressesAvailableTest extends \PHPUnit\Framework\TestCase
 {
+	private $address;
+	private $object;
 	private $order;
 	private $plugin;
-	private $address;
 
 
-	/**
-	 * Sets up the fixture, for example, opens a network connection.
-	 * This method is called before a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function setUp()
 	{
-		$context = \TestHelper::getContext();
+		$context = \TestHelperMShop::getContext();
+		$this->plugin = \Aimeos\MShop::create( $context, 'plugin' )->createItem();
+		$this->order = \Aimeos\MShop::create( $context, 'order/base' )->createItem()->off(); // remove event listeners
 
-		$pluginManager = \Aimeos\MShop\Plugin\Manager\Factory::createManager( $context );
-		$this->plugin = $pluginManager->createItem();
-		$this->plugin->setProvider( 'AddressesAvailable' );
-		$this->plugin->setStatus( 1 );
+		$this->address = \Aimeos\MShop::create( $context, 'order/base/address' )
+			->createItem()->setLastName( 'Available' );
 
-		$orderBaseManager = \Aimeos\MShop\Order\Manager\Factory::createManager( $context )->getSubManager( 'base' );
-		$orderBaseAddressManager = $orderBaseManager->getSubManager( 'address' );
-
-		$this->order = $orderBaseManager->createItem();
-
-		$this->address = $orderBaseAddressManager->createItem();
-		$this->address->setLastName( 'Available' );
+		$this->object = new \Aimeos\MShop\Plugin\Provider\Order\AddressesAvailable( $context, $this->plugin );
 	}
 
 
-	/**
-	 * Tears down the fixture, for example, closes a network connection.
-	 * This method is called after a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function tearDown()
 	{
-		unset( $this->plugin );
-		unset( $this->order );
-		unset( $this->address );
+		unset( $this->plugin, $this->order, $this->address, $this->object );
+	}
+
+
+	public function testCheckConfigBE()
+	{
+		$result = $this->object->checkConfigBE( ['payment' => '1', 'delivery' => '0'] );
+
+		$this->assertEquals( 2, count( $result ) );
+		$this->assertEquals( null, $result['payment'] );
+		$this->assertEquals( null, $result['delivery'] );
+	}
+
+
+	public function testGetConfigBE()
+	{
+		$list = $this->object->getConfigBE();
+
+		$this->assertEquals( 2, count( $list ) );
+		$this->assertArrayHasKey( 'payment', $list );
+		$this->assertArrayHasKey( 'delivery', $list );
+
+		foreach( $list as $entry ) {
+			$this->assertInstanceOf( \Aimeos\MW\Criteria\Attribute\Iface::class, $entry );
+		}
 	}
 
 
 	public function testRegister()
 	{
-		$object = new \Aimeos\MShop\Plugin\Provider\Order\AddressesAvailable( \TestHelper::getContext(), $this->plugin );
-		$object->register( $this->order );
+		$this->object->register( $this->order );
 	}
+
 
 	public function testUpdateNone()
 	{
-		// \Aimeos\MShop\Order\Item\Base\Base::PARTS_ADDRESS not set, so update shall not be executed
-		$object = new \Aimeos\MShop\Plugin\Provider\Order\AddressesAvailable( \TestHelper::getContext(), $this->plugin );
-		$this->assertTrue( $object->update( $this->order, 'check.after' ) );
+		$this->assertEquals( null, $this->object->setObject( $this->object )->update( $this->order, 'check.after' ) );
 	}
+
 
 	public function testEmptyConfig()
 	{
-		$object = new \Aimeos\MShop\Plugin\Provider\Order\AddressesAvailable( \TestHelper::getContext(), $this->plugin );
-		$this->assertTrue( $object->update( $this->order, 'check.after', \Aimeos\MShop\Order\Item\Base\Base::PARTS_ADDRESS ) );
+		$value = \Aimeos\MShop\Order\Item\Base\Base::PARTS_ADDRESS;
 
-		$this->order->setAddress( $this->address, \Aimeos\MShop\Order\Item\Base\Address\Base::TYPE_PAYMENT );
-		$this->order->setAddress( $this->address, \Aimeos\MShop\Order\Item\Base\Address\Base::TYPE_DELIVERY );
-		$this->assertTrue( $object->update( $this->order, 'check.after', \Aimeos\MShop\Order\Item\Base\Base::PARTS_ADDRESS ) );
+		$this->assertEquals( $value, $this->object->update( $this->order, 'check.after', $value ) );
+
+		$this->order->addAddress( $this->address, \Aimeos\MShop\Order\Item\Base\Address\Base::TYPE_PAYMENT );
+		$this->order->addAddress( $this->address, \Aimeos\MShop\Order\Item\Base\Address\Base::TYPE_DELIVERY );
+
+		$this->assertEquals( $value, $this->object->update( $this->order, 'check.after', $value ) );
 	}
+
 
 	public function testUpdateAddressesNotAvailable()
 	{
-		$object = new \Aimeos\MShop\Plugin\Provider\Order\AddressesAvailable( \TestHelper::getContext(), $this->plugin );
+		$value = \Aimeos\MShop\Order\Item\Base\Base::PARTS_ADDRESS;
 
 		$this->plugin->setConfig( array(
 				\Aimeos\MShop\Order\Item\Base\Address\Base::TYPE_DELIVERY => false,
 				\Aimeos\MShop\Order\Item\Base\Address\Base::TYPE_PAYMENT => false
 		) );
 
-		$this->assertTrue( $object->update( $this->order, 'check.after', \Aimeos\MShop\Order\Item\Base\Base::PARTS_ADDRESS ) );
+		$this->assertEquals( $value, $this->object->update( $this->order, 'check.after', $value ) );
 
 		$this->plugin->setConfig( array(
 				\Aimeos\MShop\Order\Item\Base\Address\Base::TYPE_DELIVERY => null,
 				\Aimeos\MShop\Order\Item\Base\Address\Base::TYPE_PAYMENT => null
 		) );
 
-		$this->assertTrue( $object->update( $this->order, 'check.after', \Aimeos\MShop\Order\Item\Base\Base::PARTS_ADDRESS ) );
+		$this->assertEquals( $value, $this->object->update( $this->order, 'check.after', $value ) );
 
 		$this->plugin->setConfig( array(
 				\Aimeos\MShop\Order\Item\Base\Address\Base::TYPE_DELIVERY => true,
 				\Aimeos\MShop\Order\Item\Base\Address\Base::TYPE_PAYMENT => true
 		) );
 
-		$this->setExpectedException( '\\Aimeos\\MShop\\Plugin\\Provider\\Exception' );
-		$object->update( $this->order, 'check.after', \Aimeos\MShop\Order\Item\Base\Base::PARTS_ADDRESS );
+		$this->setExpectedException( \Aimeos\MShop\Plugin\Provider\Exception::class );
+		$this->object->update( $this->order, 'check.after', $value );
 	}
+
 
 	public function testUpdateAddressesAvailable()
 	{
-		$object = new \Aimeos\MShop\Plugin\Provider\Order\AddressesAvailable( \TestHelper::getContext(), $this->plugin );
+		$value = \Aimeos\MShop\Order\Item\Base\Base::PARTS_ADDRESS;
 
-		$this->order->setAddress( $this->address, \Aimeos\MShop\Order\Item\Base\Address\Base::TYPE_PAYMENT );
-		$this->order->setAddress( $this->address, \Aimeos\MShop\Order\Item\Base\Address\Base::TYPE_DELIVERY );
+		$this->order->addAddress( $this->address, \Aimeos\MShop\Order\Item\Base\Address\Base::TYPE_PAYMENT );
+		$this->order->addAddress( $this->address, \Aimeos\MShop\Order\Item\Base\Address\Base::TYPE_DELIVERY );
 
 		$this->plugin->setConfig( array(
 				\Aimeos\MShop\Order\Item\Base\Address\Base::TYPE_DELIVERY => null,
 				\Aimeos\MShop\Order\Item\Base\Address\Base::TYPE_PAYMENT => null
 		) );
 
-		$this->assertTrue( $object->update( $this->order, 'check.after', \Aimeos\MShop\Order\Item\Base\Base::PARTS_ADDRESS ) );
+		$this->assertEquals( $value, $this->object->update( $this->order, 'check.after', $value ) );
 
 		$this->plugin->setConfig( array(
 				\Aimeos\MShop\Order\Item\Base\Address\Base::TYPE_DELIVERY => true,
 				\Aimeos\MShop\Order\Item\Base\Address\Base::TYPE_PAYMENT => true
 		) );
 
-		$this->assertTrue( $object->update( $this->order, 'check.after', \Aimeos\MShop\Order\Item\Base\Base::PARTS_ADDRESS ) );
+		$this->assertEquals( $value, $this->object->update( $this->order, 'check.after', $value ) );
 
 		$this->plugin->setConfig( array(
 				\Aimeos\MShop\Order\Item\Base\Address\Base::TYPE_DELIVERY => false,
 				\Aimeos\MShop\Order\Item\Base\Address\Base::TYPE_PAYMENT => false
 		) );
 
-		$this->setExpectedException( '\\Aimeos\\MShop\\Plugin\\Provider\\Exception' );
-		$object->update( $this->order, 'check.after', \Aimeos\MShop\Order\Item\Base\Base::PARTS_ADDRESS );
+		$this->setExpectedException( \Aimeos\MShop\Plugin\Provider\Exception::class );
+		$this->object->update( $this->order, 'check.after', $value );
 	}
 }

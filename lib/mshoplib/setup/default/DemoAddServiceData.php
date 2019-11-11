@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2014
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2014
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 
@@ -33,33 +33,32 @@ class DemoAddServiceData extends \Aimeos\MW\Setup\Task\MShopAddDataAbstract
 	 */
 	public function getPostDependencies()
 	{
-		return array();
-	}
-
-
-	/**
-	 * Executes the task for MySQL databases.
-	 */
-	protected function mysql()
-	{
-		$this->process();
+		return [];
 	}
 
 
 	/**
 	 * Insert service data.
 	 */
-	protected function process()
+	public function migrate()
 	{
 		$this->msg( 'Processing service demo data', 0 );
 
 		$context = $this->getContext();
-		$manager = \Aimeos\MShop\Factory::createManager( $context, 'service' );
+		$value = $context->getConfig()->get( 'setup/default/demo', '' );
+
+		if( $value === '' )
+		{
+			$this->status( 'OK' );
+			return;
+		}
+
+
+		$manager = \Aimeos\MShop::create( $context, 'service' );
 
 		$search = $manager->createSearch();
 		$search->setConditions( $search->compare( '=~', 'service.code', 'demo-' ) );
 		$services = $manager->searchItems( $search );
-
 
 		foreach( $services as $item )
 		{
@@ -71,7 +70,7 @@ class DemoAddServiceData extends \Aimeos\MW\Setup\Task\MShopAddDataAbstract
 		$manager->deleteItems( array_keys( $services ) );
 
 
-		if( $context->getConfig()->get( 'setup/default/demo', false ) == true )
+		if( $value === '1' )
 		{
 			$ds = DIRECTORY_SEPARATOR;
 			$path = __DIR__ . $ds . 'data' . $ds . 'demo-service.php';
@@ -80,11 +79,10 @@ class DemoAddServiceData extends \Aimeos\MW\Setup\Task\MShopAddDataAbstract
 				throw new \Aimeos\MShop\Exception( sprintf( 'No file "%1$s" found for service domain', $path ) );
 			}
 
-
 			foreach( $data as $entry )
 			{
 				$item = $manager->createItem();
-				$item->setTypeId( $this->getTypeId( 'service/type', 'service', $entry['type'] ) );
+				$item->setType( $entry['type'] );
 				$item->setCode( $entry['code'] );
 				$item->setLabel( $entry['label'] );
 				$item->setProvider( $entry['provider'] );
@@ -93,7 +91,6 @@ class DemoAddServiceData extends \Aimeos\MW\Setup\Task\MShopAddDataAbstract
 				$item->setStatus( $entry['status'] );
 
 				$manager->saveItem( $item );
-
 
 				if( isset( $entry['media'] ) ) {
 					$this->addMedia( $item->getId(), $entry['media'], 'service' );

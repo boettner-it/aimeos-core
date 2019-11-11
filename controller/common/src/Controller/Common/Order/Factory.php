@@ -3,7 +3,7 @@
 /**
  * @copyright Metaways Infosystems GmbH, 2014
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package Controller
  * @subpackage Common
  */
@@ -20,33 +20,18 @@ namespace Aimeos\Controller\Common\Order;
  */
 class Factory
 {
-	private static $objects = array();
-
-
-	/**
-	 * Injects a controller object.
-	 *
-	 * The object is returned via createController() if an instance of the class
-	 * with the name name is requested.
-	 *
-	 * @param string $classname Full name of the class for which the object should be returned
-	 * @param null|\Aimeos\Controller\Common\Order\Iface $controller Frontend controller object
-	 */
-	public static function injectController( $classname, \Aimeos\Controller\Common\Order\Iface $controller = null )
-	{
-		self::$objects[$classname] = $controller;
-	}
+	private static $objects = [];
 
 
 	/**
 	 * Creates a new controller specified by the given name.
 	 *
 	 * @param \Aimeos\MShop\Context\Item\Iface $context Context object required by controllers
-	 * @param string|null $name Name of the controller or "Default" if null
+	 * @param string|null $name Name of the controller or "Standard" if null
 	 * @return \Aimeos\Controller\Common\Order\Iface New order controller object
 	 * @throws \Aimeos\Controller\Common\Exception
 	 */
-	public static function createController( \Aimeos\MShop\Context\Item\Iface $context, $name = null )
+	public static function create( \Aimeos\MShop\Context\Item\Iface $context, $name = null )
 	{
 		/** controller/common/order/name
 		 * Class name of the used order common controller implementation
@@ -85,13 +70,14 @@ class Factory
 			$name = $context->getConfig()->get( 'controller/common/order/name', 'Standard' );
 		}
 
-		if( ctype_alnum( $name ) === false ) {
-			$classname = is_string( $name ) ? '\\Aimeos\\Controller\\Common\\Order\\' . $name : '<not a string>';
+		if( ctype_alnum( $name ) === false )
+		{
+			$classname = is_string( $name ) ? '\Aimeos\Controller\Common\Order\\' . $name : '<not a string>';
 			throw new \Aimeos\Controller\Common\Exception( sprintf( 'Invalid characters in class name "%1$s"', $classname ) );
 		}
 
-		$iface = '\\Aimeos\\Controller\\Common\\Order\\Iface';
-		$classname = '\\Aimeos\\Controller\\Common\\Order\\' . $name;
+		$iface = \Aimeos\Controller\Common\Order\Iface::class;
+		$classname = 'Aimeos\Controller\Common\Order\\' . $name;
 
 		if( isset( self::$objects[$classname] ) ) {
 			return self::$objects[$classname];
@@ -104,9 +90,24 @@ class Factory
 		$controller = new $classname( $context );
 
 		if( !( $controller instanceof $iface ) ) {
-			throw new \Aimeos\Controller\Common\Exception( sprintf( 'Class "%1$s" does not implement interface "%2$s"', $classname, $interface ) );
+			throw new \Aimeos\Controller\Common\Exception( sprintf( 'Class "%1$s" does not implement interface "%2$s"', $classname, $iface ) );
 		}
 
 		return $controller;
+	}
+
+
+	/**
+	 * Injects a controller object.
+	 *
+	 * The object is returned via create() if an instance of the class
+	 * with the name name is requested.
+	 *
+	 * @param string $classname Full name of the class for which the object should be returned
+	 * @param null|\Aimeos\Controller\Common\Order\Iface $controller Frontend controller object
+	 */
+	public static function inject( $classname, \Aimeos\Controller\Common\Order\Iface $controller = null )
+	{
+		self::$objects[trim( $classname, '\\' )] = $controller;
 	}
 }

@@ -1,29 +1,20 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2013
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2013
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 
 namespace Aimeos\MW\View\Helper\Encoder;
 
 
-/**
- * Test class for \Aimeos\MW\View\Helper\Encoder\Standard.
- */
-class StandardTest extends \PHPUnit_Framework_TestCase
+class StandardTest extends \PHPUnit\Framework\TestCase
 {
 	private $object;
 
 
-	/**
-	 * Sets up the fixture, for example, opens a network connection.
-	 * This method is called before a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function setUp()
 	{
 		$view = new \Aimeos\MW\View\Standard();
@@ -31,12 +22,6 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	}
 
 
-	/**
-	 * Tears down the fixture, for example, closes a network connection.
-	 * This method is called after a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function tearDown()
 	{
 		$this->object = null;
@@ -45,7 +30,7 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 
 	public function testTransform()
 	{
-		$this->assertInstanceOf( '\\Aimeos\\MW\\View\\Helper\\Iface', $this->object->transform() );
+		$this->assertInstanceOf( \Aimeos\MW\View\Helper\Iface::class, $this->object->transform() );
 	}
 
 
@@ -53,7 +38,8 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	{
 		$enc = $this->object->transform();
 
-		$this->assertEquals( 'an attribute', $enc->attr( 'an attribute', $enc::TRUST ) );
+		$this->assertEquals( '<a href=" ">', $enc->attr( '<a href="
+">', $enc::TRUST, ' ' ) );
 	}
 
 
@@ -69,7 +55,23 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	{
 		$enc = $this->object->transform();
 
-		$this->assertEquals( '&lt;a&gt;&quot;attribute&#039;&lt;/a&gt;', $enc->attr( '<a>"attribute\'</a>' ) );
+		$this->assertEquals( '<a>&quot;attribute\'</a>', $enc->attr( '<a>"attribute\'</a>' ) );
+	}
+
+
+	public function testTransformAttrArray()
+	{
+		$enc = $this->object->transform();
+
+		$this->assertEquals( '[&quot;\u0026quot;&quot;]', $enc->attr( ['&quot;'] ) );
+	}
+
+
+	public function testTransformAttrObject()
+	{
+		$enc = $this->object->transform();
+
+		$this->assertEquals( '{&quot;key&quot;:&quot;\u0026quot;&quot;}', $enc->attr( (object) ['key' => '&quot;'] ) );
 	}
 
 
@@ -97,6 +99,22 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	}
 
 
+	public function testTransformHtmlArray()
+	{
+		$enc = $this->object->transform();
+
+		$this->assertEquals( '[&quot;\u0026quot;&quot;]', $enc->html( ['&quot;'] ) );
+	}
+
+
+	public function testTransformHtmlObject()
+	{
+		$enc = $this->object->transform();
+
+		$this->assertEquals( '{&quot;key&quot;:&quot;\u0026quot;&quot;}', $enc->html( (object) ['key' => '&quot;'] ) );
+	}
+
+
 	public function testTransformXmlTrusted()
 	{
 		$enc = $this->object->transform();
@@ -118,6 +136,22 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 		$enc = $this->object->transform();
 
 		$this->assertEquals( 'a ]]&gt;&lt;b&gt;text&lt;/b&gt;', $enc->xml( 'a ]]><b>text</b>' ) );
+	}
+
+
+	public function testTransformXmlArray()
+	{
+		$enc = $this->object->transform();
+
+		$this->assertEquals( '[&quot;\u0026quot;&quot;]', $enc->html( ['&quot;'] ) );
+	}
+
+
+	public function testTransformXmlObject()
+	{
+		$enc = $this->object->transform();
+
+		$this->assertEquals( '{&quot;key&quot;:&quot;\u0026quot;&quot;}', $enc->html( (object) ['key' => '&quot;'] ) );
 	}
 
 

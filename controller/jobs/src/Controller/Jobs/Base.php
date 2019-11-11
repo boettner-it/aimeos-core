@@ -3,7 +3,7 @@
 /**
  * @copyright Metaways Infosystems GmbH, 2013
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package Controller
  * @subpackage Jobs
  */
@@ -38,6 +38,19 @@ abstract class Base
 
 
 	/**
+	 * Catch unknown methods
+	 *
+	 * @param string $name Name of the method
+	 * @param array $param List of method parameter
+	 * @throws \Aimeos\Controller\Jobs\Exception If method call failed
+	 */
+	public function __call( $name, array $param )
+	{
+		throw new \Aimeos\Controller\Jobs\Exception( sprintf( 'Unable to call method "%1$s"', $name ) );
+	}
+
+
+	/**
 	 * Returns the context object.
 	 *
 	 * @return \Aimeos\MShop\Context\Item\Iface Context object
@@ -60,71 +73,15 @@ abstract class Base
 
 
 	/**
-	 * Returns the absolute path to the given template file.
-	 * It uses the first one found from the configured paths in the manifest files, but in reverse order.
+	 * Returns the value from the list or the default value
 	 *
-	 * @param string|array $default Relative file name or list of file names to use when nothing else is configured
-	 * @param string $confpath Configuration key of the path to the template file
-	 * @return string path the to the template file
-	 * @throws \Aimeos\Controller\Jobs\Exception If no template file was found
+	 * @param array $list Associative list of key/value pairs
+	 * @param string $key Key for the value to retrieve
+	 * @param mixed $default Default value if key isn't found
+	 * @return mixed Value for the key in the list or the default value
 	 */
-	protected function getTemplate( $confpath, $default )
+	protected function getValue( array $list, $key, $default = null )
 	{
-		$ds = DIRECTORY_SEPARATOR;
-		$templatePaths = $this->aimeos->getCustomPaths( 'controller/jobs/templates' );
-
-		foreach( (array) $default as $fname )
-		{
-			$file = $this->context->getConfig()->get( $confpath, $fname );
-
-			foreach( array_reverse( $templatePaths ) as $path => $relPaths )
-			{
-				foreach( $relPaths as $relPath )
-				{
-					$absPath = $path . $ds . $relPath . $ds . $file;
-					if( $ds !== '/' ) {
-						$absPath = str_replace( '/', $ds, $absPath );
-					}
-
-					if( is_file( $absPath ) ) {
-						return $absPath;
-					}
-				}
-			}
-		}
-
-		throw new \Aimeos\Controller\Jobs\Exception( sprintf( 'Template "%1$s" not available', $file ) );
-	}
-
-
-	/**
-	 * Returns the attribute type item specified by the code.
-	 *
-	 * @param string $prefix Domain prefix for the manager, e.g. "media/type"
-	 * @param string $domain Domain of the type item
-	 * @param string $code Code of the type item
-	 * @return \Aimeos\MShop\Common\Item\Type\Iface Type item
-	 * @throws \Aimeos\Controller\Jobs\Exception If no item is found
-	 */
-	protected function getTypeItem( $prefix, $domain, $code )
-	{
-		$manager = \Aimeos\MShop\Factory::createManager( $this->getContext(), $prefix );
-		$prefix = str_replace( '/', '.', $prefix );
-
-		$search = $manager->createSearch();
-		$expr = array(
-			$search->compare( '==', $prefix . '.domain', $domain ),
-			$search->compare( '==', $prefix . '.code', $code ),
-		);
-		$search->setConditions( $search->combine( '&&', $expr ) );
-		$result = $manager->searchItems( $search );
-
-		if( ( $item = reset( $result ) ) === false )
-		{
-			$msg = sprintf( 'No type item for "%1$s/%2$s" in "%3$s" found', $domain, $code, $prefix );
-			throw new \Aimeos\Controller\Jobs\Exception( $msg );
-		}
-
-		return $item;
+		return isset( $list[$key] ) && ( $value = trim( $list[$key] ) ) !== '' ? $value : $default;
 	}
 }

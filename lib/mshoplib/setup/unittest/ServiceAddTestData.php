@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2012
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2012
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 
@@ -22,42 +22,19 @@ class ServiceAddTestData extends \Aimeos\MW\Setup\Task\Base
 	 */
 	public function getPreDependencies()
 	{
-		return array( 'MShopSetLocale', 'CatalogListAddTestData' );
-	}
-
-
-	/**
-	 * Returns the list of task names which depends on this task.
-	 *
-	 * @return array List of task names
-	 */
-	public function getPostDependencies()
-	{
-		return array();
-	}
-
-
-	/**
-	 * Executes the task for MySQL databases.
-	 */
-	protected function mysql()
-	{
-		$this->process();
+		return ['MShopSetLocale'];
 	}
 
 
 	/**
 	 * Adds service test data.
 	 */
-	protected function process()
+	public function migrate()
 	{
-		$iface = '\\Aimeos\\MShop\\Context\\Item\\Iface';
-		if( !( $this->additional instanceof $iface ) ) {
-			throw new \Aimeos\MW\Setup\Exception( sprintf( 'Additionally provided object is not of type "%1$s"', $iface ) );
-		}
+		\Aimeos\MW\Common\Base::checkClass( \Aimeos\MShop\Context\Item\Iface::class, $this->additional );
 
 		$this->msg( 'Adding service test data', 0 );
-		$this->additional->setEditor( 'core:unittest' );
+		$this->additional->setEditor( 'core:lib/mshoplib' );
 
 		$ds = DIRECTORY_SEPARATOR;
 		$path = __DIR__ . $ds . 'data' . $ds . 'service.php';
@@ -80,13 +57,12 @@ class ServiceAddTestData extends \Aimeos\MW\Setup\Task\Base
 	 */
 	private function addServiceData( array $testdata )
 	{
-		$serviceManager = \Aimeos\MShop\Service\Manager\Factory::createManager( $this->additional, 'Standard' );
+		$serviceManager = \Aimeos\MShop\Service\Manager\Factory::create( $this->additional, 'Standard' );
 		$serviceTypeManager = $serviceManager->getSubManager( 'type', 'Standard' );
 
-		$typeIds = array();
 		$type = $serviceTypeManager->createItem();
 
-		$this->conn->begin();
+		$serviceManager->begin();
 
 		foreach( $testdata['service/type'] as $key => $dataset )
 		{
@@ -97,19 +73,14 @@ class ServiceAddTestData extends \Aimeos\MW\Setup\Task\Base
 			$type->setStatus( $dataset['status'] );
 
 			$serviceTypeManager->saveItem( $type );
-			$typeIds[$key] = $type->getId();
 		}
 
 		$parent = $serviceManager->createItem();
 
 		foreach( $testdata['service'] as $key => $dataset )
 		{
-			if( !isset( $typeIds[$dataset['typeid']] ) ) {
-				throw new \Aimeos\MW\Setup\Exception( sprintf( 'No service type ID found for "%1$s"', $dataset['typeid'] ) );
-			}
-
 			$parent->setId( null );
-			$parent->setTypeId( $typeIds[$dataset['typeid']] );
+			$parent->setType( $dataset['type'] );
 			$parent->setPosition( $dataset['pos'] );
 			$parent->setCode( $dataset['code'] );
 			$parent->setLabel( $dataset['label'] );
@@ -120,6 +91,6 @@ class ServiceAddTestData extends \Aimeos\MW\Setup\Task\Base
 			$serviceManager->saveItem( $parent, false );
 		}
 
-		$this->conn->commit();
+		$serviceManager->commit();
 	}
 }

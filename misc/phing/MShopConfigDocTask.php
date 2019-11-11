@@ -3,7 +3,7 @@
 /**
  * @copyright Metaways Infosystems GmbH, 2014
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Aimeos (aimeos.org), 2015-2016
  */
 
 
@@ -254,14 +254,20 @@ class MShopConfigDocTask extends Task
 
 			}
 
+			$data .= "\n== See also ==\n";
+
 			if( isset( $list['see'] ) )
 			{
-				$data .= "\n== See also ==\n";
-
 				foreach( $list['see'] as $see ) {
 					$data .= "\n* [[$wikiprefix/$see|$see]]";
 				}
 			}
+
+			$data .= "\nHow to adapt the configuration:\n";
+			$data .= "* [[TYPO3/Change_configuration|TYPO3]]\n";
+			$data .= "* [[Symfony/Change_configuration|Symfony]]\n";
+			$data .= "* [[Laravel/Change_configuration|Laravel]]\n";
+			$data .= "* [[Flow/Change_configuration|Flow]]\n";
 
 			if( isset( $list['category'] ) )
 			{

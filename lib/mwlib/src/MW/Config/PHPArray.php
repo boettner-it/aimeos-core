@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2013
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2013
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Config
  */
@@ -23,7 +23,6 @@ class PHPArray
 	implements \Aimeos\MW\Config\Iface
 {
 	private $config;
-	private $paths;
 
 
 	/**
@@ -32,10 +31,13 @@ class PHPArray
 	 * @param array $config Configuration array
 	 * @param string|array $paths Filesystem path or list of paths to the configuration files
 	 */
-	public function __construct( $config = array(), $paths = array() )
+	public function __construct( $config = [], $paths = [] )
 	{
 		$this->config = $config;
-		$this->paths = (array) $paths;
+
+		foreach( (array) $paths as $fspath ) {
+			$this->config = $this->load( $this->config, $fspath );
+		}
 	}
 
 
@@ -54,14 +56,6 @@ class PHPArray
 			return $value;
 		}
 
-		foreach( $this->paths as $fspath ) {
-			$this->config = $this->load( $this->config, $fspath, $parts );
-		}
-
-		if( ( $value = $this->getPart( $this->config, $parts ) ) !== null ) {
-			return $value;
-		}
-
 		return $default;
 	}
 
@@ -71,11 +65,12 @@ class PHPArray
 	 *
 	 * @param string $name Path to the requested value like tree/node/classname
 	 * @param mixed $value Value that should be associated with the given path
+	 * @return \Aimeos\MW\Config\Iface Config instance for method chaining
 	 */
 	public function set( $name, $value )
 	{
-		$parts = explode( '/', trim( $name, '/' ) );
-		$this->config = $this->setPart( $this->config, $parts, $value );
+		$this->config = $this->setPart( $this->config, explode( '/', trim( $name, '/' ) ), $value );
+		return $this;
 	}
 
 
@@ -83,10 +78,10 @@ class PHPArray
 	 * Returns a configuration value from an array.
 	 *
 	 * @param array $config The array to search in
-	 * @param array $parts Configuration path parts to look for inside the array
+	 * @param string[] $parts Configuration path parts to look for inside the array
 	 * @return mixed Found value or null if no value is available
 	 */
-	protected function getPart( $config,  $parts )
+	protected function getPart( $config, $parts )
 	{
 		if( ( $current = array_shift( $parts ) ) !== null && isset( $config[$current] ) )
 		{
@@ -105,8 +100,8 @@ class PHPArray
 	 * Sets a configuration value in the array.
 	 *
 	 * @param array $config Configuration sub-part
-	 * @param array $path Configuration path parts
-	 * @param array $value The new value
+	 * @param string[] $path Configuration path parts
+	 * @param mixed $value The new value
 	 */
 	protected function setPart( $config, $path, $value )
 	{
@@ -115,7 +110,7 @@ class PHPArray
 			if( isset( $config[$current] ) ) {
 				$config[$current] = $this->setPart( $config[$current], $path, $value );
 			} else {
-				$config[$current] = $this->setPart( array(), $path, $value );
+				$config[$current] = $this->setPart( [], $path, $value );
 			}
 
 			return $config;
@@ -130,55 +125,34 @@ class PHPArray
 	 *
 	 * @param array $config Configuration array which should contain the loaded configuration
 	 * @param string $path Path to the configuration directory
-	 * @param array $parts List of config name parts to look for
+	 * @param string[] $parts List of config name parts to look for
 	 * @return array Merged configuration
 	 */
-	protected function load( array $config, $path, array $parts )
+	protected function load( array $config, $path )
 	{
-		if( ( $key = array_shift( $parts ) ) !== null )
+		if( is_dir( $path ) )
 		{
-			$newPath = $path . DIRECTORY_SEPARATOR . $key;
-
-			if( is_dir( $newPath ) )
+			foreach( new \DirectoryIterator( $path ) as $entry )
 			{
-				if( !isset( $config[$key] ) ) {
-					$config[$key] = array();
+				if( $entry->isDot() ) {
+					continue;
 				}
 
-				$config[$key] = $this->load( $config[$key], $newPath, $parts );
-			}
+				$key = $entry->getBasename( '.php' );
+				$filepath = $entry->getPathname();
 
-			if( file_exists( $newPath . '.php' ) )
-			{
 				if( !isset( $config[$key] ) ) {
-					$config[$key] = array();
+					$config[$key] = [];
 				}
 
-				$config[$key] = $this->merge( $config[$key], $this->includeFile( $newPath . '.php' ) );
+				if( $entry->isDir() ) {
+					$config[$key] = $this->load( $config[$key], $filepath );
+				} elseif( $entry->isFile() ) {
+					$config[$key] = array_replace_recursive( $config[$key], $this->includeFile( $filepath ) );
+				}
 			}
 		}
 
 		return $config;
-	}
-
-
-	/**
-	 * Merges a multi-dimensional array into another one
-	 *
-	 * @param array $left Array to be merged into
-	 * @param array $right Array to merge in
-	 */
-	protected function merge( array $left, array $right )
-	{
-		foreach( $right as $key => $value )
-		{
-			if( isset( $left[$key] ) && is_array( $left[$key] ) && is_array( $value ) ) {
-				$left[$key] = $this->merge( $left[$key], $value );
-			} else {
-				$left[$key] = $value;
-			}
-		}
-
-		return $left;
 	}
 }

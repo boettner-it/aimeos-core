@@ -1,16 +1,16 @@
 <?php
 
+/**
+ * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
+ * @copyright Metaways Infosystems GmbH, 2014
+ * @copyright Aimeos (aimeos.org), 2015-2018
+ */
+
+
 namespace Aimeos\MW\Cache;
 
 
-/**
- * Test class for \Aimeos\MW\Cache\Factory.
- *
- * @copyright Metaways Infosystems GmbH, 2014
- * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
- */
-class FactoryTest extends \PHPUnit_Framework_TestCase
+class FactoryTest extends \PHPUnit\Framework\TestCase
 {
 	public function testFactory()
 	{
@@ -26,29 +26,29 @@ class FactoryTest extends \PHPUnit_Framework_TestCase
 			),
 		);
 
-		$object = \Aimeos\MW\Cache\Factory::createManager( 'DB', $config, \TestHelper::getDBManager() );
-		$this->assertInstanceOf( '\\Aimeos\\MW\\Cache\\Iface', $object );
+		$object = \Aimeos\MW\Cache\Factory::create( 'DB', $config, \TestHelperMw::getDBManager() );
+		$this->assertInstanceOf( \Aimeos\MW\Cache\Iface::class, $object );
 	}
 
 
 	public function testFactoryUnknown()
 	{
-		$this->setExpectedException( '\\Aimeos\\MW\\Cache\\Exception' );
-		\Aimeos\MW\Cache\Factory::createManager( 'unknown', array(), null );
+		$this->setExpectedException( \Aimeos\MW\Cache\Exception::class );
+		\Aimeos\MW\Cache\Factory::create( 'unknown' );
 	}
 
 
 	public function testFactoryInvalidCharacters()
 	{
-		$this->setExpectedException( '\\Aimeos\\MW\\Cache\\Exception' );
-		\Aimeos\MW\Cache\Factory::createManager( '$$$', array(), null );
+		$this->setExpectedException( \Aimeos\MW\Cache\Exception::class );
+		\Aimeos\MW\Cache\Factory::create( '$$$' );
 	}
 
 
 	public function testFactoryInvalidClass()
 	{
-		$this->setExpectedException( '\\Aimeos\\MW\\Cache\\Exception' );
-		\Aimeos\MW\Cache\Factory::createManager( 'InvalidCache', array(), null );
+		$this->setExpectedException( \Aimeos\MW\Cache\Exception::class );
+		\Aimeos\MW\Cache\Factory::create( 'InvalidCache' );
 	}
 }
 

@@ -2,7 +2,7 @@
 
 /**
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 
@@ -21,61 +21,76 @@ class SupplierListAddTestData extends \Aimeos\MW\Setup\Task\Base
 	 */
 	public function getPreDependencies()
 	{
-		return array( 'MShopSetLocale', 'TextAddTestData', 'ProductAddTestData', 'SupplierAddTestData' );
-	}
-
-
-	/**
-	 * Returns the list of task names which depends on this task.
-	 *
-	 * @return string[] List of task names
-	 */
-	public function getPostDependencies()
-	{
-		return array( 'CatalogRebuildTestIndex' );
-	}
-
-
-	/**
-	 * Executes the task for MySQL databases.
-	 */
-	protected function mysql()
-	{
-		$this->process();
+		return ['SupplierAddTestData', 'MediaAddTestData', 'ProductAddTestData', 'TextAddTestData', 'CustomerAddTestData'];
 	}
 
 
 	/**
 	 * Adds supplier test data.
 	 */
-	protected function process()
+	public function migrate()
 	{
-		$iface = '\\Aimeos\\MShop\\Context\\Item\\Iface';
-		if( !( $this->additional instanceof $iface ) ) {
-			throw new \Aimeos\MW\Setup\Exception( sprintf( 'Additionally provided object is not of type "%1$s"', $iface ) );
-		}
+		\Aimeos\MW\Common\Base::checkClass( \Aimeos\MShop\Context\Item\Iface::class, $this->additional );
 
 		$this->msg( 'Adding supplier-list test data', 0 );
-		$this->additional->setEditor( 'core:unittest' );
+		$this->additional->setEditor( 'core:lib/mshoplib' );
 
 		$ds = DIRECTORY_SEPARATOR;
 		$path = __DIR__ . $ds . 'data' . $ds . 'supplier-list.php';
 
-		if( ( $testdata = include( $path ) ) == false ){
+		if( ( $testdata = include( $path ) ) == false ) {
 			throw new \Aimeos\MShop\Exception( sprintf( 'No file "%1$s" found for supplier list domain', $path ) );
 		}
 
-		$refKeys = array();
+		$refKeys = [];
 		foreach( $testdata['supplier/lists'] as $dataset ) {
-			$refKeys[ $dataset['domain'] ][] = $dataset['refid'];
+			$refKeys[$dataset['domain']][] = $dataset['refid'];
 		}
 
-		$refIds = array();
+		$refIds = [];
 		$refIds['text'] = $this->getTextData( $refKeys['text'] );
-		//$refIds['product'] = $this->getProductData( $refKeys['product'] );
+		$refIds['media'] = $this->getMediaData( $refKeys['media'] );
+
+		if( isset( $refKeys['product'] ) ) {
+			$refIds['product'] = $this->getProductData( $refKeys['product'] );
+		}
+
 		$this->addSupplierListData( $testdata, $refIds );
 
 		$this->status( 'done' );
+	}
+
+
+	/**
+	 * Returns required media item ids.
+	 *
+	 * @param array $keys List of keys for search
+	 * @return array $refIds List with referenced Ids
+	 * @throws \Aimeos\MW\Setup\Exception If no type ID is found
+	 */
+	protected function getMediaData( array $keys )
+	{
+		$mediaManager = \Aimeos\MShop\Media\Manager\Factory::create( $this->additional, 'Standard' );
+
+		$urls = [];
+		foreach( $keys as $dataset )
+		{
+			if( ( $pos = strpos( $dataset, '/' ) ) === false || ( $str = substr( $dataset, $pos + 1 ) ) === false ) {
+				throw new \Aimeos\MW\Setup\Exception( sprintf( 'Some keys for ref media are set wrong "%1$s"', $dataset ) );
+			}
+
+			$urls[] = $str;
+		}
+
+		$search = $mediaManager->createSearch();
+		$search->setConditions( $search->compare( '==', 'media.url', $urls ) );
+
+		$refIds = [];
+		foreach( $mediaManager->searchItems( $search ) as $item ) {
+			$refIds['media/' . $item->getUrl()] = $item->getId();
+		}
+
+		return $refIds;
 	}
 
 
@@ -87,12 +102,12 @@ class SupplierListAddTestData extends \Aimeos\MW\Setup\Task\Base
 	 */
 	protected function getProductData( array $keys )
 	{
-		$manager = \Aimeos\MShop\Product\Manager\Factory::createManager( $this->additional, 'Standard' );
+		$manager = \Aimeos\MShop\Product\Manager\Factory::create( $this->additional, 'Standard' );
 
-		$codes = array();
+		$codes = [];
 		foreach( $keys as $dataset )
 		{
-			if( ( $pos = strpos( $dataset, '/' ) ) === false || ( $str = substr( $dataset, $pos+1 ) ) === false ) {
+			if( ( $pos = strpos( $dataset, '/' ) ) === false || ( $str = substr( $dataset, $pos + 1 ) ) === false ) {
 				throw new \Aimeos\MW\Setup\Exception( sprintf( 'Some keys for ref products are set wrong "%1$s"', $dataset ) );
 			}
 
@@ -102,9 +117,9 @@ class SupplierListAddTestData extends \Aimeos\MW\Setup\Task\Base
 		$search = $manager->createSearch();
 		$search->setConditions( $search->compare( '==', 'product.code', $codes ) );
 
-		$refIds = array();
+		$refIds = [];
 		foreach( $manager->searchItems( $search ) as $item ) {
-			$refIds[ 'product/' . $item->getCode() ] = $item->getId();
+			$refIds['product/' . $item->getCode()] = $item->getId();
 		}
 
 		return $refIds;
@@ -119,12 +134,12 @@ class SupplierListAddTestData extends \Aimeos\MW\Setup\Task\Base
 	 */
 	protected function getTextData( array $keys )
 	{
-		$textManager = \Aimeos\MShop\Text\Manager\Factory::createManager( $this->additional, 'Standard' );
+		$textManager = \Aimeos\MShop\Text\Manager\Factory::create( $this->additional, 'Standard' );
 
-		$labels = array();
+		$labels = [];
 		foreach( $keys as $dataset )
 		{
-			if( ( $pos = strpos( $dataset, '/' ) ) === false || ( $str = substr( $dataset, $pos+1 ) ) === false ) {
+			if( ( $pos = strpos( $dataset, '/' ) ) === false || ( $str = substr( $dataset, $pos + 1 ) ) === false ) {
 				throw new \Aimeos\MW\Setup\Exception( sprintf( 'Some keys for ref text are set wrong "%1$s"', $dataset ) );
 			}
 
@@ -134,9 +149,9 @@ class SupplierListAddTestData extends \Aimeos\MW\Setup\Task\Base
 		$search = $textManager->createSearch();
 		$search->setConditions( $search->compare( '==', 'text.label', $labels ) );
 
-		$refIds = array();
-		foreach( $textManager->searchItems( $search ) as $item )	{
-			$refIds[ 'text/'.$item->getLabel() ] = $item->getId();
+		$refIds = [];
+		foreach( $textManager->searchItems( $search ) as $item ) {
+			$refIds['text/' . $item->getLabel()] = $item->getId();
 		}
 
 		return $refIds;
@@ -153,14 +168,14 @@ class SupplierListAddTestData extends \Aimeos\MW\Setup\Task\Base
 	 */
 	protected function addSupplierListData( array $testdata, array $refIds, $type = 'Standard' )
 	{
-		$supplierManager = \Aimeos\MShop\Supplier\Manager\Factory::createManager( $this->additional, $type );
+		$supplierManager = \Aimeos\MShop\Supplier\Manager\Factory::create( $this->additional, $type );
 		$supplierListManager = $supplierManager->getSubManager( 'lists', $type );
 		$supplierListTypeManager = $supplierListManager->getSubmanager( 'type', $type );
 
-		$itemCode = array();
+		$itemCode = [];
 		foreach( $testdata['supplier/lists'] as $dataset )
 		{
-			if( ( $pos = strpos( $dataset['parentid'], '/' ) ) === false || ( $str = substr( $dataset['parentid'], $pos+1 ) ) === false ) {
+			if( ( $pos = strpos( $dataset['parentid'], '/' ) ) === false || ( $str = substr( $dataset['parentid'], $pos + 1 ) ) === false ) {
 				throw new \Aimeos\MW\Setup\Exception( sprintf( 'Some keys for parentid are set wrong "%1$s"', $dataset['parentid'] ) );
 			}
 
@@ -168,17 +183,16 @@ class SupplierListAddTestData extends \Aimeos\MW\Setup\Task\Base
 		}
 
 		$search = $supplierManager->createSearch();
-		$search->setConditions( $search->compare( '==', 'supplier.code', $itemCode) );
+		$search->setConditions( $search->compare( '==', 'supplier.code', $itemCode ) );
 
-		$parentIds = array();
-		foreach( $supplierManager->searchItems( $search ) as $item )	{
-			$parentIds[ 'supplier/'.$item->getCode() ] = $item->getId();
+		$parentIds = [];
+		foreach( $supplierManager->searchItems( $search ) as $item ) {
+			$parentIds['supplier/' . $item->getCode()] = $item->getId();
 		}
 
-		$listItemTypeIds = array();
 		$listItemType = $supplierListTypeManager->createItem();
 
-		$this->conn->begin();
+		$supplierManager->begin();
 
 		foreach( $testdata['supplier/lists/type'] as $key => $dataset )
 		{
@@ -189,28 +203,23 @@ class SupplierListAddTestData extends \Aimeos\MW\Setup\Task\Base
 			$listItemType->setStatus( $dataset['status'] );
 
 			$supplierListTypeManager->saveItem( $listItemType );
-			$listItemTypeIds[ $key ] = $listItemType->getId();
 		}
 
 		$listItem = $supplierListManager->createItem();
 		foreach( $testdata['supplier/lists'] as $dataset )
 		{
-			if( !isset( $parentIds[ $dataset['parentid'] ] ) ) {
+			if( !isset( $parentIds[$dataset['parentid']] ) ) {
 				throw new \Aimeos\MW\Setup\Exception( sprintf( 'No supplier ID found for "%1$s"', $dataset['parentid'] ) );
 			}
 
-			if( !isset( $refIds[ $dataset['domain'] ][ $dataset['refid'] ] ) ) {
+			if( !isset( $refIds[$dataset['domain']][$dataset['refid']] ) ) {
 				throw new \Aimeos\MW\Setup\Exception( sprintf( 'No "%2$s" ref ID found for "%1$s"', $dataset['refid'], $dataset['domain'] ) );
 			}
 
-			if( !isset( $listItemTypeIds[ $dataset['typeid'] ] ) ) {
-				throw new \Aimeos\MW\Setup\Exception( sprintf( 'No supplier list type ID found for "%1$s"', $dataset['typeid'] ) );
-			}
-
 			$listItem->setId( null );
-			$listItem->setParentId( $parentIds[ $dataset['parentid'] ] );
-			$listItem->setTypeId( $listItemTypeIds[ $dataset['typeid'] ] );
-			$listItem->setRefId( $refIds[ $dataset['domain'] ] [ $dataset['refid'] ] );
+			$listItem->setParentId( $parentIds[$dataset['parentid']] );
+			$listItem->setRefId( $refIds[$dataset['domain']] [$dataset['refid']] );
+			$listItem->setType( $dataset['type'] );
 			$listItem->setDomain( $dataset['domain'] );
 			$listItem->setDateStart( $dataset['start'] );
 			$listItem->setDateEnd( $dataset['end'] );
@@ -221,6 +230,6 @@ class SupplierListAddTestData extends \Aimeos\MW\Setup\Task\Base
 			$supplierListManager->saveItem( $listItem, false );
 		}
 
-		$this->conn->commit();
+		$supplierManager->commit();
 	}
 }

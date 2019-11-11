@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2012
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2012
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage View
  */
@@ -15,23 +15,41 @@ namespace Aimeos\MW\View;
 /**
  * Default view implementation.
  *
- * @method string|array config(string $name = null, string|array $default = null) Returns the config value for the given key
+ * @method mixed config(string $name = null, string|array $default = null) Returns the config value for the given key
+ * @method \Aimeos\MW\View\Helper\Iface csrf() Returns the CSRF helper object
  * @method string date(string $date) Returns the formatted date
- * @method \Aimeos\MW\View\Helper\Iface encoder() Returns the encoder object
+ * @method \Aimeos\MW\View\Helper\Iface encoder() Returns the encoder helper object
  * @method string formparam(string|array $names) Returns the name for the HTML form parameter
  * @method \Aimeos\MW\Mail\Message\Iface mail() Returns the e-mail message object
  * @method string number(integer|float|decimal $number, integer $decimals = 2) Returns the formatted number
  * @method string|array param(string|null $name, string|array $default) Returns the parameter value
+ * @method string partial(string $filepath, array $params = [] ) Renders the partial template
+ * @method \Aimeos\MW\View\Helper\Iface request() Returns the request helper object
  * @method string translate(string $domain, string $singular, string $plural = '', integer $number = 1) Returns the translated string or the original one if no translation is available
- * @method string url(string|null $target, string|null $controller = null, string|null $action = null, array $params = array(), array $trailing = array(), array $config = array()) Returns the URL assembled from the given arguments
+ * @method string url(string|null $target, string|null $controller = null, string|null $action = null, array $params = [], array $trailing = [], array $config = []) Returns the URL assembled from the given arguments
  *
  * @package MW
  * @subpackage View
  */
 class Standard implements \Aimeos\MW\View\Iface
 {
-	private $helper = array();
-	private $values = array();
+	private $helper = [];
+	private $values = [];
+	private $engines;
+	private $paths;
+
+
+	/**
+	 * Initializes the view object
+	 *
+	 * @param array $paths Associative list of base paths as keys and list of relative paths as value
+	 * @param \Aimeos\MW\View\Engine\Iface[] $engines Associative list of file extensions as keys and engine objects as values
+	 */
+	public function __construct( array $paths = [], array $engines = [] )
+	{
+		$this->engines = $engines;
+		$this->paths = $paths;
+	}
 
 
 	/**
@@ -47,12 +65,12 @@ class Standard implements \Aimeos\MW\View\Iface
 		{
 			if( ctype_alnum( $name ) === false )
 			{
-				$classname = is_string( $name ) ? '\\Aimeos\\MW\\View\\Helper\\' . $name : '<not a string>';
+				$classname = is_string( $name ) ? '\Aimeos\MW\View\Helper\\' . $name : '<not a string>';
 				throw new \Aimeos\MW\View\Exception( sprintf( 'Invalid characters in class name "%1$s"', $classname ) );
 			}
 
-			$iface = '\\Aimeos\\MW\\View\\Helper\\Iface';
-			$classname = '\\Aimeos\\MW\\View\\Helper\\' . ucfirst( $name ) . '\\Standard';
+			$iface = \Aimeos\MW\View\Helper\Iface::class;
+			$classname = '\Aimeos\MW\View\Helper\\' . ucfirst( $name ) . '\Standard';
 
 			if( class_exists( $classname ) === false ) {
 				throw new \Aimeos\MW\View\Exception( sprintf( 'Class "%1$s" not available', $classname ) );
@@ -145,10 +163,12 @@ class Standard implements \Aimeos\MW\View\Iface
 	 *
 	 * @param string $name Name of the view helper as called in the template
 	 * @param \Aimeos\MW\View\Helper\Iface $helper View helper instance
+	 * @return \Aimeos\MW\View\Iface View object for method chaining
 	 */
 	public function addHelper( $name, \Aimeos\MW\View\Helper\Iface $helper )
 	{
 		$this->helper[$name] = $helper;
+		return $this;
 	}
 
 
@@ -157,10 +177,12 @@ class Standard implements \Aimeos\MW\View\Iface
 	 * This method overwrites already existing key/value pairs set by the magic method.
 	 *
 	 * @param array $values Associative list of key/value pairs
+	 * @return \Aimeos\MW\View\Iface View object for method chaining
 	 */
 	public function assign( array $values )
 	{
 		$this->values = $values;
+		return $this;
 	}
 
 
@@ -173,30 +195,50 @@ class Standard implements \Aimeos\MW\View\Iface
 	 */
 	public function get( $key, $default = null )
 	{
-		if( isset( $this->values[$key] ) ) {
-			return $this->values[$key];
+		$values = $this->values;
+
+		foreach( explode( '/', ltrim( $key, '/' ) ) as $part )
+		{
+			if( is_array( $values ) && isset( $values[$part] ) ) {
+				$values = $values[$part];
+			} else {
+				return $default;
+			}
 		}
 
-		return $default;
+		return $values;
 	}
 
 
 	/**
 	 * Renders the output based on the given template file name and the key/value pairs.
 	 *
-	 * @param string $filename File name of the view template
+	 * @param array|string $filenames File name or list of file names for the view templates
 	 * @return string Output generated by the template
 	 * @throws \Aimeos\MW\View\Exception If the template isn't found
 	 */
-	public function render( $filename )
+	public function render( $filenames )
 	{
+		foreach( $this->engines as $fileext => $engine )
+		{
+			if( ( $filepath = $this->resolve( $filenames, $fileext ) ) !== false ) {
+				return str_replace( ["\t", '    '], '', $engine->render( $this, $filepath, $this->values ) );
+			}
+		}
+
+		if( ( $filepath = $this->resolve( $filenames, '.php' ) ) === false )
+		{
+			$files = is_array( $filenames ) ? print_r( $filenames, true ) : $filenames;
+			throw new \Aimeos\MW\View\Exception( sprintf( 'Template not available: %1$s', $files ) );
+		}
+
 		try
 		{
 			ob_start();
 
-			$this->includeFile( $filename );
+			$this->includeFile( $filepath );
 
-			return ob_get_clean();
+			return str_replace( ["\t", '    '], '', ob_get_clean() );
 		}
 		catch( \Exception $e )
 		{
@@ -213,5 +255,42 @@ class Standard implements \Aimeos\MW\View\Iface
 	protected function includeFile()
 	{
 		include func_get_arg( 0 );
+	}
+
+
+	/**
+	 * Returns the absolute file name for the given relative one
+	 *
+	 * @param array|string $files File name of list of file names for the view templates
+	 * @return string|false Absolute path to the template file of false if not found
+	 */
+	protected function resolve( $files, $fileext )
+	{
+		foreach( (array) $files as $file )
+		{
+			if( is_file( $file . $fileext ) ) {
+				return $file . $fileext;
+			}
+
+			$ds = DIRECTORY_SEPARATOR;
+
+			foreach( array_reverse( $this->paths ) as $path => $relPaths )
+			{
+				foreach( $relPaths as $relPath )
+				{
+					$absPath = $path . $ds . $relPath . $ds . $file . $fileext;
+
+					if( $ds !== '/' ) {
+						$absPath = str_replace( '/', $ds, $absPath );
+					}
+
+					if( is_file( $absPath ) ) {
+						return $absPath;
+					}
+				}
+			}
+		}
+
+		return false;
 	}
 }

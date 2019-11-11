@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Product
  */
@@ -26,12 +26,12 @@ class Factory
 	 * Creates a product manager object.
 	 *
 	 * @param \Aimeos\MShop\Context\Item\Iface $context Context instance with necessary objects
-	 * @param string $name Manager name
+	 * @param string|null $name Manager name
 	 * @return \Aimeos\MShop\Common\Manager\Iface Manager object
 	 * @throws \Aimeos\MShop\Product\Exception|\Aimeos\MShop\Exception If requested manager
 	 * implementation couldn't be found or initialisation fails
 	 */
-	public static function createManager( \Aimeos\MShop\Context\Item\Iface $context, $name = null )
+	public static function create( \Aimeos\MShop\Context\Item\Iface $context, $name = null )
 	{
 		/** mshop/product/manager/name
 		 * Class name of the used product manager implementation
@@ -72,14 +72,14 @@ class Factory
 
 		if( ctype_alnum( $name ) === false )
 		{
-			$classname = is_string( $name ) ? '\\Aimeos\\MShop\\Product\\Manager\\' . $name : '<not a string>';
+			$classname = is_string( $name ) ? '\Aimeos\MShop\Product\Manager\\' . $name : '<not a string>';
 			throw new \Aimeos\MShop\Product\Exception( sprintf( 'Invalid characters in class name "%1$s"', $classname ) );
 		}
 
-		$iface = '\\Aimeos\\MShop\\Product\\Manager\\Iface';
-		$classname = '\\Aimeos\\MShop\\Product\\Manager\\' . $name;
+		$iface = \Aimeos\MShop\Product\Manager\Iface::class;
+		$classname = '\Aimeos\MShop\Product\Manager\\' . $name;
 
-		$manager = self::createManagerBase( $context, $classname, $iface );
+		$manager = self::createManager( $context, $classname, $iface );
 
 		/** mshop/product/manager/decorators/excludes
 		 * Excludes decorators added by the "common" option from the product manager
@@ -121,7 +121,8 @@ class Factory
 		 *  mshop/product/manager/decorators/global = array( 'decorator1' )
 		 *
 		 * This would add the decorator named "decorator1" defined by
-		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator1" only to the product controller.
+		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator1" only to the product
+		 * manager.
 		 *
 		 * @param array List of decorator names
 		 * @since 2014.03
@@ -140,13 +141,13 @@ class Factory
 		 * modify what is returned to the caller.
 		 *
 		 * This option allows you to wrap local decorators
-		 * ("\Aimeos\MShop\Common\Manager\Decorator\*") around the product manager.
+		 * ("\Aimeos\MShop\Product\Manager\Decorator\*") around the product manager.
 		 *
 		 *  mshop/product/manager/decorators/local = array( 'decorator2' )
 		 *
 		 * This would add the decorator named "decorator2" defined by
-		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator2" only to the product
-		 * controller.
+		 * "\Aimeos\MShop\Product\Manager\Decorator\Decorator2" only to the product
+		 * manager.
 		 *
 		 * @param array List of decorator names
 		 * @since 2014.03

@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Common
  */
@@ -21,7 +21,7 @@ namespace Aimeos\MW\Criteria;
 class SQL extends \Aimeos\MW\Criteria\Base
 {
 	private $conditions;
-	private $sortations = array();
+	private $sortations = [];
 	private $sliceStart = 0;
 	private $sliceSize = 100;
 	private $conn = null;
@@ -48,7 +48,7 @@ class SQL extends \Aimeos\MW\Criteria\Base
 	 * "!": NOT term
 	 *
 	 * @param string $operator One of the known operators
-	 * @param array $list List of expression objects that should be combined
+	 * @param \Aimeos\MW\Criteria\Expression\Compare\Iface[] $list List of expression objects
 	 * @return \Aimeos\MW\Criteria\Expression\Combine\Iface Combine expression object
 	 */
 	public function combine( $operator, array $list )
@@ -118,14 +118,15 @@ class SQL extends \Aimeos\MW\Criteria\Base
 	 *
 	 * @param array $types Associative list of item names and their types
 	 * @param array $translations Associative list of item names that should be translated
-	 * @param array $plugins Associative list of item names and plugins implementing \Aimeos\MW\Criteria\Plugin\Iface
-	 * @return string Expression string for searching
+	 * @param \Aimeos\MW\Criteria\Plugin\Iface[] $plugins Associative list of item names as keys and plugin objects as values
+	 * @param array $funcs Associative list of item names and functions modifying the conditions
+	 * @return mixed Data for searching
 	 */
-	public function getConditionString( array $types, array $translations = array(), array $plugins = array() )
+	public function getConditionSource( array $types, array $translations = [], array $plugins = [], array $funcs = [] )
 	{
 		$types['1'] = \Aimeos\MW\DB\Statement\Base::PARAM_INT;
 
-		if( ( $string = $this->conditions->toString( $types, $translations, $plugins ) ) !== '' ) {
+		if( ( $string = $this->conditions->toSource( $types, $translations, $plugins, $funcs ) ) !== '' ) {
 			return $string;
 		}
 
@@ -166,9 +167,10 @@ class SQL extends \Aimeos\MW\Criteria\Base
 	 *
 	 * @param array $types Associative list of variable or column names as keys and their corresponding types
 	 * @param array $translations Associative list of item names that should be translated
-	 * @return string Order string for sorting the items
+	 * @param array $funcs Associative list of item names and functions modifying the conditions
+	 * @return mixed Data for sorting the items
 	 */
-	public function getSortationString( array $types, array $translations = array() )
+	public function getSortationSource( array $types, array $translations = [], array $funcs = [] )
 	{
 		if( empty( $this->sortations ) )
 		{
@@ -178,15 +180,15 @@ class SQL extends \Aimeos\MW\Criteria\Base
 				throw new \Aimeos\MW\Common\Exception( 'No sortation types available' );
 			}
 
-			return $this->sort( '+', $name )->toString( $types, $translations );
+			return $this->sort( '+', $name )->toSource( $types, $translations, [], $funcs );
 		}
 
 
-		$sortation = array();
+		$sortation = [];
 
 		foreach( $this->sortations as $sortitem )
 		{
-			if( ( $string = $sortitem->toString( $types, $translations ) ) !== '' ) {
+			if( ( $string = $sortitem->toSource( $types, $translations ) ) !== '' ) {
 				$sortation[] = $string;
 			}
 		}
@@ -214,7 +216,7 @@ class SQL extends \Aimeos\MW\Criteria\Base
 	 */
 	public function setSortations( array $sortations )
 	{
-		\Aimeos\MW\Common\Base::checkClassList( '\\Aimeos\\MW\\Criteria\\Expression\\Sort\\Iface', $sortations );
+		\Aimeos\MW\Common\Base::checkClassList( \Aimeos\MW\Criteria\Expression\Sort\Iface::class, $sortations );
 
 		$this->sortations = $sortations;
 		return $this;

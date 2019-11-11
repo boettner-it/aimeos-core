@@ -1,82 +1,98 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 
 namespace Aimeos\MShop\Plugin\Provider\Order;
 
 
-/**
- * Test class for \Aimeos\MShop\Plugin\Provider\Order\Shipping.
- */
-class ShippingTest extends \PHPUnit_Framework_TestCase
+class ShippingTest extends \PHPUnit\Framework\TestCase
 {
-	private $order;
+	private $context;
 	private $object;
 	private $plugin;
-	private $product;
 
 
-	/**
-	 * Sets up the fixture, for example, opens a network connection.
-	 * This method is called before a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function setUp()
 	{
-		$context = \TestHelper::getContext();
+		$this->context = \TestHelperMShop::getContext();
+		$this->plugin = \Aimeos\MShop::create( $this->context, 'plugin' )->createItem();
 
-		$pluginManager = \Aimeos\MShop\Plugin\Manager\Factory::createManager( $context );
-		$this->plugin = $pluginManager->createItem();
-		$this->plugin->setTypeId( 2 );
-		$this->plugin->setProvider( 'Shipping' );
-		$this->plugin->setConfig( array( 'threshold' => array( 'EUR' => '34.00' ) ) );
-		$this->plugin->setStatus( '1' );
+		$this->object = new \Aimeos\MShop\Plugin\Provider\Order\Shipping( $this->context, $this->plugin );
+	}
 
-		$orderManager = \Aimeos\MShop\Order\Manager\Factory::createManager( $context );
-		$orderBaseManager = $orderManager->getSubManager( 'base' );
-		$orderBaseProductManager = $orderBaseManager->getSubManager( 'product' );
 
-		$manager = \Aimeos\MShop\Product\Manager\Factory::createManager( $context );
-		$search = $manager->createSearch();
+	protected function tearDown()
+	{
+		unset( $this->object, $this->plugin, $this->context );
+	}
 
-		$search->setConditions( $search->compare( '==', 'product.code', array( 'CNE', 'CNC', 'IJKL' ) ) );
 
-		$pResults = $manager->searchItems( $search, array( 'price' ) );
+	public function testCheckConfigBE()
+	{
+		$attributes = array(
+			'threshold' => ['EUR' => '50.00'],
+		);
 
-		if( count( $pResults ) !== 3 ) {
-			throw new \Exception( 'Wrong number of products' );
+		$result = $this->object->checkConfigBE( $attributes );
+
+		$this->assertEquals( 1, count( $result ) );
+		$this->assertEquals( null, $result['threshold'] );
+	}
+
+
+	public function testGetConfigBE()
+	{
+		$list = $this->object->getConfigBE();
+
+		$this->assertEquals( 1, count( $list ) );
+		$this->assertArrayHasKey( 'threshold', $list );
+
+		foreach( $list as $entry ) {
+			$this->assertInstanceOf( \Aimeos\MW\Criteria\Attribute\Iface::class, $entry );
 		}
+	}
 
-		$products = array();
-		foreach( $pResults as $prod ) {
+
+	public function testRegister()
+	{
+		$this->object->register( \Aimeos\MShop::create( $this->context, 'order/base' )->createItem() );
+	}
+
+
+	public function testUpdate()
+	{
+		$this->plugin = $this->plugin->setProvider( 'Shipping' )
+			->setConfig( ['threshold' => ['EUR' => '34.00']] );
+
+		$manager = \Aimeos\MShop::create( $this->context, 'product' );
+		$search = $manager->createSearch();
+		$search->setConditions( $search->compare( '==', 'product.code', ['CNE', 'CNC', 'IJKL'] ) );
+
+		$products = [];
+		foreach( $manager->searchItems( $search, ['price'] ) as $prod ) {
 			$products[$prod->getCode()] = $prod;
 		}
 
-		if( ( $price = current( $products['IJKL']->getRefItems( 'price' ) ) ) === false ) {
-			throw new \Exception( 'No price item found' );
+		if( count( $products ) !== 3 ) {
+			throw new \RuntimeException( 'Wrong number of products' );
 		}
-		$price->setValue( 10.00 );
 
-		$this->product = $orderBaseProductManager->createItem();
-		$this->product->copyFrom( $products['CNE'] );
-		$this->product->setPrice( $price );
+		if( ( $price = current( $products['IJKL']->getRefItems( 'price' ) ) ) === false ) {
+			throw new \RuntimeException( 'No price item found' );
+		}
+		$price = $price->setValue( 10.00 );
 
-		$product2 = $orderBaseProductManager->createItem();
-		$product2->copyFrom( $products['CNC'] );
-		$product2->setPrice( $price );
+		$orderBaseProductManager = \Aimeos\MShop::create( $this->context, 'order/base/product' );
+		$product = $orderBaseProductManager->createItem()->copyFrom( $products['CNE'] )->setPrice( $price );
+		$product2 = $orderBaseProductManager->createItem()->copyFrom( $products['CNC'] )->setPrice( $price );
+		$product3 = $orderBaseProductManager->createItem()->copyFrom( $products['IJKL'] )->setPrice( $price );
 
-		$product3 = $orderBaseProductManager->createItem();
-		$product3->copyFrom( $products['IJKL'] );
-		$product3->setPrice( $price );
-
-		$orderBaseServiceManager = $orderBaseManager->getSubManager( 'service' );
-
+		$orderBaseServiceManager = \Aimeos\MShop::create( $this->context, 'order/base/service' );
 		$serviceSearch = $orderBaseServiceManager->createSearch();
 		$exp = array(
 			$serviceSearch->compare( '==', 'order.base.service.type', 'delivery' ),
@@ -86,47 +102,21 @@ class ShippingTest extends \PHPUnit_Framework_TestCase
 		$results = $orderBaseServiceManager->searchItems( $serviceSearch );
 
 		if( ( $delivery = reset( $results ) ) === false ) {
-			throw new \Exception( 'No order base item found' );
+			throw new \RuntimeException( 'No order service item found' );
 		}
 
-		$this->order = $orderBaseManager->createItem();
+		$order = \Aimeos\MShop::create( $this->context, 'order/base' )->createItem()->off(); // remove event listeners
 
-		$this->order->setService( $delivery, 'delivery' );
-		$this->order->addProduct( $this->product );
-		$this->order->addProduct( $product2 );
-		$this->order->addProduct( $product3 );
-
-		$this->object = new \Aimeos\MShop\Plugin\Provider\Order\Shipping( $context, $this->plugin );
-	}
+		$order = $order->addService( $delivery, 'delivery' )
+			->addProduct( $product )->addProduct( $product2 )->addProduct( $product3 );
 
 
-	/**
-	 * Tears down the fixture, for example, closes a network connection.
-	 * This method is called after a test is executed.
-	 *
-	 * @access protected
-	 */
-	protected function tearDown()
-	{
-		unset( $this->object, $this->order, $this->plugin, $this->product );
-	}
+		$this->assertEquals( 5.00, $order->getPrice()->getCosts() );
+		$this->assertEquals( null, $this->object->update( $order, 'addProduct' ) );
 
+		$order->addProduct( $product );
+		$this->assertEquals( null, $this->object->update( $order, 'addProduct' ) );
 
-	public function testRegister()
-	{
-		$object = new \Aimeos\MShop\Plugin\Provider\Order\Shipping( \TestHelper::getContext(), $this->plugin );
-		$object->register( $this->order );
-	}
-
-
-	public function testUpdate()
-	{
-		$this->assertEquals( 5.00, $this->order->getPrice()->getCosts() );
-		$this->object->update( $this->order, 'addProduct' );
-
-		$this->order->addProduct( $this->product );
-		$this->object->update( $this->order, 'addProduct' );
-
-		$this->assertEquals( 0.00, $this->order->getPrice()->getCosts() );
+		$this->assertEquals( 0.00, $order->getPrice()->getCosts() );
 	}
 }

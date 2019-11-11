@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2013
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2013
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Customer
  */
@@ -19,74 +19,83 @@ namespace Aimeos\MShop\Customer\Manager\Lists\Type;
  */
 class Standard
 	extends \Aimeos\MShop\Common\Manager\Type\Base
-	implements \Aimeos\MShop\Customer\Manager\Lists\Type\Iface
+	implements \Aimeos\MShop\Customer\Manager\Lists\Type\Iface, \Aimeos\MShop\Common\Manager\Factory\Iface
 {
 	private $searchConfig = array(
 		'customer.lists.type.id' => array(
-			'code'=>'customer.lists.type.id',
-			'internalcode'=>'mcuslity."id"',
-			'internaldeps'=>array( 'LEFT JOIN "mshop_customer_list_type" AS mcuslity ON ( mcusli."typeid" = mcuslity."id" )' ),
-			'label'=>'Customer list type Id',
-			'type'=> 'integer',
+			'code' => 'customer.lists.type.id',
+			'internalcode' => 'mcuslity."id"',
+			'label' => 'List type Id',
+			'type' => 'integer',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 			'public' => false,
 		),
 		'customer.lists.type.siteid' => array(
-			'code'=>'customer.lists.type.siteid',
-			'internalcode'=>'mcuslity."siteid"',
-			'label'=>'Customer list type site Id',
-			'type'=> 'integer',
+			'code' => 'customer.lists.type.siteid',
+			'internalcode' => 'mcuslity."siteid"',
+			'label' => 'List type site Id',
+			'type' => 'integer',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 			'public' => false,
 		),
+		'customer.lists.type.label' => array(
+			'code' => 'customer.lists.type.label',
+			'internalcode' => 'mcuslity."label"',
+			'label' => 'List type label',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		),
 		'customer.lists.type.code' => array(
-			'code'=>'customer.lists.type.code',
-			'internalcode'=>'mcuslity."code"',
-			'label'=>'Customer list type code',
-			'type'=> 'string',
+			'code' => 'customer.lists.type.code',
+			'internalcode' => 'mcuslity."code"',
+			'label' => 'List type code',
+			'type' => 'string',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
 		'customer.lists.type.domain' => array(
-			'code'=>'customer.lists.type.domain',
-			'internalcode'=>'mcuslity."domain"',
-			'label'=>'Customer list type domain',
-			'type'=> 'string',
+			'code' => 'customer.lists.type.domain',
+			'internalcode' => 'mcuslity."domain"',
+			'label' => 'List type domain',
+			'type' => 'string',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
-		'customer.lists.type.label' => array(
-			'code'=>'customer.lists.type.label',
-			'internalcode'=>'mcuslity."label"',
-			'label'=>'Customer list type label',
-			'type'=> 'string',
-			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
-		),
-		'customer.lists.type.status' => array(
-			'code'=>'customer.lists.type.status',
-			'internalcode'=>'mcuslity."status"',
-			'label'=>'Customer list type status',
-			'type'=> 'integer',
+		'customer.lists.type.position' => array(
+			'code' => 'customer.lists.type.position',
+			'internalcode' => 'mcuslity."pos"',
+			'label' => 'List type position',
+			'type' => 'integer',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 		),
-		'customer.lists.type.ctime'=> array(
-			'code'=>'customer.lists.type.ctime',
-			'internalcode'=>'mcuslity."ctime"',
-			'label'=>'Customer list type create date/time',
-			'type'=> 'datetime',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR
+		'customer.lists.type.status' => array(
+			'code' => 'customer.lists.type.status',
+			'internalcode' => 'mcuslity."status"',
+			'label' => 'List type status',
+			'type' => 'integer',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 		),
-		'customer.lists.type.mtime'=> array(
-			'code'=>'customer.lists.type.mtime',
-			'internalcode'=>'mcuslity."mtime"',
-			'label'=>'Customer list type modification date/time',
-			'type'=> 'datetime',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR
+		'customer.lists.type.ctime' => array(
+			'code' => 'customer.lists.type.ctime',
+			'internalcode' => 'mcuslity."ctime"',
+			'label' => 'List type create date/time',
+			'type' => 'datetime',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
-		'customer.lists.type.editor'=> array(
-			'code'=>'customer.lists.type.editor',
-			'internalcode'=>'mcuslity."editor"',
-			'label'=>'Customer list type editor',
-			'type'=> 'string',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'customer.lists.type.mtime' => array(
+			'code' => 'customer.lists.type.mtime',
+			'internalcode' => 'mcuslity."mtime"',
+			'label' => 'List type modify date/time',
+			'type' => 'datetime',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
+		),
+		'customer.lists.type.editor' => array(
+			'code' => 'customer.lists.type.editor',
+			'internalcode' => 'mcuslity."editor"',
+			'label' => 'List type editor',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
 	);
 
@@ -106,16 +115,31 @@ class Standard
 	/**
 	 * Removes old entries from the storage.
 	 *
-	 * @param array $siteids List of IDs for sites whose entries should be deleted
+	 * @param string[] $siteids List of IDs for sites whose entries should be deleted
+	 * @return \Aimeos\MShop\Customer\Manager\Lists\Type\Iface Manager object for chaining method calls
 	 */
-	public function cleanup( array $siteids )
+	public function clear( array $siteids )
 	{
 		$path = 'mshop/customer/manager/lists/type/submanagers';
-		foreach( $this->getContext()->getConfig()->get( $path, array() ) as $domain ) {
-			$this->getSubManager( $domain )->cleanup( $siteids );
+		foreach( $this->getContext()->getConfig()->get( $path, [] ) as $domain ) {
+			$this->getObject()->getSubManager( $domain )->clear( $siteids );
 		}
 
-		$this->cleanupBase( $siteids, 'mshop/customer/manager/lists/type/standard/delete' );
+		return $this->clearBase( $siteids, 'mshop/customer/manager/lists/type/standard/delete' );
+	}
+
+
+	/**
+	 * Returns the available manager types
+	 *
+	 * @param boolean $withsub Return also the resource type of sub-managers if true
+	 * @return string[] Type of the manager and submanagers, subtypes are separated by slashes
+	 */
+	public function getResourceType( $withsub = true )
+	{
+		$path = 'mshop/customer/manager/lists/type/submanagers';
+
+		return $this->getResourceTypeBase( 'customer/lists/type', $path, [], $withsub );
 	}
 
 
@@ -123,7 +147,7 @@ class Standard
 	 * Returns the attributes that can be used for searching.
 	 *
 	 * @param boolean $withsub Return also attributes of sub-managers if true
-	 * @return array List of attribute items implementing \Aimeos\MW\Criteria\Attribute\Iface
+	 * @return \Aimeos\MW\Criteria\Attribute\Iface[] List of search attribute items
 	 */
 	public function getSearchAttributes( $withsub = true )
 	{
@@ -146,7 +170,7 @@ class Standard
 		 */
 		$path = 'mshop/customer/manager/lists/type/submanagers';
 
-		return $this->getSearchAttributesBase( $this->searchConfig, $path, array(), $withsub );
+		return $this->getSearchAttributesBase( $this->searchConfig, $path, [], $withsub );
 	}
 
 
@@ -228,12 +252,14 @@ class Standard
 		 * modify what is returned to the caller.
 		 *
 		 * This option allows you to wrap global decorators
-		 * ("\Aimeos\MShop\Common\Manager\Decorator\*") around the customer list type manager.
+		 * ("\Aimeos\MShop\Common\Manager\Decorator\*") around the customer list type
+		 * manager.
 		 *
 		 *  mshop/customer/manager/lists/type/decorators/global = array( 'decorator1' )
 		 *
 		 * This would add the decorator named "decorator1" defined by
-		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator1" only to the customer controller.
+		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator1" only to the customer
+		 * list type manager.
 		 *
 		 * @param array List of decorator names
 		 * @since 2014.03
@@ -252,13 +278,14 @@ class Standard
 		 * modify what is returned to the caller.
 		 *
 		 * This option allows you to wrap local decorators
-		 * ("\Aimeos\MShop\Common\Manager\Decorator\*") around the customer list type manager.
+		 * ("\Aimeos\MShop\Customer\Manager\Lists\Type\Decorator\*") around the
+		 * customer list type manager.
 		 *
 		 *  mshop/customer/manager/lists/type/decorators/local = array( 'decorator2' )
 		 *
 		 * This would add the decorator named "decorator2" defined by
-		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator2" only to the customer
-		 * controller.
+		 * "\Aimeos\MShop\Customer\Manager\Lists\Type\Decorator\Decorator2" only to the
+		 * customer list type manager.
 		 *
 		 * @param array List of decorator names
 		 * @since 2014.03
@@ -279,7 +306,13 @@ class Standard
 	 */
 	protected function getConfigPath()
 	{
-		/** mshop/customer/manager/lists/type/standard/insert
+		/** mshop/customer/manager/lists/type/standard/insert/mysql
+		 * Inserts a new customer list type record into the database table
+		 *
+		 * @see mshop/customer/manager/lists/type/standard/insert/ansi
+		 */
+
+		/** mshop/customer/manager/lists/type/standard/insert/ansi
 		 * Inserts a new customer list type record into the database table
 		 *
 		 * Items with no ID yet (i.e. the ID is NULL) will be created in
@@ -302,14 +335,20 @@ class Standard
 		 * @param string SQL statement for inserting records
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/customer/manager/lists/type/standard/update
-		 * @see mshop/customer/manager/lists/type/standard/newid
-		 * @see mshop/customer/manager/lists/type/standard/delete
-		 * @see mshop/customer/manager/lists/type/standard/search
-		 * @see mshop/customer/manager/lists/type/standard/count
+		 * @see mshop/customer/manager/lists/type/standard/update/ansi
+		 * @see mshop/customer/manager/lists/type/standard/newid/ansi
+		 * @see mshop/customer/manager/lists/type/standard/delete/ansi
+		 * @see mshop/customer/manager/lists/type/standard/search/ansi
+		 * @see mshop/customer/manager/lists/type/standard/count/ansi
 		 */
 
-		/** mshop/customer/manager/lists/type/standard/update
+		/** mshop/customer/manager/lists/type/standard/update/mysql
+		 * Updates an existing customer list type record in the database
+		 *
+		 * @see mshop/customer/manager/lists/type/standard/update/ansi
+		 */
+
+		/** mshop/customer/manager/lists/type/standard/update/ansi
 		 * Updates an existing customer list type record in the database
 		 *
 		 * Items which already have an ID (i.e. the ID is not NULL) will
@@ -329,14 +368,20 @@ class Standard
 		 * @param string SQL statement for updating records
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/customer/manager/lists/type/standard/insert
-		 * @see mshop/customer/manager/lists/type/standard/newid
-		 * @see mshop/customer/manager/lists/type/standard/delete
-		 * @see mshop/customer/manager/lists/type/standard/search
-		 * @see mshop/customer/manager/lists/type/standard/count
+		 * @see mshop/customer/manager/lists/type/standard/insert/ansi
+		 * @see mshop/customer/manager/lists/type/standard/newid/ansi
+		 * @see mshop/customer/manager/lists/type/standard/delete/ansi
+		 * @see mshop/customer/manager/lists/type/standard/search/ansi
+		 * @see mshop/customer/manager/lists/type/standard/count/ansi
 		 */
 
-		/** mshop/customer/manager/lists/type/standard/newid
+		/** mshop/customer/manager/lists/type/standard/newid/mysql
+		 * Retrieves the ID generated by the database when inserting a new record
+		 *
+		 * @see mshop/customer/manager/lists/type/standard/newid/ansi
+		 */
+
+		/** mshop/customer/manager/lists/type/standard/newid/ansi
 		 * Retrieves the ID generated by the database when inserting a new record
 		 *
 		 * As soon as a new record is inserted into the database table,
@@ -360,14 +405,20 @@ class Standard
 		 * @param string SQL statement for retrieving the last inserted record ID
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/customer/manager/lists/type/standard/insert
-		 * @see mshop/customer/manager/lists/type/standard/update
-		 * @see mshop/customer/manager/lists/type/standard/delete
-		 * @see mshop/customer/manager/lists/type/standard/search
-		 * @see mshop/customer/manager/lists/type/standard/count
+		 * @see mshop/customer/manager/lists/type/standard/insert/ansi
+		 * @see mshop/customer/manager/lists/type/standard/update/ansi
+		 * @see mshop/customer/manager/lists/type/standard/delete/ansi
+		 * @see mshop/customer/manager/lists/type/standard/search/ansi
+		 * @see mshop/customer/manager/lists/type/standard/count/ansi
 		 */
 
-		/** mshop/customer/manager/lists/type/standard/delete
+		/** mshop/customer/manager/lists/type/standard/delete/mysql
+		 * Deletes the items matched by the given IDs from the database
+		 *
+		 * @see mshop/customer/manager/lists/type/standard/delete/ansi
+		 */
+
+		/** mshop/customer/manager/lists/type/standard/delete/ansi
 		 * Deletes the items matched by the given IDs from the database
 		 *
 		 * Removes the records specified by the given IDs from the customer database.
@@ -385,14 +436,20 @@ class Standard
 		 * @param string SQL statement for deleting items
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/customer/manager/lists/type/standard/insert
-		 * @see mshop/customer/manager/lists/type/standard/update
-		 * @see mshop/customer/manager/lists/type/standard/newid
-		 * @see mshop/customer/manager/lists/type/standard/search
-		 * @see mshop/customer/manager/lists/type/standard/count
+		 * @see mshop/customer/manager/lists/type/standard/insert/ansi
+		 * @see mshop/customer/manager/lists/type/standard/update/ansi
+		 * @see mshop/customer/manager/lists/type/standard/newid/ansi
+		 * @see mshop/customer/manager/lists/type/standard/search/ansi
+		 * @see mshop/customer/manager/lists/type/standard/count/ansi
 		 */
 
-		/** mshop/customer/manager/lists/type/standard/search
+		/** mshop/customer/manager/lists/type/standard/search/mysql
+		 * Retrieves the records matched by the given criteria in the database
+		 *
+		 * @see mshop/customer/manager/lists/type/standard/search/ansi
+		 */
+
+		/** mshop/customer/manager/lists/type/standard/search/ansi
 		 * Retrieves the records matched by the given criteria in the database
 		 *
 		 * Fetches the records matched by the given criteria from the customer
@@ -437,14 +494,20 @@ class Standard
 		 * @param string SQL statement for searching items
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/customer/manager/lists/type/standard/insert
-		 * @see mshop/customer/manager/lists/type/standard/update
-		 * @see mshop/customer/manager/lists/type/standard/newid
-		 * @see mshop/customer/manager/lists/type/standard/delete
-		 * @see mshop/customer/manager/lists/type/standard/count
+		 * @see mshop/customer/manager/lists/type/standard/insert/ansi
+		 * @see mshop/customer/manager/lists/type/standard/update/ansi
+		 * @see mshop/customer/manager/lists/type/standard/newid/ansi
+		 * @see mshop/customer/manager/lists/type/standard/delete/ansi
+		 * @see mshop/customer/manager/lists/type/standard/count/ansi
 		 */
 
-		/** mshop/customer/manager/lists/type/standard/count
+		/** mshop/customer/manager/lists/type/standard/count/mysql
+		 * Counts the number of records matched by the given criteria in the database
+		 *
+		 * @see mshop/customer/manager/lists/type/standard/count/ansi
+		 */
+
+		/** mshop/customer/manager/lists/type/standard/count/ansi
 		 * Counts the number of records matched by the given criteria in the database
 		 *
 		 * Counts all records matched by the given criteria from the customer
@@ -483,11 +546,11 @@ class Standard
 		 * @param string SQL statement for counting items
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/customer/manager/lists/type/standard/insert
-		 * @see mshop/customer/manager/lists/type/standard/update
-		 * @see mshop/customer/manager/lists/type/standard/newid
-		 * @see mshop/customer/manager/lists/type/standard/delete
-		 * @see mshop/customer/manager/lists/type/standard/search
+		 * @see mshop/customer/manager/lists/type/standard/insert/ansi
+		 * @see mshop/customer/manager/lists/type/standard/update/ansi
+		 * @see mshop/customer/manager/lists/type/standard/newid/ansi
+		 * @see mshop/customer/manager/lists/type/standard/delete/ansi
+		 * @see mshop/customer/manager/lists/type/standard/search/ansi
 		 */
 
 		return 'mshop/customer/manager/lists/type/standard/';

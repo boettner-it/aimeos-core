@@ -3,7 +3,7 @@
 /**
  * @copyright Metaways Infosystems GmbH, 2013
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package Controller
  * @subpackage Jobs
  */
@@ -27,13 +27,14 @@ abstract class Base
 
 
 	/**
-	 * Initializes the controller decorator.
+	 * Initializes a new controller decorator object.
 	 *
-	 * @param \Aimeos\MShop\Context\Item\Iface $context Context object with required objects
 	 * @param \Aimeos\Controller\Jobs\Iface $controller Controller object
+	 * @param \Aimeos\MShop\Context\Item\Iface $context Context object with required objects
+	 * @param \Aimeos\Bootstrap $aimeos \Aimeos\Bootstrap object
 	 */
-	public function __construct( \Aimeos\MShop\Context\Item\Iface $context, \Aimeos\Bootstrap $aimeos,
-		\Aimeos\Controller\Jobs\Iface $controller )
+	public function __construct( \Aimeos\Controller\Jobs\Iface $controller,
+		\Aimeos\MShop\Context\Item\Iface $context, \Aimeos\Bootstrap $aimeos )
 	{
 		$this->context = $context;
 		$this->aimeos = $aimeos;
@@ -51,11 +52,7 @@ abstract class Base
 	 */
 	public function __call( $name, array $param )
 	{
-		if( ( $result = call_user_func_array( array( $this->controller, $name ), $param ) ) === false ) {
-			throw new \Aimeos\Controller\Jobs\Exception( sprintf( 'Unable to call method "%1$s"', $name ) );
-		}
-
-		return $result;
+		return call_user_func_array( array( $this->controller, $name ), $param );
 	}
 
 

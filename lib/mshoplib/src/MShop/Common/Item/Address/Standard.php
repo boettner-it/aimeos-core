@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Common
  */
@@ -19,7 +19,7 @@ namespace Aimeos\MShop\Common\Item\Address;
  */
 class Standard
 	extends \Aimeos\MShop\Common\Item\Address\Base
-	implements \Aimeos\MShop\Common\Item\Address\Iface
+	implements \Aimeos\MShop\Common\Item\Address\Iface, \Aimeos\MShop\Common\Item\Position\Iface
 {
 	private $prefix;
 	private $values;
@@ -30,7 +30,7 @@ class Standard
 	 * @param string $prefix Property prefix when converting to array
 	 * @param array $values List of attributes that belong to the provider common address item
 	 */
-	public function __construct( $prefix, array $values = array( ) )
+	public function __construct( $prefix, array $values = [] )
 	{
 		parent::__construct( $prefix, $values );
 
@@ -40,41 +40,35 @@ class Standard
 
 
 	/**
-	 * Returns the reference id regarding to the product suppliercode of the address.
+	 * Returns the customer ID this address belongs to
 	 *
-	 * @return string Address reference id
+	 * @return string Customer ID of the address
 	 */
-	public function getRefId()
+	public function getParentId()
 	{
-		return ( isset( $this->values['refid'] ) ? (string) $this->values['refid'] : '' );
+		if( isset( $this->values[$this->prefix . 'parentid'] ) ) {
+			return (string) $this->values[$this->prefix . 'parentid'];
+		}
+
+		return '';
 	}
 
 
 	/**
-	 * Sets the new reference id regarding to the product suppliercode of the address.
+	 * Sets the new customer ID this address belongs to
 	 *
-	 * @param string $refid New reference id of the address
+	 * @param string $parentid New customer ID of the address
+	 * @return \Aimeos\MShop\Common\Item\Address\Iface Common address item for chaining method calls
 	 */
-	public function setRefId( $refid )
+	public function setParentId( $parentid )
 	{
-		if( $refid == $this->getRefId() ) { return; }
+		if( (string) $parentid !== $this->getParentId() )
+		{
+			$this->values[$this->prefix . 'parentid'] = (string) $parentid;
+			$this->setModified();
+		}
 
-		$this->values['refid'] = (string) $refid;
-		$this->setModified();
-	}
-
-
-	/**
-	 * Sets the Position of the address item.
-	 *
-	 * @param integer $position Position of the address item
-	 */
-	public function setPosition( $position )
-	{
-		if( $position == $this->getPosition() ) { return; }
-
-		$this->values['pos'] = (int) $position;
-		$this->setModified();
+		return $this;
 	}
 
 
@@ -85,77 +79,76 @@ class Standard
 	 */
 	public function getPosition()
 	{
-		return ( isset( $this->values['pos'] ) ? (int) $this->values['pos'] : 0 );
+		if( isset( $this->values[$this->prefix . 'position'] ) ) {
+			return (int) $this->values[$this->prefix . 'position'];
+		}
+
+		return 0;
 	}
 
 
 	/**
-	 * Copies the values of the order address item into the address item.
+	 * Sets the Position of the address item.
 	 *
-	 * @param \Aimeos\MShop\Order\Item\Base\Address\Iface $item Order address item
+	 * @param integer $position Position of the address item
+	 * @return \Aimeos\MShop\Common\Item\Address\Iface Common address item for chaining method calls
 	 */
-	public function copyFrom( \Aimeos\MShop\Order\Item\Base\Address\Iface $item )
+	public function setPosition( $position )
 	{
-		$this->setCompany( $item->getCompany() );
-		$this->setVatID( $item->getVatID() );
-		$this->setSalutation( $item->getSalutation() );
-		$this->setTitle( $item->getTitle() );
-		$this->setFirstname( $item->getFirstname() );
-		$this->setLastname( $item->getLastname() );
-		$this->setAddress1( $item->getAddress1() );
-		$this->setAddress2( $item->getAddress2() );
-		$this->setAddress3( $item->getAddress3() );
-		$this->setPostal( $item->getPostal() );
-		$this->setCity( $item->getCity() );
-		$this->setState( $item->getState() );
-		$this->setCountryId( $item->getCountryId() );
-		$this->setLanguageId( $item->getLanguageId() );
-		$this->setTelephone( $item->getTelephone() );
-		$this->setTelefax( $item->getTelefax() );
-		$this->setEmail( $item->getEmail() );
-		$this->setWebsite( $item->getWebsite() );
-		$this->setFlag( $item->getFlag() );
+		if( (int) $position !== $this->getPosition() )
+		{
+			$this->values[$this->prefix . 'position'] = (int) $position;
+			$this->setModified();
+		}
+
+		return $this;
 	}
 
 
-	/**
-	 * Sets the item values from the given array.
+	/*
+	 * Sets the item values from the given array and removes that entries from the list
 	 *
-	 * @param array $list Associative list of item keys and their values
-	 * @return array Associative list of keys and their values that are unknown
+	 * @param array &$list Associative list of item keys and their values
+	 * @param boolean True to set private properties too, false for public only
+	 * @return \Aimeos\MShop\Common\Item\Address\Iface Address item for chaining method calls
 	 */
-	public function fromArray( array $list )
+	public function fromArray( array &$list, $private = false )
 	{
-		$unknown = array();
-		$list = parent::fromArray( $list );
+		$item = parent::fromArray( $list, $private );
 
 		foreach( $list as $key => $value )
 		{
 			switch( $key )
 			{
-				case $this->prefix . 'refid': $this->setRefId( $value ); break;
-				case $this->prefix . 'position': $this->setPosition( $value ); break;
-				default: $unknown[$key] = $value;
+				case $this->prefix . 'parentid': !$private ?: $item = $item->setParentId( $value ); break;
+				case $this->prefix . 'position': $item = $item->setPosition( $value ); break;
+				default: continue 2;
 			}
+
+			unset( $list[$key] );
 		}
 
-		return $unknown;
+		return $item;
 	}
 
 
 	/**
 	 * Returns the item values as array.
 	 *
-	 * @return Associative list of item properties and their values
+	 * @param boolean True to return private properties, false for public only
+	 * @return array Associative list of item properties and their values
 	 */
-	public function toArray()
+	public function toArray( $private = false )
 	{
-		$properties = parent::toArray();
+		$list = parent::toArray( $private );
 
-		$properties[$this->prefix . 'refid'] = $this->getRefId();
-		$properties[$this->prefix . 'position'] = $this->getPosition();
+		$list[$this->prefix . 'position'] = $this->getPosition();
 
-		return $properties;
+		if( $private === true ) {
+			$list[$this->prefix . 'parentid'] = $this->getParentId();
+		}
+
+		return $list;
 	}
 
 }

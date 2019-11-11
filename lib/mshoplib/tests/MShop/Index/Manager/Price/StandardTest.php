@@ -1,147 +1,76 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2012
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2012
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 
 namespace Aimeos\MShop\Index\Manager\Price;
 
 
-/**
- * Test class for \Aimeos\MShop\Index\Manager\Price\Standard.
- */
-class StandardTest extends \PHPUnit_Framework_TestCase
+class StandardTest extends \PHPUnit\Framework\TestCase
 {
+	private $context;
 	private $object;
-	protected static $products;
 
 
-	public static function setUpBeforeClass()
-	{
-		$productManager = \Aimeos\MShop\Product\Manager\Factory::createManager( \TestHelper::getContext() );
-
-		$search = $productManager->createSearch();
-		$search->setConditions( $search->compare( '==', 'product.code', array( 'CNC', 'CNE' ) ) );
-		$result = $productManager->searchItems( $search, array( 'attribute', 'price', 'text' ) );
-
-		if( count( $result ) !== 2 ) {
-			throw new \Exception( 'Products not available' );
-		}
-
-		foreach( $result as $item ) {
-			self::$products[$item->getCode()] = $item;
-		}
-	}
-
-
-	/**
-	 * Sets up the fixture.
-	 * This method is called before a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function setUp()
 	{
-		$this->object = new \Aimeos\MShop\Index\Manager\Price\Standard( \TestHelper::getContext() );
+		$this->context = \TestHelperMShop::getContext();
+		$this->object = new \Aimeos\MShop\Index\Manager\Price\Standard( $this->context );
 	}
 
 
-	/**
-	 * Tears down the fixture, for example, closes a network connection.
-	 * This method is called after a test is executed.
-	 *
-	 * @access protected
-	 */
 	protected function tearDown()
 	{
-		unset( $this->object );
+		unset( $this->object, $this->context );
 	}
 
 
-	public function testCleanup()
+	public function testClear()
 	{
-		$this->object->cleanup( array( -1 ) );
+		$this->object->clear( array( -1 ) );
 	}
 
 
-	public function testAggregate()
+	public function testGetResourceType()
 	{
-		$manager = \Aimeos\MShop\Factory::createManager( \TestHelper::getContext(), 'price' );
+		$result = $this->object->getResourceType();
 
-		$search = $manager->createSearch();
-		$expr = array(
-			$search->compare( '==', 'price.value', '18.00' ),
-			$search->compare( '==', 'price.currencyid', 'EUR' ),
-			$search->compare( '==', 'price.editor', 'core:unittest' ),
-		);
-		$search->setConditions( $search->combine( '&&', $expr ) );
-
-		$items = $manager->searchItems( $search );
-
-		if( ( $item = reset( $items ) ) === false ) {
-			throw new \Exception( 'No price item found' );
-		}
-
-
-		$search = $this->object->createSearch( true );
-		$result = $this->object->aggregate( $search, 'index.price.id' );
-
-		$this->assertEquals( 6, count( $result ) );
-		$this->assertArrayHasKey( $item->getId(), $result );
-		$this->assertEquals( 3, $result[$item->getId()] );
+		$this->assertContains( 'index/price', $result );
 	}
 
 
 	public function testGetSearchAttributes()
 	{
 		foreach( $this->object->getSearchAttributes() as $attribute ) {
-			$this->assertInstanceOf( '\\Aimeos\\MW\\Criteria\\Attribute\\Iface', $attribute );
+			$this->assertInstanceOf( \Aimeos\MW\Criteria\Attribute\Iface::class, $attribute );
 		}
 	}
 
 
 	public function testSaveDeleteItem()
 	{
-		$productManager = \Aimeos\MShop\Product\Manager\Factory::createManager( \TestHelper::getContext() );
-		$product = clone self::$products['CNC'];
-
-		$prices = $product->getRefItems( 'price' );
-		if( ( $priceItem = reset( $prices ) ) === false ) {
-			throw new \Exception( 'Product doesnt have any price item' );
-		}
-
-
-		$product->setId( null );
-		$product->setCode( 'ModifiedCNC' );
-		$productManager->saveItem( $product );
-		$this->object->saveItem( $product );
-
-
-		$search = $this->object->createSearch();
-		$search->setConditions( $search->compare( '==', 'index.price.id', $priceItem->getId() ) );
-		$result = $this->object->searchItems( $search );
-
+		$productManager = \Aimeos\MShop\Product\Manager\Factory::create( $this->context );
+		$product = $productManager->findItem( 'CNC', ['price'] );
 
 		$this->object->deleteItem( $product->getId() );
-		$productManager->deleteItem( $product->getId() );
-
+		$this->object->saveItem( $product );
 
 		$search = $this->object->createSearch();
-		$search->setConditions( $search->compare( '==', 'index.price.id', $priceItem->getId() ) );
-		$result2 = $this->object->searchItems( $search );
 
+		$func = $search->createFunction( 'index.price:value', ['EUR'] );
+		$search->setConditions( $search->compare( '==', $func, '18.00' ) );
 
-		$this->assertContains( $product->getId(), array_keys( $result ) );
-		$this->assertFalse( in_array( $product->getId(), array_keys( $result2 ) ) );
+		$this->assertEquals( 3, count( $this->object->searchItems( $search ) ) );
 	}
 
 
 	public function testGetSubManager()
 	{
-		$this->setExpectedException( '\\Aimeos\\MShop\\Exception' );
+		$this->setExpectedException( \Aimeos\MShop\Exception::class );
 		$this->object->getSubManager( 'unknown' );
 	}
 
@@ -150,127 +79,21 @@ class StandardTest extends \PHPUnit_Framework_TestCase
 	{
 		$search = $this->object->createSearch();
 
-		$priceItems = self::$products['CNC']->getRefItems( 'price', 'default' );
-		if( ( $priceItem = reset( $priceItems ) ) === false ) {
-			throw new \Exception( 'No price with type "default" available in product CNC' );
-		}
-
-		$search->setConditions( $search->compare( '==', 'index.price.id', $priceItem->getId() ) );
-		$result = $this->object->searchItems( $search, array() );
-
-		$this->assertEquals( 2, count( $result ) );
-	}
-
-
-	public function testSearchItemsIdNull()
-	{
-		$search = $this->object->createSearch();
-
-		$search->setConditions( $search->compare( '!=', 'index.price.id', null ) );
-		$result = $this->object->searchItems( $search, array() );
-
-		$this->assertGreaterThanOrEqual( 2, count( $result ) );
-	}
-
-
-	public function testSearchItemsQuantity()
-	{
-		$search = $this->object->createSearch();
-
-		$search->setConditions( $search->compare( '==', 'index.price.quantity', 1 ) );
-		$result = $this->object->searchItems( $search, array() );
-
-		$this->assertGreaterThanOrEqual( 2, count( $result ) );
-	}
-
-
-	public function testSearchItemsQuantityValue()
-	{
-		$search = $this->object->createSearch();
-
-		$func = $search->createFunction( 'index.price.value', array( 'default', 'EUR', 'default' ) );
-		$expr = array(
-			$search->compare( '>=', $func, '10.00' ),
-			$search->compare( '==', 'index.price.quantity', 1 ),
-		);
-		$search->setConditions( $search->combine( '&&', $expr ) );
-
-		$sortfunc = $search->createFunction( 'sort:index.price.value', array( 'default', 'EUR', 'default' ) );
-		$search->setSortations( array( $search->sort( '+', $sortfunc ) ) );
-
-		$result = $this->object->searchItems( $search, array() );
-
-		$this->assertGreaterThanOrEqual( 2, count( $result ) );
-	}
-
-
-	public function testSearchItemsValue()
-	{
-		$search = $this->object->createSearch();
-
-		$func = $search->createFunction( 'index.price.value', array( 'default', 'EUR', 'default' ) );
+		$func = $search->createFunction( 'index.price:value', ['EUR'] );
 		$search->setConditions( $search->compare( '>=', $func, '18.00' ) );
 
-		$sortfunc = $search->createFunction( 'sort:index.price.value', array( 'default', 'EUR', 'default' ) );
+		$sortfunc = $search->createFunction( 'sort:index.price:value', ['EUR'] );
 		$search->setSortations( array( $search->sort( '+', $sortfunc ) ) );
 
-		$result = $this->object->searchItems( $search, array() );
+		$result = $this->object->searchItems( $search, [] );
 
 		$this->assertGreaterThanOrEqual( 2, count( $result ) );
 	}
 
 
-	public function testSearchItemsCosts()
+	public function testCleanup()
 	{
-		$search = $this->object->createSearch();
-
-		$func = $search->createFunction( 'index.price.costs', array( 'default', 'EUR', 'default' ) );
-		$search->setConditions( $search->compare( '>=', $func, '20.00' ) );
-
-		$sortfunc = $search->createFunction( 'sort:index.price.costs', array( 'default', 'EUR', 'default' ) );
-		$search->setSortations( array( $search->sort( '+', $sortfunc ) ) );
-
-		$result = $this->object->searchItems( $search, array() );
-
-		$this->assertGreaterThanOrEqual( 1, count( $result ) );
-	}
-
-
-	public function testSearchItemsRebate()
-	{
-		$search = $this->object->createSearch();
-
-		$func = $search->createFunction( 'index.price.costs', array( 'default', 'EUR', 'default' ) );
-		$search->setConditions( $search->compare( '==', $func, '1.50' ) );
-
-		$sortfunc = $search->createFunction( 'sort:index.price.costs', array( 'default', 'EUR', 'default' ) );
-		$search->setSortations( array( $search->sort( '+', $sortfunc ) ) );
-
-		$result = $this->object->searchItems( $search, array() );
-
-		$this->assertGreaterThanOrEqual( 1, count( $result ) );
-	}
-
-
-	public function testSearchItemsTaxrate()
-	{
-		$search = $this->object->createSearch();
-
-		$func = $search->createFunction( 'index.price.taxrate', array( 'default', 'EUR', 'default' ) );
-		$search->setConditions( $search->compare( '==', $func, '19.00' ) );
-
-		$sortfunc = $search->createFunction( 'sort:index.price.taxrate', array( 'default', 'EUR', 'default' ) );
-		$search->setSortations( array( $search->sort( '+', $sortfunc ) ) );
-
-		$result = $this->object->searchItems( $search, array() );
-
-		$this->assertGreaterThanOrEqual( 2, count( $result ) );
-	}
-
-
-	public function testCleanupIndex()
-	{
-		$this->object->cleanupIndex( '0000-00-00 00:00:00' );
+		$this->object->cleanup( '1970-01-01 00:00:00' );
 	}
 
 }

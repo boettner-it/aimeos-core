@@ -1,8 +1,8 @@
 <?php
 /**
- * @copyright Metaways Infosystems GmbH, 2012
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2012
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 return array(
@@ -24,18 +24,16 @@ return array(
 	'service' => array(
 		'service/delivery/unitcode' => array(
 			'pos' => 0,
-			'typeid' => 'service/delivery',
+			'type' => 'delivery',
 			'code' => 'unitcode',
 			'label' => 'unitlabel',
 			'provider' => 'Standard',
-			'config' => array(
-				'default.url' => 'deliveryurl'
-			),
+			'config' => [],
 			'status' => 1
 		),
 		'service/payment/unitcode' => array(
 			'pos' => 0,
-			'typeid' => 'service/payment',
+			'type' => 'payment',
 			'code' => 'unitpaymentcode',
 			'label' => 'unitpaymentlabel',
 			'provider' => 'PrePay',
@@ -46,16 +44,16 @@ return array(
 		),
 		'service/payment/directdebit' => array(
 			'pos' => 1,
-			'typeid' => 'service/payment',
+			'type' => 'payment',
 			'code' => 'directdebit-test',
 			'label' => 'direct debit label',
 			'provider' => 'DirectDebit',
-			'config' => array(),
+			'config' => [],
 			'status' => 1
 		),
 		'service/payment/paypalexpress' => array(
 			'pos' => 2,
-			'typeid' => 'service/payment',
+			'type' => 'payment',
 			'code' => 'paypalexpress',
 			'label' => 'PayPalExpress',
 			'provider' => 'PayPalExpress',

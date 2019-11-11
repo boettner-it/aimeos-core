@@ -2,7 +2,7 @@
 
 /**
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Customer
  */
@@ -19,20 +19,21 @@ namespace Aimeos\MShop\Customer\Manager\Group;
  */
 class Standard
 	extends \Aimeos\MShop\Common\Manager\Base
-	implements \Aimeos\MShop\Customer\Manager\Group\Iface
+	implements \Aimeos\MShop\Customer\Manager\Group\Iface, \Aimeos\MShop\Common\Manager\Factory\Iface
 {
 	private $searchConfig = array(
 		'customer.group.id' => array(
 			'code' => 'customer.group.id',
 			'internalcode' => 'mcusgr."id"',
-			'label' => 'Customer group ID',
+			'label' => 'Group ID',
 			'type' => 'integer',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
+			'public' => false,
 		),
 		'customer.group.siteid' => array(
 			'code' => 'customer.group.siteid',
 			'internalcode' => 'mcusgr."siteid"',
-			'label' => 'Customer group site ID',
+			'label' => 'Group site ID',
 			'type' => 'integer',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 			'public' => false,
@@ -40,37 +41,40 @@ class Standard
 		'customer.group.code' => array(
 			'code' => 'customer.group.code',
 			'internalcode' => 'mcusgr."code"',
-			'label' => 'Customer group code',
+			'label' => 'Group code',
 			'type' => 'string',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
 		'customer.group.label' => array(
 			'code' => 'customer.group.label',
 			'internalcode' => 'mcusgr."label"',
-			'label' => 'Customer group label',
+			'label' => 'Group label',
 			'type' => 'string',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
-		'customer.group.ctime'=> array(
+		'customer.group.ctime' => array(
 			'code' => 'customer.group.ctime',
 			'internalcode' => 'mcusgr."ctime"',
-			'label' => 'Customer group creation time',
+			'label' => 'Group create date/time',
 			'type' => 'datetime',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
-		'customer.group.mtime'=> array(
+		'customer.group.mtime' => array(
 			'code' => 'customer.group.mtime',
 			'internalcode' => 'mcusgr."mtime"',
-			'label' => 'Customer group modification time',
+			'label' => 'Group modify date/time',
 			'type' => 'datetime',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
-		'customer.group.editor'=> array(
+		'customer.group.editor' => array(
 			'code' => 'customer.group.editor',
 			'internalcode' => 'mcusgr."editor"',
-			'label' => 'Customer group editor',
+			'label' => 'Group editor',
 			'type' => 'string',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
 	);
 
@@ -90,29 +94,43 @@ class Standard
 	/**
 	 * Removes old entries from the database
 	 *
-	 * @param integer[] $siteids List of IDs for sites whose entries should be deleted
+	 * @param string[] $siteids List of IDs for sites whose entries should be deleted
+	 * @return \Aimeos\MShop\Customer\Manager\Group\Iface Manager object for chaining method calls
 	 */
-	public function cleanup( array $siteids )
+	public function clear( array $siteids )
 	{
 		$path = 'mshop/customer/manager/group/submanagers';
-		foreach( $this->getContext()->getConfig()->get( $path, array() ) as $domain ) {
-			$this->getSubManager( $domain )->cleanup( $siteids );
+		foreach( $this->getContext()->getConfig()->get( $path, [] ) as $domain ) {
+			$this->getObject()->getSubManager( $domain )->clear( $siteids );
 		}
 
-		$this->cleanupBase( $siteids, 'mshop/customer/manager/group/standard/delete' );
+		return $this->clearBase( $siteids, 'mshop/customer/manager/group/standard/delete' );
 	}
 
 
 	/**
-	 * Instantiates a new customer group item object
+	 * Creates a new empty item instance
 	 *
-	 * @return \Aimeos\MShop\Customer\Item\Group\Iface
+	 * @param array $values Values the item should be initialized with
+	 * @return \Aimeos\MShop\Customer\Item\Group\Iface New customer group item object
 	 */
-	public function createItem()
+	public function createItem( array $values = [] )
 	{
-		$values = array( 'siteid'=> $this->getContext()->getLocale()->getSiteId() );
-
+		$values['customer.group.siteid'] = $this->getContext()->getLocale()->getSiteId();
 		return $this->createItemBase( $values );
+	}
+
+
+	/**
+	 * Returns the available manager types
+	 *
+	 * @param boolean $withsub Return also the resource type of sub-managers if true
+	 * @return string[] Type of the manager and submanagers, subtypes are separated by slashes
+	 */
+	public function getResourceType( $withsub = true )
+	{
+		$path = 'mshop/customer/manager/group/submanagers';
+		return $this->getResourceTypeBase( 'customer/group', $path, [], $withsub );
 	}
 
 
@@ -120,7 +138,7 @@ class Standard
 	 * Returns the attributes that can be used for searching
 	 *
 	 * @param boolean $withsub Return attributes of sub-managers too if true
-	 * @return array List of attribute items implementing \Aimeos\MW\Criteria\Attribute\Iface
+	 * @return \Aimeos\MW\Criteria\Attribute\Iface[] List of search attribute items
 	 */
 	public function getSearchAttributes( $withsub = true )
 	{
@@ -143,18 +161,25 @@ class Standard
 		 */
 		$path = 'mshop/customer/manager/group/submanagers';
 
-		return $this->getSearchAttributesBase( $this->searchConfig, $path, array(), $withsub );
+		return $this->getSearchAttributesBase( $this->searchConfig, $path, [], $withsub );
 	}
 
 
 	/**
-	 * Removes multiple items specified by their IDs
+	 * Removes multiple items.
 	 *
-	 * @param array $ids List of IDs
+	 * @param \Aimeos\MShop\Common\Item\Iface[]|string[] $itemIds List of item objects or IDs of the items
+	 * @return \Aimeos\MShop\Customer\Manager\Group\Iface Manager object for chaining method calls
 	 */
-	public function deleteItems( array $ids )
+	public function deleteItems( array $itemIds )
 	{
-		/** mshop/customer/manager/group/standard/delete
+		/** mshop/customer/manager/group/standard/delete/mysql
+		 * Deletes the items matched by the given IDs from the database
+		 *
+		 * @see mshop/customer/manager/group/standard/delete/ansi
+		 */
+
+		/** mshop/customer/manager/group/standard/delete/ansi
 		 * Deletes the items matched by the given IDs from the database
 		 *
 		 * Removes the records specified by the given IDs from the customer group
@@ -172,28 +197,46 @@ class Standard
 		 * @param string SQL statement for deleting items
 		 * @since 2015.08
 		 * @category Developer
-		 * @see mshop/customer/manager/group/standard/insert
-		 * @see mshop/customer/manager/group/standard/update
-		 * @see mshop/customer/manager/group/standard/newid
-		 * @see mshop/customer/manager/group/standard/search
-		 * @see mshop/customer/manager/group/standard/count
+		 * @see mshop/customer/manager/group/standard/insert/ansi
+		 * @see mshop/customer/manager/group/standard/update/ansi
+		 * @see mshop/customer/manager/group/standard/newid/ansi
+		 * @see mshop/customer/manager/group/standard/search/ansi
+		 * @see mshop/customer/manager/group/standard/count/ansi
 		 */
 		$path = 'mshop/customer/manager/group/standard/delete';
-		$this->deleteItemsBase( $ids, $path );
+
+		return $this->deleteItemsBase( $itemIds, $path );
+	}
+
+
+	/**
+	 * Returns the item specified by its code and domain/type if necessary
+	 *
+	 * @param string $code Code of the item
+	 * @param string[] $ref List of domains to fetch list items and referenced items for
+	 * @param string|null $domain Domain of the item if necessary to identify the item uniquely
+	 * @param string|null $type Type code of the item if necessary to identify the item uniquely
+	 * @param boolean $default True to add default criteria
+	 * @return \Aimeos\MShop\Common\Item\Iface Item object
+	 */
+	public function findItem( $code, array $ref = [], $domain = null, $type = null, $default = false )
+	{
+		return $this->findItemBase( array( 'customer.group.code' => $code ), $ref, $default );
 	}
 
 
 	/**
 	 * Returns the customer group item object specificed by its ID
 	 *
-	 * @param integer $id Unique customer ID referencing an existing customer group
+	 * @param string $id Unique customer ID referencing an existing customer group
 	 * @param string[] $ref List of domains to fetch list items and referenced items for
+	 * @param boolean $default Add default criteria
 	 * @return \Aimeos\MShop\Customer\Item\Group\Iface Returns the customer group item for the given ID
 	 * @throws \Aimeos\MShop\Exception If item couldn't be found
 	 */
-	public function getItem( $id, array $ref = array() )
+	public function getItem( $id, array $ref = [], $default = false )
 	{
-		return $this->getItemBase( 'customer.group.id', $id, $ref );
+		return $this->getItemBase( 'customer.group.id', $id, $ref, $default );
 	}
 
 
@@ -202,15 +245,13 @@ class Standard
 	 *
 	 * @param \Aimeos\MShop\Customer\Item\Group\Iface $item Customer group item
 	 * @param boolean $fetch True if the new ID should be returned in the item
+	 * @return \Aimeos\MShop\Customer\Item\Group\Iface $item Updated item including the generated ID
 	 */
-	public function saveItem( \Aimeos\MShop\Common\Item\Iface $item, $fetch = true )
+	public function saveItem( \Aimeos\MShop\Customer\Item\Group\Iface $item, $fetch = true )
 	{
-		$iface = '\\Aimeos\\MShop\\Customer\\Item\\Group\\Iface';
-		if( !( $item instanceof $iface ) ) {
-			throw new \Aimeos\MShop\Customer\Exception( sprintf( 'Object is not of required type "%1$s"', $iface ) );
+		if( !$item->isModified() ) {
+			return $item;
 		}
-
-		if( !$item->isModified() ) { return; }
 
 		$context = $this->getContext();
 
@@ -222,10 +263,17 @@ class Standard
 		{
 			$id = $item->getId();
 			$date = date( 'Y-m-d H:i:s' );
+			$columns = $this->getObject()->getSaveAttributes();
 
 			if( $id === null )
 			{
-				/** mshop/customer/manager/group/standard/insert
+				/** mshop/customer/manager/group/standard/insert/mysql
+				 * Inserts a new customer group record into the database table
+				 *
+				 * @see mshop/customer/manager/group/standard/insert/ansi
+				 */
+
+				/** mshop/customer/manager/group/standard/insert/ansi
 				 * Inserts a new customer group record into the database table
 				 *
 				 * Items with no ID yet (i.e. the ID is NULL) will be created in
@@ -248,17 +296,24 @@ class Standard
 				 * @param string SQL statement for inserting records
 				 * @since 2015.08
 				 * @category Developer
-				 * @see mshop/customer/manager/group/standard/update
-				 * @see mshop/customer/manager/group/standard/newid
-				 * @see mshop/customer/manager/group/standard/delete
-				 * @see mshop/customer/manager/group/standard/search
-				 * @see mshop/customer/manager/group/standard/count
+				 * @see mshop/customer/manager/group/standard/update/ansi
+				 * @see mshop/customer/manager/group/standard/newid/ansi
+				 * @see mshop/customer/manager/group/standard/delete/ansi
+				 * @see mshop/customer/manager/group/standard/search/ansi
+				 * @see mshop/customer/manager/group/standard/count/ansi
 				 */
 				$path = 'mshop/customer/manager/group/standard/insert';
+				$sql = $this->addSqlColumns( array_keys( $columns ), $this->getSqlConfig( $path ) );
 			}
 			else
 			{
-				/** mshop/customer/manager/group/standard/update
+				/** mshop/customer/manager/group/standard/update/mysql
+				 * Updates an existing customer group record in the database
+				 *
+				 * @see mshop/customer/manager/group/standard/update/ansi
+				 */
+
+				/** mshop/customer/manager/group/standard/update/ansi
 				 * Updates an existing customer group record in the database
 				 *
 				 * Items which already have an ID (i.e. the ID is not NULL) will
@@ -278,35 +333,47 @@ class Standard
 				 * @param string SQL statement for updating records
 				 * @since 2015.08
 				 * @category Developer
-				 * @see mshop/customer/manager/group/standard/insert
-				 * @see mshop/customer/manager/group/standard/newid
-				 * @see mshop/customer/manager/group/standard/delete
-				 * @see mshop/customer/manager/group/standard/search
-				 * @see mshop/customer/manager/group/standard/count
+				 * @see mshop/customer/manager/group/standard/insert/ansi
+				 * @see mshop/customer/manager/group/standard/newid/ansi
+				 * @see mshop/customer/manager/group/standard/delete/ansi
+				 * @see mshop/customer/manager/group/standard/search/ansi
+				 * @see mshop/customer/manager/group/standard/count/ansi
 				 */
 				$path = 'mshop/customer/manager/group/standard/update';
+				$sql = $this->addSqlColumns( array_keys( $columns ), $this->getSqlConfig( $path ), false );
 			}
 
-			$stmt = $this->getCachedStatement( $conn, $path );
+			$idx = 1;
+			$stmt = $this->getCachedStatement( $conn, $path, $sql );
 
-			$stmt->bind( 1, $context->getLocale()->getSiteId(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 2, $item->getCode() );
-			$stmt->bind( 3, $item->getLabel() );
-			$stmt->bind( 4, $date ); // mtime
-			$stmt->bind( 5, $context->getEditor() );
+			foreach( $columns as $name => $entry ) {
+				$stmt->bind( $idx++, $item->get( $name ), $entry->getInternalType() );
+			}
+
+			$stmt->bind( $idx++, $item->getCode() );
+			$stmt->bind( $idx++, $item->getLabel() );
+			$stmt->bind( $idx++, $date ); // mtime
+			$stmt->bind( $idx++, $context->getEditor() );
+			$stmt->bind( $idx++, $context->getLocale()->getSiteId(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 
 			if( $id !== null ) {
-				$stmt->bind( 6, $id, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+				$stmt->bind( $idx++, $id, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 				$item->setId( $id );
 			} else {
-				$stmt->bind( 6, $date ); // ctime
+				$stmt->bind( $idx++, $date ); // ctime
 			}
 
 			$stmt->execute()->finish();
 
 			if( $id === null && $fetch === true )
 			{
-				/** mshop/customer/manager/group/standard/newid
+				/** mshop/customer/manager/group/standard/newid/mysql
+				 * Retrieves the ID generated by the database when inserting a new record
+				 *
+				 * @see mshop/customer/manager/group/standard/newid/ansi
+				 */
+
+				/** mshop/customer/manager/group/standard/newid/ansi
 				 * Retrieves the ID generated by the database when inserting a new record
 				 *
 				 * As soon as a new record is inserted into the database table,
@@ -330,11 +397,11 @@ class Standard
 				 * @param string SQL statement for retrieving the last inserted record ID
 				 * @since 2015.08
 				 * @category Developer
-				 * @see mshop/customer/manager/group/standard/insert
-				 * @see mshop/customer/manager/group/standard/update
-				 * @see mshop/customer/manager/group/standard/delete
-				 * @see mshop/customer/manager/group/standard/search
-				 * @see mshop/customer/manager/group/standard/count
+				 * @see mshop/customer/manager/group/standard/insert/ansi
+				 * @see mshop/customer/manager/group/standard/update/ansi
+				 * @see mshop/customer/manager/group/standard/delete/ansi
+				 * @see mshop/customer/manager/group/standard/search/ansi
+				 * @see mshop/customer/manager/group/standard/count/ansi
 				 */
 				$path = 'mshop/customer/manager/group/standard/newid';
 				$item->setId( $this->newId( $conn, $path ) );
@@ -347,6 +414,8 @@ class Standard
 			$dbm->release( $conn, $dbname );
 			throw $e;
 		}
+
+		return $item;
 	}
 
 
@@ -354,14 +423,13 @@ class Standard
 	 * Returns the item objects matched by the given search criteria.
 	 *
 	 * @param \Aimeos\MW\Criteria\Iface $search Search criteria object
-	 * @param array $ref List of domain items that should be fetched too
-	 * @param integer &$total Number of items that are available in total
+	 * @param string[] $ref List of domains to fetch list items and referenced items for
+	 * @param integer|null &$total Number of items that are available in total
 	 * @return array List of items implementing \Aimeos\MShop\Customer\Item\Group\Iface
-	 * @throws \Aimeos\MShop\Exception If retrieving items failed
 	 */
-	public function searchItems( \Aimeos\MW\Criteria\Iface $search, array $ref = array(), &$total = null )
+	public function searchItems( \Aimeos\MW\Criteria\Iface $search, array $ref = [], &$total = null )
 	{
-		$map = array();
+		$items = [];
 		$context = $this->getContext();
 
 		$dbm = $context->getDatabaseManager();
@@ -373,7 +441,13 @@ class Standard
 			$required = array( 'customer.group' );
 			$level = \Aimeos\MShop\Locale\Manager\Base::SITE_ALL;
 
-			/** mshop/customer/manager/group/standard/search
+			/** mshop/customer/manager/group/standard/search/mysql
+			 * Retrieves the records matched by the given criteria in the database
+			 *
+			 * @see mshop/customer/manager/group/standard/search/ansi
+			 */
+
+			/** mshop/customer/manager/group/standard/search/ansi
 			 * Retrieves the records matched by the given criteria in the database
 			 *
 			 * Fetches the records matched by the given criteria from the customer
@@ -418,15 +492,21 @@ class Standard
 			 * @param string SQL statement for searching items
 			 * @since 2015.08
 			 * @category Developer
-			 * @see mshop/customer/manager/group/standard/insert
-			 * @see mshop/customer/manager/group/standard/update
-			 * @see mshop/customer/manager/group/standard/newid
-			 * @see mshop/customer/manager/group/standard/delete
-			 * @see mshop/customer/manager/group/standard/count
+			 * @see mshop/customer/manager/group/standard/insert/ansi
+			 * @see mshop/customer/manager/group/standard/update/ansi
+			 * @see mshop/customer/manager/group/standard/newid/ansi
+			 * @see mshop/customer/manager/group/standard/delete/ansi
+			 * @see mshop/customer/manager/group/standard/count/ansi
 			 */
 			$cfgPathSearch = 'mshop/customer/manager/group/standard/search';
 
-			/** mshop/customer/manager/group/standard/count
+			/** mshop/customer/manager/group/standard/count/mysql
+			 * Counts the number of records matched by the given criteria in the database
+			 *
+			 * @see mshop/customer/manager/group/standard/count/ansi
+			 */
+
+			/** mshop/customer/manager/group/standard/count/ansi
 			 * Counts the number of records matched by the given criteria in the database
 			 *
 			 * Counts all records matched by the given criteria from the customer
@@ -465,18 +545,18 @@ class Standard
 			 * @param string SQL statement for counting items
 			 * @since 2015.08
 			 * @category Developer
-			 * @see mshop/customer/manager/group/standard/insert
-			 * @see mshop/customer/manager/group/standard/update
-			 * @see mshop/customer/manager/group/standard/newid
-			 * @see mshop/customer/manager/group/standard/delete
-			 * @see mshop/customer/manager/group/standard/search
+			 * @see mshop/customer/manager/group/standard/insert/ansi
+			 * @see mshop/customer/manager/group/standard/update/ansi
+			 * @see mshop/customer/manager/group/standard/newid/ansi
+			 * @see mshop/customer/manager/group/standard/delete/ansi
+			 * @see mshop/customer/manager/group/standard/search/ansi
 			 */
 			$cfgPathCount = 'mshop/customer/manager/group/standard/count';
 
 			$results = $this->searchItemsBase( $conn, $search, $cfgPathSearch, $cfgPathCount, $required, $total, $level );
 
 			while( ( $row = $results->fetch() ) !== false ) {
-				$map[$row['id']] = $this->createItemBase( $row );
+				$items[(string) $row['customer.group.id']] = $this->createItemBase( $row );
 			}
 
 			$dbm->release( $conn, $dbname );
@@ -487,7 +567,7 @@ class Standard
 			throw $e;
 		}
 
-		return $map;
+		return $items;
 	}
 
 
@@ -594,13 +674,14 @@ class Standard
 		 * modify what is returned to the caller.
 		 *
 		 * This option allows you to wrap local decorators
-		 * ("\Aimeos\MShop\Common\Manager\Decorator\*") around the customer group manager.
+		 * ("\Aimeos\MShop\Customer\Manager\Group\Decorator\*") around the customer
+		 * group manager.
 		 *
 		 *  mshop/customer/manager/group/decorators/local = array( 'decorator2' )
 		 *
 		 * This would add the decorator named "decorator2" defined by
-		 * "\Aimeos\MShop\Common\Manager\Decorator\Decorator2" only to the customer
-		 * group manager.
+		 * "\Aimeos\MShop\Customer\Manager\Group\Decorator\Decorator2" only to the
+		 * customer group manager.
 		 *
 		 * @param array List of decorator names
 		 * @since 2015.08
@@ -620,7 +701,7 @@ class Standard
 	 * @param array $values List of attributes for customer group item
 	 * @return \Aimeos\MShop\Customer\Item\Group\Iface New customer group item
 	 */
-	protected function createItemBase( array $values = array() )
+	protected function createItemBase( array $values = [] )
 	{
 		return new \Aimeos\MShop\Customer\Item\Group\Standard( $values );
 	}

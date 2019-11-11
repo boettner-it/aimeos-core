@@ -5,9 +5,9 @@ namespace Aimeos\MW\Container\Content;
 
 /**
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
-class TextTest extends \PHPUnit_Framework_TestCase
+class TextTest extends \PHPUnit\Framework\TestCase
 {
 	protected function setUp()
 	{
@@ -68,7 +68,7 @@ class TextTest extends \PHPUnit_Framework_TestCase
 
 		$expected = array( 'test text' );
 
-		$actual = array();
+		$actual = [];
 		foreach( $file as $entry ) {
 			$actual[] = $entry;
 		}

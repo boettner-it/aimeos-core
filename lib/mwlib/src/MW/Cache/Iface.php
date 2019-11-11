@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2012
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2012
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Cache
  */
@@ -41,10 +41,22 @@ interface Iface
 	 * Implementations for cache servers that care about expiration themselves
 	 * simply do nothing and return immediately.
 	 *
-	 * @throws \Aimeos\MW\Cache\Exception If the cache server doesn't respond
-	 * @return void
+	 * @return bool True on success and false on failure
 	 */
-	public function cleanup();
+	public function cleanup() : bool;
+
+
+	/**
+	 * Removes all entries of the site from the cache.
+	 *
+	 * This method deletes all cached entries of a site from the cache server
+	 * the client has access to. This method is primarily usefull to provide a
+	 * clean start before new entries are added to the cache and you don't know
+	 * which entries are still in the cache.
+	 *
+	 * @return bool True on success and false on failure
+	 */
+	public function clear() : bool;
 
 
 	/**
@@ -59,27 +71,27 @@ interface Iface
 	 * If the key doesn't exist in the cache, nothing happens and the method
 	 * returns in the same way as if the key was found.
 	 *
-	 * When multiple keys should be deleted, use deleteList() instead as it can
+	 * When multiple keys should be deleted, use deleteMultiple() instead as it can
 	 * delete the keys much faster by combining them into one request.
 	 *
 	 * @param string $key Key string that identifies the single cache entry
-	 * @throws \Aimeos\MW\Cache\Exception If the cache server doesn't respond
-	 * @return void
+	 * @return bool True if the item was successfully removed. False if there was an error
+	 * @throws \Psr\SimpleCache\InvalidArgumentException
 	 */
-	public function delete( $key );
+	public function delete( string $key ) : bool;
 
 
 	/**
 	 * Removes the cache entries identified by the given keys.
 	 *
-	 * Several cache entries can be removed at once with deleteList():
+	 * Several cache entries can be removed at once with deleteMultiple():
 	 *
 	 * <code>
 	 * $keys = array(
 	 * 	'product/id/100',
 	 * 	'product/id/101',
 	 * );
-	 * $cache->deleteList( $keys );
+	 * $cache->deleteMultiple( $keys );
 	 * </code>
 	 *
 	 * If one of the keys is not part of the cache, it's ignored and no error
@@ -88,11 +100,11 @@ interface Iface
 	 * This is much faster than deleting them one by one as they are combined
 	 * into a single request.
 	 *
-	 * @param array $keys List of key strings that identify the cache entries
-	 * 	that should be removed
-	 * @throws \Aimeos\MW\Cache\Exception If the cache server doesn't respond
+	 * @param iterable $keys List of key strings that identify the cache entries that should be removed
+	 * @return bool True if the items were successfully removed. False if there was an error.
+	 * @throws \Psr\SimpleCache\InvalidArgumentException
 	 */
-	public function deleteList( array $keys );
+	public function deleteMultiple( iterable $keys ) : bool;
 
 
 	/**
@@ -117,24 +129,12 @@ interface Iface
 	 * extremely handy if e.g. all cached entries that relates to one product
 	 * should be deleted because the product has changed.
 	 *
-	 * @param string[] $tags List of tag strings that are associated to one or more
-	 * 	cache entries that should be removed
-	 * @throws \Aimeos\MW\Cache\Exception If the cache server doesn't respond
+	 * @param iterable $tags List of tag strings that are associated to one or
+	 *  more cache entries that should be removed
+	 * @return bool True if the items were successfully removed. False if there was an error.
+	 * @throws \Psr\SimpleCache\InvalidArgumentException
 	 */
-	public function deleteByTags( array $tags );
-
-
-	/**
-	 * Removes all entries of the site from the cache.
-	 *
-	 * This method deletes all cached entries of a site from the cache server
-	 * the client has access to. This method is primarily usefull to provide a
-	 * clean start before new entries are added to the cache and you don't know
-	 * which entries are still in the cache.
-	 *
-	 * @throws \Aimeos\MW\Cache\Exception If the cache server doesn't respond
-	 */
-	public function flush();
+	public function deleteByTags( iterable $tags ) : bool;
 
 
 	/**
@@ -147,7 +147,7 @@ interface Iface
 	 * $result = $cache->get( 'product/id/100' );
 	 * </code>
 	 *
-	 * In case you need to retrieve several cached entries, please use getList()
+	 * In case you need to retrieve several cached entries, please use getMultiple()
 	 * instead. It can combine fetching the entries into one request and saves
 	 * the round trip time of a second or all further requests.
 	 *
@@ -179,16 +179,16 @@ interface Iface
 	 * @param string $key Path to the requested value like product/id/123
 	 * @param mixed $default Value returned if requested key isn't found
 	 * @return mixed Value associated to the requested key. If no value for the
-	 * key is found in the cache, the given default value is returned
-	 * @throws \Aimeos\MW\Cache\Exception If the cache server doesn't respond
+	 *	key is found in the cache, the given default value is returned
+	 * @throws \Psr\SimpleCache\InvalidArgumentException
 	 */
-	public function get( $key, $default = null );
+	public function get( string $key, $default = null );
 
 
 	/**
 	 * Returns the cached values for the given cache keys if available.
 	 *
-	 * Several cached entries can be fetched at once using getList(), which is
+	 * Several cached entries can be fetched at once using getMultiple(), which is
 	 * extremely useful to save round trip times:
 	 *
 	 * <code>
@@ -196,7 +196,7 @@ interface Iface
 	 * 	'product/id/100',
 	 * 	'product/id/101',
 	 * );
-	 * $result = $cache->getList( $keys );
+	 * $result = $cache->getMultiple( $keys );
 	 *
 	 * // content of $result:
 	 * array(
@@ -211,53 +211,27 @@ interface Iface
 	 * array. No error or warning is returned in this case. If none of the keys
 	 * is found in the cache, an empty array is returned.
 	 *
-	 * @param array $keys List of key strings for the requested cache entries
-	 * @return array Associative list of key/value pairs for the requested cache
-	 * 	entries. If a cache entry doesn't exist, neither its key nor a value
-	 * 	will be in the result list
-	 * @throws \Aimeos\MW\Cache\Exception If the cache server doesn't respond
+	 * @param iterable $keys List of key strings for the requested cache entries
+	 * @param mixed $default Default value to return for keys that do not exist
+	 * @return iterable A list of key => value pairs. Cache keys that do not exist or are stale will have $default as value.
+	 * @throws \Psr\SimpleCache\InvalidArgumentException
 	 */
-	public function getList( array $keys );
+	public function getMultiple( iterable $keys, $default = null ) : iterable;
 
 
 	/**
-	 * Returns the cached keys and values associated to the given tags if available.
+	 * Determines whether an item is present in the cache.
 	 *
-	 * To retrieve all entries from the cache that are tagged by one or more
-	 * tags, getListByTags() can be used:
+	 * NOTE: It is recommended that has() is only to be used for cache warming type purposes
+	 * and not to be used within your live applications operations for get/set, as this method
+	 * is subject to a race condition where your has() will return true and immediately after,
+	 * another script can remove it, making the state of your app out of date.
 	 *
-	 * <code>
-	 * $cache->set( 'product/id/100', '<string for 100>', array( 'text/id/1' ) );
-	 * $cache->set( 'product/id/101', '<string for 101>', array( 'text/id/2' ) );
-	 *
-	 * $tags = array(
-	 * 	'text/id/1',
-	 * 	'text/id/2',
-	 * );
-	 * $result = $cache->getListByTags( $tags );
-	 *
-	 * // content of $result:
-	 * array(
-	 * 	'product/id/100' => '<cached string for product/id/100>',
-	 * 	'product/id/101' => '<cached string for product/id/101>',
-	 * );
-	 * </code>
-	 *
-	 * The result is an associative array of the keys used in the first parameter
-	 * of set() and the strings stored in the cache for these keys. If one of
-	 * the tags is not associated to an entry in the cache, nothing is returned
-	 * for this tag. Also, no error or warning is returned in this case. If no
-	 * entries are found for all given tags, an empty array is returned. When
-	 * several given tags are associated to one key, the key and its cached
-	 * value is only returned once in the array.
-	 *
-	 * @param string[] $tags List of tag strings associated to the requested cache entries
-	 * @return array Associative list of key/value pairs for the requested cache
-	 * 	entries. If a tag isn't associated to any cache entry, nothing is returned
-	 * 	for that tag
-	 * @throws \Aimeos\MW\Cache\Exception If the cache server doesn't respond
+	 * @param string $key The cache item key
+	 * @return bool True if cache entry is available, false if not
+	 * @throws \Psr\SimpleCache\InvalidArgumentException
 	 */
-	public function getListByTags( array $tags );
+	public function has( string $key ) : bool;
 
 
 	/**
@@ -288,8 +262,8 @@ interface Iface
 	 * in the cache:
 	 *
 	 * <code>
-	 * $tags = array( 'product/id/101', 'product/id/102' );
-	 * $cache->setList( 'product/id/100', '<string>', $tags );
+	 * $tags = ['product/id/101', 'product/id/102'];
+	 * $cache->set( 'product/id/100', '<string>', null, $tags );
 	 * </code>
 	 *
 	 * In this case, the tag 'product/id/101' and 'product/id/102' would be
@@ -301,7 +275,7 @@ interface Iface
 	 * You can also specify an expiration date for the key:
 	 *
 	 * <code>
-	 * $cache->set( 'product/id/100', '<string>', array(), '2100-01-01 12:00:00' );
+	 * $cache->set( 'product/id/100', '<string>', '2100-01-01 12:00:00' );
 	 * </code>
 	 *
 	 * In the example, 'product/id/100' would stay in the cache till Jan. 1, 2100
@@ -324,14 +298,14 @@ interface Iface
 	 *
 	 * @param string $key Key string for the given value like product/id/123
 	 * @param mixed $value Value string that should be stored for the given key
-	 * @param array $tags List of tag strings that should be assoicated to the
-	 * 	given value in the cache
-	 * @param string|null $expires Date/time string in "YYYY-MM-DD HH:mm:ss"
-	 * 	format when the cache entry expires
-	 * @throws \Aimeos\MW\Cache\Exception If the cache server doesn't respond
-	 * @return void
+	 * @param \DateInterval|int|string|null $expires Date interval object,
+	 *  date/time string in "YYYY-MM-DD HH:mm:ss" format or as integer TTL value
+	 *  when the cache entry will expiry
+	 * @param iterable $tags List of tag strings that should be assoicated to the cache entry
+	 * @return bool True on success and false on failure.
+	 * @throws \Psr\SimpleCache\InvalidArgumentException
 	 */
-	public function set( $key, $value, array $tags = array(), $expires = null );
+	public function set( string $key, $value, $expires = null, iterable $tags = [] ) : bool;
 
 
 	/**
@@ -347,7 +321,7 @@ interface Iface
 	 * 	'product/id/100/prices' => '{1:"10.00",5:"9.00",10:"7.50"}',
 	 * 	'product/id/100/object' => '<output from serialize()>',
 	 * );
-	 * $cache->setList( $pairs );
+	 * $cache->setMultiple( $pairs );
 	 * </code>
 	 *
 	 * The keys must be strings and can contain any UTF-8 character. For the
@@ -364,42 +338,15 @@ interface Iface
 	 * or unserialize() after retrieving the values for these keys to get back
 	 * the list or object again. The maximum length of a value is 512 MB.
 	 *
-	 * Additionally, one or more tags can be associated to each key/value pair
-	 * in the cache:
+	 * You can also specify an expiration date by adding the date/time or TTL as
+	 * value:
 	 *
 	 * <code>
-	 * $tags = array(
-	 * 	'product/id/100/name' => 'product/id/100',
-	 * 	'product/id/100/prices' => array( 'product/id/100', 'price' ),
-	 * );
-	 * $cache->setList( $pairs, array(), $tags );
+	 * $cache->setMultiple( $pairs, '2100-01-01 00:00:00' );
 	 * </code>
 	 *
-	 * In this case, the tag 'product/id/100' would be associated to the first
-	 * two keys listed in the $pairs array from above. To the second key the
-	 * tag 'price' would be associated too and no tag would be assocated to the
-	 * key 'product/id/100/object'. The keys in the $tags list must be the same
-	 * as the keys in $pairs. If a key in $tags is used that is not available in
-	 * $pairs, then it is ignored. The maximum allowed length for tags is 255
-	 * bytes.
-	 *
-	 * You can also specify an expiration date for each key in $pairs by adding
-	 * the key from $pairs and the date/time as value:
-	 *
-	 * <code>
-	 * $expires = array(
-	 * 	'product/id/100/name' => '2000-01-01 00:00:00',
-	 * 	'product/id/100/object' =>  '2100-01-01 12:00:00',
-	 * );
-	 * $cache->set( $pairs, array(), $expires );
-	 * </code>
-	 *
-	 * In the example, 'product/id/100/name' would have already been expired
-	 * while 'product/id/100/object' would stay in the cache till Jan. 1, 2100
-	 * at noon. No expiry date is associated to 'product/id/100/prices', so it
-	 * won't expire at all. If a key in $expires is used that is not available
-	 * in $pairs, then it is ignored. The format of the date/time values is
-	 * "YYYY-MM-DD HH:mm:ss" and the hour values are from 0-23.
+	 * In the example, all passed cache entries will expire at Jan. 1, 2100
+	 * at noon.
 	 *
 	 * You should keep the time on both servers in sync to get expected results.
 	 * Also, the date/time values for expiration are sensitive to time zones.
@@ -414,13 +361,22 @@ interface Iface
 	 * date_default_timezone_set( 'UTC' );
 	 * </code>
 	 *
-	 * @param array $pairs Associative list of key/value pairs. Both must be
-	 * 	a string
-	 * @param array $tags Associative list of key/tag or key/tags pairs that should be
-	 * 	associated to the values identified by their key. The value associated
-	 * 	to the key can either be a tag string or an array of tag strings
-	 * @param array $expires Associative list of key/datetime pairs.
-	 * @throws \Aimeos\MW\Cache\Exception If the cache server doesn't respond
+	 * Additionally, one or more tags can be associated to all given cache entries:
+	 *
+	 * <code>
+	 * $cache->setMultiple( $pairs, null, ['product-100', 'price'], );
+	 * </code>
+	 *
+	 * In this case, 'product-100' and 'price' would be associated to all cache
+	 * entries. The maximum allowed length for tags is 255 bytes.
+	 *
+	 * @param iterable $pairs Associative list of key/value pairs. Both must be a string
+	 * @param \DateInterval|int|string|null $expires Date interval object,
+	 *  date/time string in "YYYY-MM-DD HH:mm:ss" format or as integer TTL value
+	 *  when the cache entry will expiry
+	 * @param iterable $tags List of tags that should be associated to the cache entries
+	 * @return bool True on success and false on failure.
+	 * @throws \Psr\SimpleCache\InvalidArgumentException
 	 */
-	public function setList( array $pairs, array $tags = array(), array $expires = array() );
+	public function setMultiple( iterable $pairs, $expires = null, iterable $tags = [] ) : bool;
 }

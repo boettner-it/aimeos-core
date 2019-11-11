@@ -1,13 +1,6 @@
 <?php
 
-namespace Aimeos;
 
-
-/**
- * @copyright Metaways Infosystems GmbH, 2011
- * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
- */
 class TestHelper
 {
 	private static $aimeos;
@@ -24,6 +17,20 @@ class TestHelper
 	}
 
 
+	private static function getAimeos()
+	{
+		if( !isset( self::$aimeos ) )
+		{
+			require_once 'Bootstrap.php';
+			spl_autoload_register( 'Aimeos\\Bootstrap::autoload' );
+
+			self::$aimeos = new \Aimeos\Bootstrap();
+		}
+
+		return self::$aimeos;
+	}
+
+
 	public static function getContext( $site = 'unittest' )
 	{
 		if( !isset( self::$context[$site] ) ) {
@@ -34,35 +41,23 @@ class TestHelper
 	}
 
 
-	private static function getAimeos()
-	{
-		if( !isset( self::$aimeos ) )
-		{
-			require_once 'Bootstrap.php';
-			spl_autoload_register( 'Aimeos::autoload' );
-
-			$extdir = dirname( dirname( dirname( __DIR__ ) ) );
-			self::$aimeos = new \Aimeos\Bootstrap( array( $extdir ), false );
-		}
-
-		return self::$aimeos;
-	}
-
-
+	/**
+	 * @param string $site
+	 */
 	private static function createContext( $site )
 	{
 		$ctx = new \Aimeos\MShop\Context\Item\Standard();
 		$aimeos = self::getAimeos();
 
 
-		$paths = $aimeos->getConfigPaths( 'mysql' );
+		$paths = $aimeos->getConfigPaths();
 		$paths[] = __DIR__ . DIRECTORY_SEPARATOR . 'config';
 
 		$conf = new \Aimeos\MW\Config\PHPArray( array(), $paths );
 		$ctx->setConfig( $conf );
 
 
-		$dbm = new \Aimeos\MW\DB\Manager\PDO( $conf );
+		$dbm = new \Aimeos\MW\DB\Manager\DBAL( $conf );
 		$ctx->setDatabaseManager( $dbm );
 
 
@@ -82,12 +77,12 @@ class TestHelper
 		$ctx->setSession( $session );
 
 
-		$localeManager = \Aimeos\MShop\Locale\Manager\Factory::createManager( $ctx );
+		$localeManager = \Aimeos\MShop\Locale\Manager\Factory::create( $ctx );
 		$localeItem = $localeManager->bootstrap( $site, '', '', false );
 
 		$ctx->setLocale( $localeItem );
 
-		$ctx->setEditor( '<extname>:unittest' );
+		$ctx->setEditor( '<extname>:lib/custom' );
 
 		return $ctx;
 	}

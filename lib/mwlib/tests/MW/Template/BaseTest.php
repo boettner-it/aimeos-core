@@ -6,11 +6,11 @@ namespace Aimeos\MW\Template;
 /**
  * Test class for \Aimeos\MW\Session\CMSLite.
  *
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
-class BaseTest extends \PHPUnit_Framework_TestCase
+class BaseTest extends \PHPUnit\Framework\TestCase
 {
 	private $object;
 
@@ -55,28 +55,28 @@ test template
 
 	public function testDisable()
 	{
-		$this->assertEquals('
+		$this->assertEquals( '
 <div> text</div>
 ',
-		$this->object->get('ITEM')->disable( 'NUM' )->substitute( array( 'TEXT' => 'text' ) )->str() );
+		$this->object->get( 'ITEM' )->disable( 'NUM' )->substitute( array( 'TEXT' => 'text' ) )->str() );
 	}
 
 
 	public function testEnable()
 	{
-		$this->assertEquals('
+		$this->assertEquals( '
 <div>1 text</div>
 ',
-		$this->object->get('ITEM')->enable( 'NUM' )->substitute( array( 'TEXT' => 'text' ) )->str() );
+		$this->object->get( 'ITEM' )->enable( 'NUM' )->substitute( array( 'TEXT' => 'text' ) )->str() );
 	}
 
 
 	public function testGet()
 	{
-		$template = $this->object->get('TEMPLATE');
-		$this->assertInstanceOf( '\\Aimeos\\MW\\Template\\Iface', $template );
+		$template = $this->object->get( 'TEMPLATE' );
+		$this->assertInstanceOf( \Aimeos\MW\Template\Iface::class, $template );
 
-		$this->assertEquals('
+		$this->assertEquals( '
 test template
 <!--###LIST-->
 <!--###ITEM-->
@@ -89,8 +89,8 @@ test template
 
 	public function testGetBeginIsNotDefined()
 	{
-		$this->setExpectedException('\\Aimeos\\MW\\Template\\Exception');
-		$this->object->get('NOTDEFINED');
+		$this->setExpectedException( \Aimeos\MW\Template\Exception::class );
+		$this->object->get( 'NOTDEFINED' );
 	}
 
 	public function testGetEndIsNotDefined()
@@ -113,24 +113,24 @@ test template
 
 		$object = new \Aimeos\MW\Template\Base( $template, '<!--###$-->', '<!--$###-->' );
 
-		$this->setExpectedException('\\Aimeos\\MW\\Template\\Exception');
-		$object->get('ITEM');
+		$this->setExpectedException( \Aimeos\MW\Template\Exception::class );
+		$object->get( 'ITEM' );
 	}
 
 
 
 	public function testGetMarkerNames()
 	{
-		$this->assertEquals( array('TEMPLATE', 'LIST', 'ITEM', 'NUM', 'TEXT'), $this->object->getMarkerNames() );
+		$this->assertEquals( array( 'TEMPLATE', 'LIST', 'ITEM', 'NUM', 'TEXT' ), $this->object->getMarkerNames() );
 	}
 
 
 	public function testReplace()
 	{
-		$this->assertEquals('
+		$this->assertEquals( '
 <div><!--###NUM-->1<!--NUM###--> <!--###TEXT-->example test<!--TEXT###--></div>
 ',
-		$this->object->get('ITEM')->replace( 'text', 'test' )->str( false ) );
+		$this->object->get( 'ITEM' )->replace( 'text', 'test' )->str( false ) );
 	}
 
 
@@ -141,10 +141,10 @@ test template
 			'TEXT' => 'test'
 		);
 
-		$this->assertEquals('
+		$this->assertEquals( '
 <div>123 test</div>
 ',
-			$this->object->get('ITEM')->substitute( $marker )->str()
+			$this->object->get( 'ITEM' )->substitute( $marker )->str()
 		);
 	}
 
@@ -168,16 +168,16 @@ test template
 
 		$object = new \Aimeos\MW\Template\Base( $template, '<!--###$-->', '<!--$###-->' );
 
-		$this->setExpectedException('\\Aimeos\\MW\\Template\\Exception');
-		$object->substitute( array('ITEM'=>'Title' ) );
+		$this->setExpectedException( \Aimeos\MW\Template\Exception::class );
+		$object->substitute( array( 'ITEM'=>'Title' ) );
 	}
 
 	public function testStr()
 	{
-		$template = $this->object->get('TEMPLATE');
-		$this->assertInstanceOf( '\\Aimeos\\MW\\Template\\Iface', $template );
+		$template = $this->object->get( 'TEMPLATE' );
+		$this->assertInstanceOf( \Aimeos\MW\Template\Iface::class, $template );
 
-		$this->assertEquals('
+		$this->assertEquals( '
 test template
 
 ',

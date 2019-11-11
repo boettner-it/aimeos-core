@@ -2,7 +2,7 @@
 
 /**
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Container
  */
@@ -39,7 +39,7 @@ class Text
 	 * @param string $name Name of the file
 	 * @param array $options Associative list of key/value pairs for configuration
 	 */
-	public function __construct( $resource, $name, array $options = array() )
+	public function __construct( $resource, $name, array $options = [] )
 	{
 		if( !is_file( $resource ) && substr( $resource, -4 ) !== '.txt' ) {
 			$resource .= '.txt';
@@ -66,6 +66,7 @@ class Text
 	/**
 	 * Closes the text file so it's written to disk.
 	 *
+	 * @return \Aimeos\MW\Container\Content\Iface Container content instance for method chaining
 	 * @throws \Aimeos\MW\Container\Exception If the file handle couldn't be flushed or closed
 	 */
 	public function close()
@@ -77,28 +78,33 @@ class Text
 		if( fclose( $this->fh ) === false ) {
 			throw new \Aimeos\MW\Container\Exception( sprintf( 'Unable to close file "%1$s"', $this->getResource() ) );
 		}
+
+		return $this;
 	}
 
 
 	/**
 	 * Adds row to the content object.
 	 *
-	 * @param string[] $data Data to add
+	 * @param string $data Data to add
+	 * @return \Aimeos\MW\Container\Content\Iface Container content instance for method chaining
 	 */
 	public function add( $data )
 	{
 		if( fwrite( $this->fh, $data . $this->lineend ) === false ) {
 			throw new \Aimeos\MW\Container\Exception( sprintf( 'Unable to add content to file "%1$s"', $this->getName() ) );
 		}
+
+		return $this;
 	}
 
 
 	/**
 	 * Return the current element.
 	 *
-	 * @return string Content line ending with
+	 * @return string|null Content line ending with
 	 */
-	function current()
+	public function current()
 	{
 		return $this->data;
 	}
@@ -109,7 +115,7 @@ class Text
 	 *
 	 * @return integer|null Position within the text file or null if end of file is reached
 	 */
-	function key()
+	public function key()
 	{
 		if( $this->data !== null ) {
 			return $this->position;
@@ -122,7 +128,7 @@ class Text
 	/**
 	 * Moves forward to next element.
 	 */
-	function next()
+	public function next()
 	{
 		$this->position++;
 		$this->data = $this->getData();
@@ -132,7 +138,7 @@ class Text
 	/**
 	 * Rewinds the file pointer to the beginning.
 	 */
-	function rewind()
+	public function rewind()
 	{
 		if( rewind( $this->fh ) === 0 ) {
 			throw new \Aimeos\MW\Container\Exception( sprintf( 'Rewind file handle for %1$s failed', $this->getResource() ) );
@@ -148,7 +154,7 @@ class Text
 	 *
 	 * @return boolean True on success or false on failure
 	 */
-	function valid()
+	public function valid()
 	{
 		return ( $this->data === null ? !feof( $this->fh ) : true );
 	}
@@ -157,7 +163,7 @@ class Text
 	/**
 	 * Reads the next line from the file.
 	 *
-	 * @return string Data
+	 * @return string|null Data
 	 */
 	protected function getData()
 	{

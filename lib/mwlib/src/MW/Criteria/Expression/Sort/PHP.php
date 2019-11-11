@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MW
  * @subpackage Common
  */
@@ -82,16 +82,17 @@ class PHP
 	 *
 	 * @param array $types Associative list of variable or column names as keys and their corresponding types
 	 * @param array $translations Associative list of variable or column names that should be translated
-	 * @param array $plugins Associative list of item names and plugins implementing \Aimeos\MW\Criteria\Plugin\Iface
-	 * @return string Expression that evaluates to a boolean result
+	 * @param \Aimeos\MW\Criteria\Plugin\Iface[] $plugins Associative list of item names as keys and plugin objects as values
+	 * @param array $funcs Associative list of item names and functions modifying the conditions
+	 * @return mixed Expression that evaluates to a boolean result
 	 */
-	public function toString( array $types, array $translations = array(), array $plugins = array() )
+	public function toSource( array $types, array $translations = [], array $plugins = [], array $funcs = [] )
 	{
 		$this->setPlugins( $plugins );
 
 		$name = $this->name;
 
-		if( ( $transname = $this->translateName( $name, $translations ) ) === '' ) {
+		if( ( $transname = $this->translateName( $name, $translations, $funcs ) ) === '' ) {
 			return '';
 		}
 
@@ -109,7 +110,7 @@ class PHP
 	 * @param string $operator Operator used for the expression
 	 * @param integer $type Type constant
 	 * @param mixed $value Value that the variable or column should be compared to
-	 * @return string Escaped value
+	 * @return double|integer|string Escaped value
 	 */
 	protected function escape( $operator, $type, $value )
 	{
@@ -118,7 +119,7 @@ class PHP
 		switch( $type )
 		{
 			case '(float)':
-				return (float) $value;
+				return (double) $value;
 			case '(int)':
 				return (int) $value;
 			default:
@@ -128,10 +129,10 @@ class PHP
 
 
 	/**
-	 * @param string &$item Reference to parameter value (will be updated if necessary)
+	 * Returns the internal parameter type for the given string
 	 *
-	 * @param string &$item Parameter value
-	 * @return string Internal parameter type
+	 * @param string &$item Reference to parameter value (will be updated if necessary)
+	 * @return string Internal parameter type like string, float or int
 	 * @throws \Aimeos\MW\Common\Exception If an error occurs
 	 */
 	protected function getParamType( &$item )

@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  */
 
@@ -16,6 +16,6 @@ namespace Aimeos\MShop;
  *
  * @package MShop
  */
-class Exception extends \Exception
+class Exception extends \Aimeos\MW\Common\Exception
 {
 }

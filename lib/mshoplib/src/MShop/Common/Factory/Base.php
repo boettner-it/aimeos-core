@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Common
  */
@@ -20,7 +20,7 @@ namespace Aimeos\MShop\Common\Factory;
  */
 abstract class Base
 {
-	private static $objects = array();
+	private static $objects = [];
 
 
 	/**
@@ -42,14 +42,13 @@ abstract class Base
 	 *
 	 * @param \Aimeos\MShop\Context\Item\Iface $context Context instance with necessary objects
 	 * @param \Aimeos\MShop\Common\Manager\Iface $manager Manager object
+	 * @param array $decorators List of decorator names that should be wrapped around the manager object
 	 * @param string $classprefix Decorator class prefix, e.g. "\Aimeos\MShop\Product\Manager\Decorator\"
 	 * @return \Aimeos\MShop\Common\Manager\Iface Manager object
 	 */
 	protected static function addDecorators( \Aimeos\MShop\Context\Item\Iface $context,
 		\Aimeos\MShop\Common\Manager\Iface $manager, array $decorators, $classprefix )
 	{
-		$iface = '\\Aimeos\\MShop\\Common\\Manager\\Decorator\\Iface';
-
 		foreach( $decorators as $name )
 		{
 			if( ctype_alnum( $name ) === false ) {
@@ -62,11 +61,9 @@ abstract class Base
 				throw new \Aimeos\MShop\Exception( sprintf( 'Class "%1$s" not available', $classname ) );
 			}
 
-			$manager = new $classname( $context, $manager );
+			$manager = new $classname( $manager, $context );
 
-			if( !( $manager instanceof $iface ) ) {
-				throw new \Aimeos\MShop\Exception( sprintf( 'Class "%1$s" does not implement interface "%2$s"', $classname, $iface ) );
-			}
+			\Aimeos\MW\Common\Base::checkClass( \Aimeos\MShop\Common\Manager\Decorator\Iface::class, $manager );
 		}
 
 		return $manager;
@@ -108,8 +105,8 @@ abstract class Base
 		 * @since 2014.03
 		 * @category Developer
 		 */
-		$decorators = $config->get( 'mshop/common/manager/decorators/default', array() );
-		$excludes = $config->get( 'mshop/' . $domain . '/manager/decorators/excludes', array() );
+		$decorators = $config->get( 'mshop/common/manager/decorators/default', [] );
+		$excludes = $config->get( 'mshop/' . $domain . '/manager/decorators/excludes', [] );
 
 		foreach( $decorators as $key => $name )
 		{
@@ -118,18 +115,18 @@ abstract class Base
 			}
 		}
 
-		$classprefix = '\\Aimeos\\MShop\\Common\\Manager\\Decorator\\';
+		$classprefix = '\Aimeos\MShop\Common\Manager\Decorator\\';
 		$manager = self::addDecorators( $context, $manager, $decorators, $classprefix );
 
-		$classprefix = '\\Aimeos\\MShop\\Common\\Manager\\Decorator\\';
-		$decorators = $config->get( 'mshop/' . $domain . '/manager/decorators/global', array() );
+		$classprefix = '\Aimeos\MShop\Common\Manager\Decorator\\';
+		$decorators = $config->get( 'mshop/' . $domain . '/manager/decorators/global', [] );
 		$manager = self::addDecorators( $context, $manager, $decorators, $classprefix );
 
-		$classprefix = '\\Aimeos\\MShop\\' . ucfirst( $domain ) . '\\Manager\\Decorator\\';
-		$decorators = $config->get( 'mshop/' . $domain . '/manager/decorators/local', array() );
+		$classprefix = '\Aimeos\MShop\\' . ucfirst( $domain ) . '\Manager\Decorator\\';
+		$decorators = $config->get( 'mshop/' . $domain . '/manager/decorators/local', [] );
 		$manager = self::addDecorators( $context, $manager, $decorators, $classprefix );
 
-		return $manager;
+		return $manager->setObject( $manager );
 	}
 
 
@@ -141,7 +138,7 @@ abstract class Base
 	 * @param string $interface Name of the manager interface
 	 * @return \Aimeos\MShop\Common\Manager\Iface Manager object
 	 */
-	protected static function createManagerBase( \Aimeos\MShop\Context\Item\Iface $context, $classname, $interface )
+	protected static function createManager( \Aimeos\MShop\Context\Item\Iface $context, $classname, $interface )
 	{
 		if( isset( self::$objects[$classname] ) ) {
 			return self::$objects[$classname];
@@ -153,9 +150,7 @@ abstract class Base
 
 		$manager = new $classname( $context );
 
-		if( !( $manager instanceof $interface ) ) {
-			throw new \Aimeos\MShop\Exception( sprintf( 'Class "%1$s" does not implement interface "%2$s"', $classname, $interface ) );
-		}
+		\Aimeos\MW\Common\Base::checkClass( $interface, $manager );
 
 		return $manager;
 	}

@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2014
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2014
+ * @copyright Aimeos (aimeos.org), 2015-2018
  */
 
 
@@ -15,12 +15,20 @@ namespace Aimeos\MW\Setup\Task;
  */
 class MShopAddDataAbstract extends \Aimeos\MW\Setup\Task\Base
 {
+	private $attributes;
+
+
+	/**
+	 * Initializes the object
+	 *
+	 * @param \Aimeos\MW\Setup\DBSchema\Iface $schema
+	 * @param \Aimeos\MW\DB\Connection\Iface $conn
+	 * @param \Aimeos\MShop\Context\Item\Iface|null $additional
+	 * @throws \Aimeos\MW\Setup\Exception
+	 */
 	public function __construct( \Aimeos\MW\Setup\DBSchema\Iface $schema, \Aimeos\MW\DB\Connection\Iface $conn, $additional = null )
 	{
-		$iface = '\\Aimeos\\MShop\\Context\\Item\\Iface';
-		if( !( $additional instanceof $iface ) ) {
-			throw new \Aimeos\MW\Setup\Exception( sprintf( 'Additionally provided object is not of type "%1$s"', $iface ) );
-		}
+		\Aimeos\MW\Common\Base::checkClass( \Aimeos\MShop\Context\Item\Iface::class, $additional );
 
 		parent::__construct( $schema, $conn, $additional );
 	}
@@ -44,14 +52,14 @@ class MShopAddDataAbstract extends \Aimeos\MW\Setup\Task\Base
 	 */
 	public function getPostDependencies()
 	{
-		return array();
+		return [];
 	}
 
 
 	/**
 	 * Executes the task for MySQL databases.
 	 */
-	protected function mysql()
+	public function migrate()
 	{
 		// executed by tasks in sub-directories for specific sites
 	}
@@ -67,8 +75,8 @@ class MShopAddDataAbstract extends \Aimeos\MW\Setup\Task\Base
 	protected function addAttributes( $parentid, array $data, $domain )
 	{
 		$context = $this->getContext();
-		$attrManager = \Aimeos\MShop\Factory::createManager( $context, 'attribute' );
-		$listManager = \Aimeos\MShop\Factory::createManager( $context, $domain . '/lists' );
+		$attrManager = \Aimeos\MShop::create( $context, 'attribute' );
+		$listManager = \Aimeos\MShop::create( $context, $domain . '/lists' );
 
 
 		$item = $attrManager->createItem();
@@ -81,41 +89,49 @@ class MShopAddDataAbstract extends \Aimeos\MW\Setup\Task\Base
 
 		foreach( $data as $entry )
 		{
-			$item->setId( null );
-			$item->setTypeId( $this->getTypeId( 'attribute/type', $domain, $entry['type'] ) );
-			$item->setCode( $entry['code'] );
-			$item->setLabel( $entry['label'] );
-			$item->setPosition( $entry['position'] );
-			$item->setStatus( $entry['status'] );
+			if( ( $attrItem = $this->getAttributeItem( $domain, $entry['type'], $entry['code'] ) ) === null )
+			{
+				$item->setId( null );
+				$item->setType( $entry['type'] );
+				$item->setCode( $entry['code'] );
+				$item->setLabel( $entry['label'] );
+				$item->setPosition( $entry['position'] );
+				$item->setStatus( $entry['status'] );
 
-			$attrManager->saveItem( $item );
+				$attrManager->saveItem( $item );
+				$id = $item->getId();
+			}
+			else
+			{
+				$id = $attrItem->getId();
+			}
 
 			$listItem->setId( null );
-			$listItem->setTypeId( $this->getTypeId( $domain . '/lists/type', 'attribute', $entry['list-type'] ) );
+			$listItem->setType( $entry['list-type'] );
 			$listItem->setDateStart( $entry['list-start'] );
 			$listItem->setDateEnd( $entry['list-end'] );
 			$listItem->setConfig( $entry['list-config'] );
 			$listItem->setPosition( $entry['list-position'] );
 			$listItem->setStatus( $entry['list-status'] );
-			$listItem->setRefId( $item->getId() );
+			$listItem->setRefId( $id );
 
 			$listManager->saveItem( $listItem, false );
 
 
 			if( isset( $entry['attribute'] ) ) {
-				$this->addAttributes( $item->getId(), $entry['attribute'], 'attribute' );
+				$this->addAttributes( $id, $entry['attribute'], 'attribute' );
 			}
 
 			if( isset( $entry['media'] ) ) {
-				$this->addMedia( $item->getId(), $entry['media'], 'attribute' );
+				$this->addMedia( $id, $entry['media'], 'attribute' );
 			}
 
 			if( isset( $entry['price'] ) ) {
-				$this->addPrices( $item->getId(), $entry['price'], 'attribute' );
+				$this->addPrices( $id, $entry['price'], 'attribute' );
 			}
 
 			if( isset( $entry['text'] ) ) {
-				$this->addTexts( $item->getId(), $entry['text'], 'attribute' );
+				$this->addTexts( $id, $entry['text'], 'attribute' );
 			}
 		}
 	}
@@ -131,8 +147,8 @@ class MShopAddDataAbstract extends \Aimeos\MW\Setup\Task\Base
 	protected function addMedia( $parentid, array $data, $domain )
 	{
 		$context = $this->getContext();
-		$mediaManager = \Aimeos\MShop\Factory::createManager( $context, 'media' );
-		$listManager = \Aimeos\MShop\Factory::createManager( $context, $domain . '/lists' );
+		$mediaManager = \Aimeos\MShop::create( $context, 'media' );
+		$listManager = \Aimeos\MShop::create( $context, $domain . '/lists' );
 
 
 		$item = $mediaManager->createItem();
@@ -146,10 +162,10 @@ class MShopAddDataAbstract extends \Aimeos\MW\Setup\Task\Base
 		foreach( $data as $entry )
 		{
 			$item->setId( null );
-			$item->setTypeId( $this->getTypeId( 'media/type', $domain, $entry['type'] ) );
+			$item->setType( $entry['type'] );
 			$item->setLanguageId( $entry['languageid'] );
 			$item->setMimetype( $entry['mimetype'] );
-			$item->setPreview( $entry['preview'] );
+			$item->setPreviews( (array) $entry['preview'] );
 			$item->setUrl( $entry['url'] );
 			$item->setLabel( $entry['label'] );
 			$item->setStatus( $entry['status'] );
@@ -157,7 +173,7 @@ class MShopAddDataAbstract extends \Aimeos\MW\Setup\Task\Base
 			$mediaManager->saveItem( $item );
 
 			$listItem->setId( null );
-			$listItem->setTypeId( $this->getTypeId( $domain . '/lists/type', 'media', $entry['list-type'] ) );
+			$listItem->setType( $entry['list-type'] );
 			$listItem->setDateStart( $entry['list-start'] );
 			$listItem->setDateEnd( $entry['list-end'] );
 			$listItem->setConfig( $entry['list-config'] );
@@ -197,8 +213,8 @@ class MShopAddDataAbstract extends \Aimeos\MW\Setup\Task\Base
 	protected function addPrices( $parentid, array $data, $domain )
 	{
 		$context = $this->getContext();
-		$mediaManager = \Aimeos\MShop\Factory::createManager( $context, 'price' );
-		$listManager = \Aimeos\MShop\Factory::createManager( $context, $domain . '/lists' );
+		$mediaManager = \Aimeos\MShop::create( $context, 'price' );
+		$listManager = \Aimeos\MShop::create( $context, $domain . '/lists' );
 
 
 		$item = $mediaManager->createItem();
@@ -213,7 +229,7 @@ class MShopAddDataAbstract extends \Aimeos\MW\Setup\Task\Base
 		{
 			$item->setId( null );
 			$item->setLabel( $entry['label'] );
-			$item->setTypeId( $this->getTypeId( 'price/type', $domain, $entry['type'] ) );
+			$item->setType( $entry['type'] );
 			$item->setCurrencyId( $entry['currencyid'] );
 			$item->setQuantity( $entry['quantity'] );
 			$item->setValue( $entry['value'] );
@@ -225,7 +241,7 @@ class MShopAddDataAbstract extends \Aimeos\MW\Setup\Task\Base
 			$mediaManager->saveItem( $item );
 
 			$listItem->setId( null );
-			$listItem->setTypeId( $this->getTypeId( $domain . '/lists/type', 'price', $entry['list-type'] ) );
+			$listItem->setType( $entry['list-type'] );
 			$listItem->setDateStart( $entry['list-start'] );
 			$listItem->setDateEnd( $entry['list-end'] );
 			$listItem->setConfig( $entry['list-config'] );
@@ -265,8 +281,8 @@ class MShopAddDataAbstract extends \Aimeos\MW\Setup\Task\Base
 	protected function addTexts( $parentid, array $data, $domain )
 	{
 		$context = $this->getContext();
-		$textManager = \Aimeos\MShop\Factory::createManager( $context, 'text' );
-		$listManager = \Aimeos\MShop\Factory::createManager( $context, $domain . '/lists' );
+		$textManager = \Aimeos\MShop::create( $context, 'text' );
+		$listManager = \Aimeos\MShop::create( $context, $domain . '/lists' );
 
 
 		$item = $textManager->createItem();
@@ -280,7 +296,7 @@ class MShopAddDataAbstract extends \Aimeos\MW\Setup\Task\Base
 		foreach( $data as $entry )
 		{
 			$item->setId( null );
-			$item->setTypeId( $this->getTypeId( 'text/type', $domain, $entry['type'] ) );
+			$item->setType( $entry['type'] );
 			$item->setLanguageId( $entry['languageid'] );
 			$item->setContent( $entry['content'] );
 			$item->setLabel( $entry['label'] );
@@ -289,7 +305,7 @@ class MShopAddDataAbstract extends \Aimeos\MW\Setup\Task\Base
 			$textManager->saveItem( $item );
 
 			$listItem->setId( null );
-			$listItem->setTypeId( $this->getTypeId( $domain . '/lists/type', 'text', $entry['list-type'] ) );
+			$listItem->setType( $entry['list-type'] );
 			$listItem->setDateStart( $entry['list-start'] );
 			$listItem->setDateEnd( $entry['list-end'] );
 			$listItem->setConfig( $entry['list-config'] );
@@ -324,13 +340,13 @@ class MShopAddDataAbstract extends \Aimeos\MW\Setup\Task\Base
 	 *
 	 * @param string $parentid ID of the parent item where the products should be associated to
 	 * @param array $data Two dimensional associative list of product data
-	 * @param string $domain Domain name the texts should be added to, e.g. 'catalog'
+	 * @param string $domain Domain name the products should be added to, e.g. 'catalog'
 	 */
 	protected function addProducts( $parentid, array $data, $domain )
 	{
 		$context = $this->getContext();
-		$productManager = \Aimeos\MShop\Factory::createManager( $context, 'product' );
-		$listManager = \Aimeos\MShop\Factory::createManager( $context, $domain . '/lists' );
+		$productManager = \Aimeos\MShop::create( $context, 'product' );
+		$listManager = \Aimeos\MShop::create( $context, $domain . '/lists' );
 
 
 		$listItem = $listManager->createItem();
@@ -338,7 +354,7 @@ class MShopAddDataAbstract extends \Aimeos\MW\Setup\Task\Base
 		$listItem->setDomain( 'product' );
 
 
-		$codes = array();
+		$codes = [];
 
 		foreach( $data as $entry ) {
 			$codes[$entry['code']] = null;
@@ -356,11 +372,11 @@ class MShopAddDataAbstract extends \Aimeos\MW\Setup\Task\Base
 		foreach( $data as $entry )
 		{
 			if( !isset( $codes[$entry['code']] ) ) {
-				throw new \Exception( sprintf( 'No product for code "%1$s" found', $entry['code'] ) );
+				throw new \RuntimeException( sprintf( 'No product for code "%1$s" found', $entry['code'] ) );
 			}
 
 			$listItem->setId( null );
-			$listItem->setTypeId( $this->getTypeId( $domain . '/lists/type', 'product', $entry['list-type'] ) );
+			$listItem->setType( $entry['list-type'] );
 			$listItem->setDateStart( $entry['list-start'] );
 			$listItem->setDateEnd( $entry['list-end'] );
 			$listItem->setConfig( $entry['list-config'] );
@@ -376,31 +392,56 @@ class MShopAddDataAbstract extends \Aimeos\MW\Setup\Task\Base
 	/**
 	 * Adds stock levels to the given product in the database.
 	 *
-	 * @param string $productid ID of the product item where the stock levels should be associated to
+	 * @param string $productcode Code of the product item where the stock levels should be associated to
 	 * @param array $data Two dimensional associative list of product stock data
 	 */
-	protected function addProductStock( $productid, array $data )
+	protected function addProductStock( $productcode, array $data )
 	{
-		$manager = \Aimeos\MShop\Factory::createManager( $this->getContext(), 'product/stock/warehouse' );
+		$manager = \Aimeos\MShop::create( $this->getContext(), 'stock/type' );
 
-		$warehouses = array();
+		$types = [];
 		foreach( $manager->searchItems( $manager->createSearch() ) as $id => $item ) {
-			$warehouses[$item->getCode()] = $id;
+			$types[$item->getCode()] = $id;
 		}
 
-		$manager = \Aimeos\MShop\Factory::createManager( $this->getContext(), 'product/stock' );
+		$manager = \Aimeos\MShop::create( $this->getContext(), 'stock' );
 
 		$item = $manager->createItem();
-		$item->setProductId( $productid );
+		$item->setProductCode( $productcode );
 
 		foreach( $data as $entry )
 		{
 			$item->setId( null );
 			$item->setDateBack( $entry['dateback'] );
 			$item->setStockLevel( $entry['stocklevel'] );
-			$item->setWarehouseId( $warehouses[$entry['warehouse']] );
+			$item->setType( $entry['type'] );
 
 			$manager->saveItem( $item, false );
+		}
+	}
+
+
+	/**
+	 * Returns the attribute for the given code, type and domain
+	 *
+	 * @param string $domain Domain the attribute belongs to
+	 * @param string $type Attribute type
+	 * @param string $code Attribute code
+	 * @return \Aimeos\MShop\Attribute\Item\Iface|null Found attribute item or null if not available
+	 */
+	protected function getAttributeItem( $domain, $type, $code )
+	{
+		if( $this->attributes === null )
+		{
+			$manager = \Aimeos\MShop::create( $this->getContext(), 'attribute' );
+
+			foreach( $manager->searchItems( $manager->createSearch() ) as $item ) {
+				$this->attributes[$item->getDomain()][$item->getType()][$item->getCode()] = $item;
+			}
+		}
+
+		if( isset( $this->attributes[$domain][$type][$code] ) ) {
+			return $this->attributes[$domain][$type][$code];
 		}
 	}
 
@@ -417,35 +458,6 @@ class MShopAddDataAbstract extends \Aimeos\MW\Setup\Task\Base
 
 
 	/**
-	 * Returns the type ID for the given type and domain found by the manager
-	 *
-	 * @param string $name Manager name like 'catalog/lists/type'
-	 * @param string $domain Domain of the type item we are looking for, e.g. 'text'
-	 * @param string $type Type code of the item we are looking for, e.g. 'default'
-	 */
-	protected function getTypeId( $name, $domain, $type )
-	{
-		$key = str_replace( '/', '.', $name );
-		$manager = \Aimeos\MShop\Factory::createManager( $this->getContext(), $name );
-
-		$search = $manager->createSearch();
-		$expr = array(
-			$search->compare( '==', $key . '.domain', $domain ),
-			$search->compare( '==', $key . '.code', $type ),
-		);
-		$search->setConditions( $search->combine( '&&', $expr ) );
-
-		$result = $manager->searchItems( $search );
-
-		if( ( $item = reset( $result ) ) === false ) {
-			throw new \Exception( sprintf( 'No type item found for "%1$s/%2$s" using "%3$s"', $domain, $type, $name ) );
-		}
-
-		return $item->getId();
-	}
-
-
-	/**
 	 * Deletes the demo items from the given parent ID in the database.
 	 *
 	 * @param string $parentid ID of the parent item where the associated items should be removed from
@@ -458,8 +470,8 @@ class MShopAddDataAbstract extends \Aimeos\MW\Setup\Task\Base
 		$context = $this->getContext();
 		$key = str_replace( '/', '.', $name );
 
-		$manager = \Aimeos\MShop\Factory::createManager( $context, $refdomain );
-		$listManager = \Aimeos\MShop\Factory::createManager( $context, $name );
+		$manager = \Aimeos\MShop::create( $context, $refdomain );
+		$listManager = \Aimeos\MShop::create( $context, $name );
 
 
 		$search = $manager->createSearch();
@@ -499,8 +511,8 @@ class MShopAddDataAbstract extends \Aimeos\MW\Setup\Task\Base
 		$context = $this->getContext();
 		$key = str_replace( '/', '.', $name );
 
-		$manager = \Aimeos\MShop\Factory::createManager( $context, $refdomain );
-		$listManager = \Aimeos\MShop\Factory::createManager( $context, $name );
+		$manager = \Aimeos\MShop::create( $context, $refdomain );
+		$listManager = \Aimeos\MShop::create( $context, $name );
 
 
 		$search = $listManager->createSearch();
@@ -512,7 +524,7 @@ class MShopAddDataAbstract extends \Aimeos\MW\Setup\Task\Base
 
 		do
 		{
-			$refIds = $listIds = $map = array();
+			$refIds = $listIds = $map = [];
 			$result = $listManager->searchItems( $search );
 
 			foreach( $result as $id => $listItem )
@@ -556,6 +568,9 @@ class MShopAddDataAbstract extends \Aimeos\MW\Setup\Task\Base
 	}
 
 
+	/**
+	 * Starts a new transation
+	 */
 	protected function txBegin()
 	{
 		$dbm = $this->additional->getDatabaseManager();
@@ -566,6 +581,9 @@ class MShopAddDataAbstract extends \Aimeos\MW\Setup\Task\Base
 	}
 
 
+	/**
+	 * Commits an existing transaction
+	 */
 	protected function txCommit()
 	{
 		$dbm = $this->additional->getDatabaseManager();

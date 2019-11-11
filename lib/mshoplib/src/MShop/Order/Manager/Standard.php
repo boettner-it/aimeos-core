@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @copyright Metaways Infosystems GmbH, 2011
  * @license LGPLv3, http://opensource.org/licenses/LGPL-3.0
- * @copyright Aimeos (aimeos.org), 2015
+ * @copyright Metaways Infosystems GmbH, 2011
+ * @copyright Aimeos (aimeos.org), 2015-2018
  * @package MShop
  * @subpackage Order
  */
@@ -20,103 +20,154 @@ namespace Aimeos\MShop\Order\Manager;
  */
 class Standard
 	extends \Aimeos\MShop\Common\Manager\Base
-	implements \Aimeos\MShop\Order\Manager\Iface
+	implements \Aimeos\MShop\Order\Manager\Iface, \Aimeos\MShop\Common\Manager\Factory\Iface
 {
 	private $searchConfig = array(
-		'order.id'=> array(
-			'code'=>'order.id',
-			'internalcode'=>'mord."id"',
-			'label'=>'Order invoice ID',
-			'type'=> 'integer',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_INT,
+		'order.id' => array(
+			'code' => 'order.id',
+			'internalcode' => 'mord."id"',
+			'label' => 'Invoice ID',
+			'type' => 'integer',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 		),
-		'order.siteid'=> array(
-			'code'=>'order.siteid',
-			'internalcode'=>'mord."siteid"',
-			'label'=>'Order invoice site ID',
-			'type'=> 'integer',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_INT,
+		'order.siteid' => array(
+			'code' => 'order.siteid',
+			'internalcode' => 'mord."siteid"',
+			'label' => 'Invoice site ID',
+			'type' => 'integer',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 			'public' => false,
 		),
-		'order.baseid'=> array(
-			'code'=>'order.baseid',
-			'internalcode'=>'mord."baseid"',
-			'label'=>'Order base ID',
-			'type'=> 'integer',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_INT,
+		'order.baseid' => array(
+			'code' => 'order.baseid',
+			'internalcode' => 'mord."baseid"',
+			'label' => 'Invoice base ID',
+			'type' => 'integer',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 			'public' => false,
 		),
-		'order.type'=> array(
-			'code'=>'order.type',
-			'internalcode'=>'mord."type"',
-			'label'=>'Order type',
-			'type'=> 'string',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'order.datepayment' => array(
+			'code' => 'order.datepayment',
+			'internalcode' => 'mord."datepayment"',
+			'label' => 'Purchase date',
+			'type' => 'datetime',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
-		'order.datepayment'=> array(
-			'code'=>'order.datepayment',
-			'internalcode'=>'mord."datepayment"',
-			'label'=>'Order purchase date',
-			'type'=> 'datetime',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'order.datedelivery' => array(
+			'code' => 'order.datedelivery',
+			'internalcode' => 'mord."datedelivery"',
+			'label' => 'Delivery date',
+			'type' => 'datetime',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
-		'order.datedelivery'=> array(
-			'code'=>'order.datedelivery',
-			'internalcode'=>'mord."datedelivery"',
-			'label'=>'Order delivery date',
-			'type'=> 'datetime',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'order.statusdelivery' => array(
+			'code' => 'order.statusdelivery',
+			'internalcode' => 'mord."statusdelivery"',
+			'label' => 'Delivery status',
+			'type' => 'integer',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 		),
-		'order.statusdelivery'=> array(
-			'code'=>'order.statusdelivery',
-			'internalcode'=>'mord."statusdelivery"',
-			'label'=>'Order delivery status',
-			'type'=> 'integer',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_INT,
+		'order.statuspayment' => array(
+			'code' => 'order.statuspayment',
+			'internalcode' => 'mord."statuspayment"',
+			'label' => 'Payment status',
+			'type' => 'integer',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 		),
-		'order.statuspayment'=> array(
-			'code'=>'order.statuspayment',
-			'internalcode'=>'mord."statuspayment"',
-			'label'=>'Order payment status',
-			'type'=> 'integer',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_INT,
+		'order.type' => array(
+			'code' => 'order.type',
+			'internalcode' => 'mord."type"',
+			'label' => 'Invoice type',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
 		),
-		'order.relatedid'=> array(
-			'code'=>'order.relatedid',
-			'internalcode'=>'mord."relatedid"',
-			'label'=>'Order related order ID',
-			'type'=> 'integer',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_INT,
+		'order.relatedid' => array(
+			'code' => 'order.relatedid',
+			'internalcode' => 'mord."relatedid"',
+			'label' => 'Related invoice ID',
+			'type' => 'integer',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 		),
-		'order.mtime'=> array(
-			'code'=>'order.mtime',
-			'internalcode'=>'mord."mtime"',
-			'label'=>'Order modification date',
-			'type'=> 'datetime',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'order.cdate' => array(
+			'code' => 'order.cdate',
+			'internalcode' => 'mord."cdate"',
+			'label' => 'Create date',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
-		'order.ctime'=> array(
-			'code'=>'order.ctime',
-			'internalcode'=>'mord."ctime"',
-			'label'=>'Order creation date/time',
-			'type'=> 'datetime',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'order.cmonth' => array(
+			'code' => 'order.cmonth',
+			'internalcode' => 'mord."cmonth"',
+			'label' => 'Create month',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
-		'order.editor'=> array(
-			'code'=>'order.editor',
-			'internalcode'=>'mord."editor"',
-			'label'=>'Order editor',
-			'type'=> 'string',
-			'internaltype'=> \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+		'order.cweek' => array(
+			'code' => 'order.cweek',
+			'internalcode' => 'mord."cweek"',
+			'label' => 'Create week',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
+		),
+		'order.cwday' => array(
+			'code' => 'order.cwday',
+			'internalcode' => 'mord."cwday"',
+			'label' => 'Create weekday',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
+		),
+		'order.chour' => array(
+			'code' => 'order.chour',
+			'internalcode' => 'mord."chour"',
+			'label' => 'Create hour',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
+		),
+		'order.ctime' => array(
+			'code' => 'order.ctime',
+			'internalcode' => 'mord."ctime"',
+			'label' => 'Create date/time',
+			'type' => 'datetime',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
+		),
+		'order.mtime' => array(
+			'code' => 'order.mtime',
+			'internalcode' => 'mord."mtime"',
+			'label' => 'Modify date/time',
+			'type' => 'datetime',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
+		),
+		'order.editor' => array(
+			'code' => 'order.editor',
+			'internalcode' => 'mord."editor"',
+			'label' => 'Editor',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
+		),
+		'order:status' => array(
+			'code' => 'order:status()',
+			'internalcode' => ':site AND mordst."type" = $1 AND mordst."value"',
+			'label' => 'Order has status item, parameter(<type>)',
+			'type' => 'string',
+			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_STR,
+			'public' => false,
 		),
 		'order.containsStatus' => array(
-			'code'=>'order.containsStatus()',
-			'internalcode'=>'( SELECT COUNT(mordst_cs."parentid")
+			'code' => 'order.containsStatus()',
+			'internalcode' => '( SELECT COUNT(mordst_cs."parentid")
 				FROM "mshop_order_status" AS mordst_cs
 				WHERE mord."id" = mordst_cs."parentid" AND :site
 				AND mordst_cs."type" = $1 AND mordst_cs."value" IN ( $2 ) )',
-			'label'=>'Number of order status items, parameter(<type>,<value>)',
-			'type'=> 'integer',
+			'label' => 'Number of order status items, parameter(<type>,<value>)',
+			'type' => 'integer',
 			'internaltype' => \Aimeos\MW\DB\Statement\Base::PARAM_INT,
 			'public' => false,
 		),
@@ -134,8 +185,15 @@ class Standard
 		$this->setResourceName( 'db-order' );
 
 
-		$sites = $context->getLocale()->getSiteSubTree();
-		$this->replaceSiteMarker( $this->searchConfig['order.containsStatus'], 'mordst_cs."siteid"', $sites, ':site' );
+		$siteIds = $context->getLocale()->getSiteSubTree();
+
+		$name = 'order:status';
+		$expr = $this->toExpression( 'mordst."siteid"', $siteIds );
+		$this->searchConfig[$name] = str_replace( ':site', $expr, $this->searchConfig[$name] );
+
+		$name = 'order.containsStatus';
+		$expr = $this->toExpression( 'mordst_cs."siteid"', $siteIds );
+		$this->searchConfig[$name] = str_replace( ':site', $expr, $this->searchConfig[$name] );
 	}
 
 
@@ -144,11 +202,18 @@ class Standard
 	 *
 	 * @param \Aimeos\MW\Criteria\Iface $search Search criteria
 	 * @param string $key Search key to aggregate items for
-	 * @return array List of the search keys as key and the number of counted items as value
+	 * @return integer[] List of the search keys as key and the number of counted items as value
+	 * @todo 2018.01 Add optional parameters to interface
 	 */
-	public function aggregate( \Aimeos\MW\Criteria\Iface $search, $key )
+	public function aggregate( \Aimeos\MW\Criteria\Iface $search, $key, $value = null, $type = null )
 	{
-		/** mshop/order/manager/standard/aggregate
+		/** mshop/order/manager/standard/aggregate/mysql
+		 * Counts the number of records grouped by the values in the key column and matched by the given criteria
+		 *
+		 * @see mshop/order/manager/standard/aggregate/ansi
+		 */
+
+		/** mshop/order/manager/standard/aggregate/ansi
 		 * Counts the number of records grouped by the values in the key column and matched by the given criteria
 		 *
 		 * Groups all records by the values in the key column and counts their
@@ -184,64 +249,103 @@ class Standard
 		 * @param string SQL statement for aggregating order items
 		 * @since 2014.09
 		 * @category Developer
-		 * @see mshop/order/manager/standard/insert
-		 * @see mshop/order/manager/standard/update
-		 * @see mshop/order/manager/standard/newid
-		 * @see mshop/order/manager/standard/delete
-		 * @see mshop/order/manager/standard/search
-		 * @see mshop/order/manager/standard/count
+		 * @see mshop/order/manager/standard/insert/ansi
+		 * @see mshop/order/manager/standard/update/ansi
+		 * @see mshop/order/manager/standard/newid/ansi
+		 * @see mshop/order/manager/standard/delete/ansi
+		 * @see mshop/order/manager/standard/search/ansi
+		 * @see mshop/order/manager/standard/count/ansi
 		 */
-		$cfgkey = 'mshop/order/manager/standard/aggregate';
-		return $this->aggregateBase( $search, $key, $cfgkey, array( 'order' ) );
+
+		/** mshop/order/manager/standard/aggregateavg/mysql
+		 * Computes the average of all values grouped by the key column and matched by the given criteria
+		 *
+		 * @param string SQL statement for aggregating the order items and computing the average value
+		 * @since 2017.10
+		 * @category Developer
+		 * @see mshop/order/manager/standard/aggregateavg/ansi
+		 * @see mshop/order/manager/standard/aggregate/mysql
+		 */
+
+		/** mshop/order/manager/standard/aggregateavg/ansi
+		 * Computes the average of all values grouped by the key column and matched by the given criteria
+		 *
+		 * @param string SQL statement for aggregating the order items and computing the average value
+		 * @since 2017.10
+		 * @category Developer
+		 * @see mshop/order/manager/standard/aggregate/ansi
+		 */
+
+		/** mshop/order/manager/standard/aggregatesum/mysql
+		 * Computes the sum of all values grouped by the key column and matched by the given criteria
+		 *
+		 * @param string SQL statement for aggregating the order items and computing the sum
+		 * @since 2017.10
+		 * @category Developer
+		 * @see mshop/order/manager/standard/aggregatesum/ansi
+		 * @see mshop/order/manager/standard/aggregate/mysql
+		 */
+
+		/** mshop/order/manager/standard/aggregatesum/ansi
+		 * Computes the sum of all values grouped by the key column and matched by the given criteria
+		 *
+		 * @param string SQL statement for aggregating the order items and computing the sum
+		 * @since 2017.10
+		 * @category Developer
+		 * @see mshop/order/manager/standard/aggregate/ansi
+		 */
+
+		$cfgkey = 'mshop/order/manager/standard/aggregate' . $type;
+		return $this->aggregateBase( $search, $key, $cfgkey, array( 'order' ), $value );
 	}
 
 
 	/**
 	 * Removes old entries from the storage.
 	 *
-	 * @param integer[] $siteids List of IDs for sites whose entries should be deleted
+	 * @param string[] $siteids List of IDs for sites whose entries should be deleted
+	 * @return \Aimeos\MShop\Order\Manager\Iface Manager object for chaining method calls
 	 */
-	public function cleanup( array $siteids )
+	public function clear( array $siteids )
 	{
 		$path = 'mshop/order/manager/submanagers';
 		foreach( $this->getContext()->getConfig()->get( $path, array( 'status', 'base' ) ) as $domain ) {
-			$this->getSubManager( $domain )->cleanup( $siteids );
+			$this->getObject()->getSubManager( $domain )->clear( $siteids );
 		}
 
-		$this->cleanupBase( $siteids, 'mshop/order/manager/standard/delete' );
+		return $this->clearBase( $siteids, 'mshop/order/manager/standard/delete' );
 	}
 
 
 	/**
-	 * Returns a new and empty invoice.
+	 * Creates a new empty item instance
 	 *
-	 * @return \Aimeos\MShop\Order\Item\Iface Invoice without assigned values or items
+	 * @param array $values Values the item should be initialized with
+	 * @return \Aimeos\MShop\Order\Item\Iface New order item object
 	 */
-	public function createItem()
+	public function createItem( array $values = [] )
 	{
-		$values = array( 'siteid'=> $this->getContext()->getLocale()->getSiteId() );
+		$values['order.siteid'] = $this->getContext()->getLocale()->getSiteId();
 		return $this->createItemBase( $values );
 	}
 
 
 	/**
-	 * Creates a search object.
+	 * Creates a search critera object
 	 *
-	 * @param boolean $default Add default criteria; Optional
-	 * @return \Aimeos\MW\Criteria\Iface
+	 * @param boolean $default Add default criteria (optional)
+	 * @return \Aimeos\MW\Criteria\Iface New search criteria object
 	 */
 	public function createSearch( $default = false )
 	{
-		$search = parent::createSearch( $default );
+		$search = parent::createSearch();
 
 		if( $default === true )
 		{
-			$expr = array(
-				$search->getConditions(),
-				$search->compare( '!=', 'order.statuspayment', \Aimeos\MShop\Order\Item\Base::PAY_UNFINISHED ),
-			);
-
-			$search->setConditions( $search->combine( '&&', $expr ) );
+			$search->setConditions( $search->combine( '&&', [
+				$search->compare( '==', 'order.base.customerid', $this->getContext()->getUserId() ),
+				$search->getConditions()
+			] ) );
 		}
 
 		return $search;
@@ -251,21 +355,19 @@ class Standard
 	/**
 	 * Creates a one-time order in the storage from the given invoice object.
 	 *
-	 * @param \Aimeos\MShop\Common\Item\Iface $item Order item with necessary values
+	 * @param \Aimeos\MShop\Order\Item\Iface $item Order item with necessary values
 	 * @param boolean $fetch True if the new ID should be returned in the item
+	 * @return \Aimeos\MShop\Order\Item\Iface $item Updated item including the generated ID
 	 */
-	public function saveItem( \Aimeos\MShop\Common\Item\Iface $item, $fetch = true )
+	public function saveItem( \Aimeos\MShop\Order\Item\Iface $item, $fetch = true )
 	{
-		$iface = '\\Aimeos\\MShop\\Order\\Item\\Iface';
-		if( !( $item instanceof $iface ) ) {
-			throw new \Aimeos\MShop\Order\Exception( sprintf( 'Object is not of required type "%1$s"', $iface ) );
-		}
-
 		if( $item->getBaseId() === null ) {
 			throw new \Aimeos\MShop\Order\Exception( 'Required order base ID is missing' );
 		}
 
-		if( !$item->isModified() ) { return; }
+		if( !$item->isModified() ) {
+			return $item;
+		}
 
 		$context = $this->getContext();
 
@@ -277,10 +379,17 @@ class Standard
 		{
 			$id = $item->getId();
 			$date = date( 'Y-m-d H:i:s' );
+			$columns = $this->getObject()->getSaveAttributes();
 
 			if( $id === null )
 			{
-				/** mshop/order/manager/standard/insert
+				/** mshop/order/manager/standard/insert/mysql
+				 * Inserts a new order record into the database table
+				 *
+				 * @see mshop/order/manager/standard/insert/ansi
+				 */
+
+				/** mshop/order/manager/standard/insert/ansi
 				 * Inserts a new order record into the database table
 				 *
 				 * Items with no ID yet (i.e. the ID is NULL) will be created in
@@ -303,17 +412,24 @@ class Standard
 				 * @param string SQL statement for inserting records
 				 * @since 2014.03
 				 * @category Developer
-				 * @see mshop/order/manager/standard/update
-				 * @see mshop/order/manager/standard/newid
-				 * @see mshop/order/manager/standard/delete
-				 * @see mshop/order/manager/standard/search
-				 * @see mshop/order/manager/standard/count
+				 * @see mshop/order/manager/standard/update/ansi
+				 * @see mshop/order/manager/standard/newid/ansi
+				 * @see mshop/order/manager/standard/delete/ansi
+				 * @see mshop/order/manager/standard/search/ansi
+				 * @see mshop/order/manager/standard/count/ansi
 				 */
 				$path = 'mshop/order/manager/standard/insert';
+				$sql = $this->addSqlColumns( array_keys( $columns ), $this->getSqlConfig( $path ) );
 			}
 			else
 			{
-				/** mshop/order/manager/standard/update
+				/** mshop/order/manager/standard/update/mysql
+				 * Updates an existing order record in the database
+				 *
+				 * @see mshop/order/manager/standard/update/ansi
+				 */
+
+				/** mshop/order/manager/standard/update/ansi
 				 * Updates an existing order record in the database
 				 *
 				 * Items which already have an ID (i.e. the ID is not NULL) will
@@ -333,40 +449,57 @@ class Standard
 				 * @param string SQL statement for updating records
 				 * @since 2014.03
 				 * @category Developer
-				 * @see mshop/order/manager/standard/insert
-				 * @see mshop/order/manager/standard/newid
-				 * @see mshop/order/manager/standard/delete
-				 * @see mshop/order/manager/standard/search
-				 * @see mshop/order/manager/standard/count
+				 * @see mshop/order/manager/standard/insert/ansi
+				 * @see mshop/order/manager/standard/newid/ansi
+				 * @see mshop/order/manager/standard/delete/ansi
+				 * @see mshop/order/manager/standard/search/ansi
+				 * @see mshop/order/manager/standard/count/ansi
 				 */
 				$path = 'mshop/order/manager/standard/update';
+				$sql = $this->addSqlColumns( array_keys( $columns ), $this->getSqlConfig( $path ), false );
 			}
 
-			$stmt = $this->getCachedStatement( $conn, $path );
+			$idx = 1;
+			$stmt = $this->getCachedStatement( $conn, $path, $sql );
 
-			$stmt->bind( 1, $item->getBaseId(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 2, $context->getLocale()->getSiteId(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 3, $item->getType() );
-			$stmt->bind( 4, $item->getDatePayment() );
-			$stmt->bind( 5, $item->getDateDelivery() );
-			$stmt->bind( 6, $item->getDeliveryStatus(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 7, $item->getPaymentStatus(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 8, $item->getRelatedId(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-			$stmt->bind( 9, $date ); //mtime
-			$stmt->bind( 10, $context->getEditor() );
+			foreach( $columns as $name => $entry ) {
+				$stmt->bind( $idx++, $item->get( $name ), $entry->getInternalType() );
+			}
+
+			$stmt->bind( $idx++, $item->getBaseId(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmt->bind( $idx++, $item->getType() );
+			$stmt->bind( $idx++, $item->getDatePayment() );
+			$stmt->bind( $idx++, $item->getDateDelivery() );
+			$stmt->bind( $idx++, $item->getDeliveryStatus(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmt->bind( $idx++, $item->getPaymentStatus(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmt->bind( $idx++, $item->getRelatedId(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+			$stmt->bind( $idx++, $date ); // mtime
+			$stmt->bind( $idx++, $context->getEditor() );
+			$stmt->bind( $idx++, $context->getLocale()->getSiteId(), \Aimeos\MW\DB\Statement\Base::PARAM_INT );
 
 			if( $id !== null ) {
-				$stmt->bind( 11, $id, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
-				$item->setId( $id ); //is not modified anymore
+				$stmt->bind( $idx++, $id, \Aimeos\MW\DB\Statement\Base::PARAM_INT );
+				$item->setId( $id ); // is not modified anymore
 			} else {
-				$stmt->bind( 11, $date ); //ctime
+				$stmt->bind( $idx++, $date ); // ctime
+				$stmt->bind( $idx++, date( 'Y-m-d' ) ); // cdate
+				$stmt->bind( $idx++, date( 'Y-m' ) ); // cmonth
+				$stmt->bind( $idx++, date( 'Y-W' ) ); // cweek
+				$stmt->bind( $idx++, date( 'w' ) ); // cwday
+				$stmt->bind( $idx++, date( 'H' ) ); // chour
 			}
 
 			$stmt->execute()->finish();
 
 			if( $id === null && $fetch === true )
 			{
-				/** mshop/order/manager/standard/newid
+				/** mshop/order/manager/standard/newid/mysql
+				 * Retrieves the ID generated by the database when inserting a new record
+				 *
+				 * @see mshop/order/manager/standard/newid/ansi
+				 */
+
+				/** mshop/order/manager/standard/newid/ansi
 				 * Retrieves the ID generated by the database when inserting a new record
 				 *
 				 * As soon as a new record is inserted into the database table,
@@ -390,11 +523,11 @@ class Standard
 				 * @param string SQL statement for retrieving the last inserted record ID
 				 * @since 2014.03
 				 * @category Developer
-				 * @see mshop/order/manager/standard/insert
-				 * @see mshop/order/manager/standard/update
-				 * @see mshop/order/manager/standard/delete
-				 * @see mshop/order/manager/standard/search
-				 * @see mshop/order/manager/standard/count
+				 * @see mshop/order/manager/standard/insert/ansi
+				 * @see mshop/order/manager/standard/update/ansi
+				 * @see mshop/order/manager/standard/delete/ansi
+				 * @see mshop/order/manager/standard/search/ansi
+				 * @see mshop/order/manager/standard/count/ansi
 				 */
 				$path = 'mshop/order/manager/standard/newid';
 				$item->setId( $this->newId( $conn, $path ) );
@@ -410,31 +543,41 @@ class Standard
 
 
 		$this->addStatus( $item );
+
+		return $item;
 	}
 
 
 	/**
 	 * Returns an order invoice item built from database values.
 	 *
-	 * @param integer $id Unique id of the order invoice
-	 * @param array $ref List of domains to fetch list items and referenced items for
+	 * @param string $id Unique id of the order invoice
+	 * @param string[] $ref List of domains to fetch list items and referenced items for
+	 * @param boolean $default Add default criteria
 	 * @return \Aimeos\MShop\Order\Item\Iface Returns order invoice item of the given id
 	 * @throws \Aimeos\MShop\Order\Exception If item couldn't be found
 	 */
-	public function getItem( $id, array $ref = array() )
+	public function getItem( $id, array $ref = [], $default = false )
 	{
-		return $this->getItemBase( 'order.id', $id, $ref );
+		return $this->getItemBase( 'order.id', $id, $ref, $default );
 	}
 
 
 	/**
-	 * Removes multiple items specified by ids in the array.
+	 * Removes multiple items.
 	 *
-	 * @param array $ids List of IDs
+	 * @param \Aimeos\MShop\Common\Item\Iface[]|string[] $itemIds List of item objects or IDs of the items
+	 * @return \Aimeos\MShop\Order\Manager\Iface Manager object for chaining method calls
 	 */
-	public function deleteItems( array $ids )
+	public function deleteItems( array $itemIds )
 	{
-		/** mshop/order/manager/standard/delete
+		/** mshop/order/manager/standard/delete/mysql
+		 * Deletes the items matched by the given IDs from the database
+		 *
+		 * @see mshop/order/manager/standard/delete/ansi
+		 */
+
+		/** mshop/order/manager/standard/delete/ansi
 		 * Deletes the items matched by the given IDs from the database
 		 *
 		 * Removes the records specified by the given IDs from the order database.
@@ -452,14 +595,28 @@ class Standard
 		 * @param string SQL statement for deleting items
 		 * @since 2014.03
 		 * @category Developer
-		 * @see mshop/order/manager/standard/insert
-		 * @see mshop/order/manager/standard/update
-		 * @see mshop/order/manager/standard/newid
-		 * @see mshop/order/manager/standard/search
-		 * @see mshop/order/manager/standard/count
+		 * @see mshop/order/manager/standard/insert/ansi
+		 * @see mshop/order/manager/standard/update/ansi
+		 * @see mshop/order/manager/standard/newid/ansi
+		 * @see mshop/order/manager/standard/search/ansi
+		 * @see mshop/order/manager/standard/count/ansi
 		 */
 		$path = 'mshop/order/manager/standard/delete';
-		$this->deleteItemsBase( $ids, $path );
+
+		return $this->deleteItemsBase( $itemIds, $path );
+	}
+
+
+	/**
+	 * Returns the available manager types
+	 *
+	 * @param boolean $withsub Return also the resource type of sub-managers if true
+	 * @return string[] Type of the manager and submanagers, subtypes are separated by slashes
+	 */
+	public function getResourceType( $withsub = true )
+	{
+		$path = 'mshop/order/manager/submanagers';
+		return $this->getResourceTypeBase( 'order', $path, array( 'base', 'status' ), $withsub );
 	}
 
 
@@ -467,7 +624,7 @@ class Standard
 	 * Returns the attributes that can be used for searching.
 	 *
 	 * @param boolean $withsub Return also attributes of sub-managers if true
-	 * @return array List of attribute items implementing \Aimeos\MW\Criteria\Attribute\Iface
+	 * @return \Aimeos\MW\Criteria\Attribute\Iface[] List of search attribute items
 	 */
 	public function getSearchAttributes( $withsub = true )
 	{
@@ -498,14 +655,12 @@ class Standard
 	/**
 	 * Searches for orders based on the given criteria.
 	 *
-	 * @param \Aimeos\MW\Criteria\Iface $search Search object containing the conditions
-	 * @param array $ref Not used
-	 * @param integer &$total Number of items that are available in total
-	 * @return array List of items implementing \Aimeos\MShop\Order\Item\Iface
-	 * @throws \Aimeos\MShop\Order\Exception If creating items failed
-	 * @throws \Aimeos\MW\DB\Exception If a database operation fails
+	 * @param \Aimeos\MW\Criteria\Iface $search Search criteria object
+	 * @param string[] $ref List of domains to fetch list items and referenced items for
+	 * @param integer|null &$total Number of items that are available in total
+	 * @return \Aimeos\MShop\Order\Item\Iface[] List of order items
 	 */
-	public function searchItems( \Aimeos\MW\Criteria\Iface $search, array $ref = array(), &$total = null )
+	public function searchItems( \Aimeos\MW\Criteria\Iface $search, array $ref = [], &$total = null )
 	{
 		$context = $this->getContext();
 
@@ -513,14 +668,51 @@ class Standard
 		$dbname = $this->getResourceName();
 		$conn = $dbm->acquire( $dbname );
 
-		$items = array();
+		$items = [];
 
 		try
 		{
 			$required = array( 'order' );
-			$sitelevel = \Aimeos\MShop\Locale\Manager\Base::SITE_SUBTREE;
 
-			/** mshop/order/manager/standard/search
+			/** mshop/order/manager/sitemode
+			 * Mode how items from levels below or above in the site tree are handled
+			 *
+			 * By default, only items from the current site are fetched from the
+			 * storage. If the ai-sites extension is installed, you can create a
+			 * tree of sites. Then, this setting allows you to define for the
+			 * whole order domain if items from parent sites are inherited,
+			 * sites from child sites are aggregated or both.
+			 *
+			 * Available constants for the site mode are:
+			 * * 0 = only items from the current site
+			 * * 1 = inherit items from parent sites
+			 * * 2 = aggregate items from child sites
+			 * * 3 = inherit and aggregate items at the same time
+			 *
+			 * You also need to set the mode in the locale manager
+			 * (mshop/locale/manager/standard/sitelevel) to one of the constants.
+			 * If you set it to the same value, it will work as described but you
+			 * can also use different modes. For example, if inheritance and
+			 * aggregation is configured the locale manager but only inheritance
+			 * in the domain manager because aggregating items makes no sense in
+			 * this domain, then items wil be only inherited. Thus, you have full
+			 * control over inheritance and aggregation in each domain.
+			 *
+			 * @param integer Constant from Aimeos\MShop\Locale\Manager\Base class
+			 * @category Developer
+			 * @since 2018.01
+			 * @see mshop/locale/manager/standard/sitelevel
+			 */
+			$level = \Aimeos\MShop\Locale\Manager\Base::SITE_ALL;
+			$level = $context->getConfig()->get( 'mshop/order/manager/sitemode', $level );
+
+			/** mshop/order/manager/standard/search/mysql
+			 * Retrieves the records matched by the given criteria in the database
+			 *
+			 * @see mshop/order/manager/standard/search/ansi
+			 */
+
+			/** mshop/order/manager/standard/search/ansi
 			 * Retrieves the records matched by the given criteria in the database
 			 *
 			 * Fetches the records matched by the given criteria from the order
@@ -565,15 +757,21 @@ class Standard
 			 * @param string SQL statement for searching items
 			 * @since 2014.03
 			 * @category Developer
-			 * @see mshop/order/manager/standard/insert
-			 * @see mshop/order/manager/standard/update
-			 * @see mshop/order/manager/standard/newid
-			 * @see mshop/order/manager/standard/delete
-			 * @see mshop/order/manager/standard/count
+			 * @see mshop/order/manager/standard/insert/ansi
+			 * @see mshop/order/manager/standard/update/ansi
+			 * @see mshop/order/manager/standard/newid/ansi
+			 * @see mshop/order/manager/standard/delete/ansi
+			 * @see mshop/order/manager/standard/count/ansi
 			 */
 			$cfgPathSearch = 'mshop/order/manager/standard/search';
 
-			/** mshop/order/manager/standard/count
+			/** mshop/order/manager/standard/count/mysql
+			 * Counts the number of records matched by the given criteria in the database
+			 *
+			 * @see mshop/order/manager/standard/count/ansi
+			 */
+
+			/** mshop/order/manager/standard/count/ansi
 			 * Counts the number of records matched by the given criteria in the database
 			 *
 			 * Counts all records matched by the given criteria from the order
@@ -612,21 +810,21 @@ class Standard
 			 * @param string SQL statement for counting items
 			 * @since 2014.03
 			 * @category Developer
-			 * @see mshop/order/manager/standard/insert
-			 * @see mshop/order/manager/standard/update
-			 * @see mshop/order/manager/standard/newid
-			 * @see mshop/order/manager/standard/delete
-			 * @see mshop/order/manager/standard/search
+			 * @see mshop/order/manager/standard/insert/ansi
+			 * @see mshop/order/manager/standard/update/ansi
+			 * @see mshop/order/manager/standard/newid/ansi
+			 * @see mshop/order/manager/standard/delete/ansi
+			 * @see mshop/order/manager/standard/search/ansi
 			 */
 			$cfgPathCount = 'mshop/order/manager/standard/count';
 
 			$results = $this->searchItemsBase( $conn, $search, $cfgPathSearch, $cfgPathCount,
-				$required, $total, $sitelevel );
+				$required, $total, $level );
 
 			try
 			{
 				while( ( $row = $results->fetch() ) !== false ) {
-					$items[$row['id']] = $this->createItemBase( $row );
+					$items[(string) $row['order.id']] = $this->createItemBase( $row );
 				}
 			}
 			catch( \Exception $e )
@@ -667,25 +865,23 @@ class Standard
 	 */
 	protected function addStatus( \Aimeos\MShop\Order\Item\Iface $item )
 	{
-		$statusManager = \Aimeos\MShop\Factory::createManager( $this->getContext(), 'order/status' );
+		$statusManager = \Aimeos\MShop::create( $this->getContext(), 'order/status' );
 
 		$statusItem = $statusManager->createItem();
 		$statusItem->setParentId( $item->getId() );
 
-		if( $item->getPaymentStatus() != $item->oldPaymentStatus )
+		if( ( $status = $item->get( '.statuspayment' ) ) !== null && $status != $item->getPaymentStatus() )
 		{
-			$statusItem->setId( null );
-			$statusItem->setType( \Aimeos\MShop\Order\Item\Status\Base::STATUS_PAYMENT );
-			$statusItem->setValue( $item->getPaymentStatus() );
+			$statusItem->setId( null )->setValue( $item->getPaymentStatus() )
+				->setType( \Aimeos\MShop\Order\Item\Status\Base::STATUS_PAYMENT );
 
 			$statusManager->saveItem( $statusItem, false );
 		}
 
-		if( $item->getDeliveryStatus() != $item->oldDeliveryStatus )
+		if( ( $status = $item->get( '.statusdelivery' ) ) !== null && $status != $item->getDeliveryStatus() )
 		{
-			$statusItem->setId( null );
-			$statusItem->setType( \Aimeos\MShop\Order\Item\Status\Base::STATUS_DELIVERY );
-			$statusItem->setValue( $item->getDeliveryStatus() );
+			$statusItem->setId( null )->setValue( $item->getDeliveryStatus() )
+				->setType( \Aimeos\MShop\Order\Item\Status\Base::STATUS_DELIVERY );
 
 			$statusManager->saveItem( $statusItem, false );
 		}
@@ -698,7 +894,7 @@ class Standard
 	 * @param array $values List of attributes for order item
 	 * @return \Aimeos\MShop\Order\Item\Iface New order item
 	 */
-	protected function createItemBase( array $values = array() )
+	protected function createItemBase( array $values = [] )
 	{
 		return new \Aimeos\MShop\Order\Item\Standard( $values );
 	}
